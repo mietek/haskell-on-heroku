@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+
+declare self_dir
+self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "${self_dir}/../haskell-on-heroku.sh"
+
+
+function heroku_compile () {
+	local build_dir cache_dir env_dir
+	expect_args build_dir cache_dir env_dir -- "$@"
+	expect "${build_dir}"
+
+	export HALCYON_CACHE="${cache_dir}"
+
+	set_config_vars "${env_dir}" || die
+
+	prepare_cache || die
+	slug_buildpack "${self_dir}/.." "${build_dir}" || die
+
+	local app_label
+	app_label=$( detect_app_label "${build_dir}" ) || die
+
+	log
+	log
+	log "Compiling ${app_label}"
+	log
+
+	prepare_ghc 0 "${build_dir}" || return 1
+	log
+
+	prepare_cabal 0 || return 1
+	log
+
+	prepare_sandbox 0 "${build_dir}" || return 1
+	log
+
+	if ! restore_build "${build_dir}"; then
+		configure_build "${build_dir}" || die
+	fi
+	build "${build_dir}" || die
+	cache_build "${build_dir}" || die
+	log
+
+	log
+	log "Compiled ${app_label}"
+	log
+	log_compile_succeeded_help
+	log
+	log
+
+	slug_app "${build_dir}" || die
+	clean_cache "${build_dir}" || die
+}
+
+
+if ! heroku_compile "$1" "$2" "$3"; then
+	log_error 'Compiling failed'
+	log
+	log_compile_failed_help
+	log
+fi
