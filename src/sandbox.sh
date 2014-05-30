@@ -107,8 +107,6 @@ function validate_sandbox_tag () {
 
 
 function validate_sandbox () {
-	expect_vars HALCYON
-
 	local build_dir sandbox_tag sandbox_constraints
 	expect_args build_dir sandbox_tag sandbox_constraints -- "$@"
 
@@ -473,7 +471,7 @@ function prepare_extended_sandbox () {
 
 
 function prepare_sandbox () {
-	expect_vars HALCYON
+	expect_vars HALCYON NO_EXTEND_SANDBOX FORCE_SANDBOX_BUILD
 	expect "${HALCYON}/ghc/tag"
 
 	local has_time build_dir
@@ -499,15 +497,15 @@ function prepare_sandbox () {
 	sandbox_label=$( echo_sandbox_label "${ghc_tag}" "${app_label}" ) || die
 	sandbox_tag=$( echo_sandbox_tag "${sandbox_digest}" "${sandbox_label}" ) || die
 
-	if ! (( ${FORCE_SANDBOX_BUILD:-0} )) && restore_sandbox "${sandbox_tag}"; then
+	if ! (( ${FORCE_SANDBOX_BUILD} )) && restore_sandbox "${sandbox_tag}"; then
 		activate_sandbox "${build_dir}" || die
 		return 0
 	fi
 
-	(( ${has_time} )) || ! (( ${NO_EXTEND_SANDBOX:-0} )) || return 1
+	(( ${has_time} )) || ! (( ${NO_EXTEND_SANDBOX} )) || return 1
 
 	local matched_tag
-	if ! (( ${FORCE_SANDBOX_BUILD:-0} )) &&
+	if ! (( ${FORCE_SANDBOX_BUILD} )) &&
 		matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
 		prepare_extended_sandbox "${has_time}" "${build_dir}" "${sandbox_tag}" "${matched_tag}" "${unhappy_workaround}"
 	then

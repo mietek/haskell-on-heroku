@@ -6,14 +6,14 @@ function prefix_log () {
 	prefix="$1"
 	shift
 
-	export LAST_LOG="${*:+${prefix}$*}"
-	echo "${LAST_LOG}" >&2
+	export HALCYON_LAST_LOG="${*:+${prefix}$*}"
+	echo "${HALCYON_LAST_LOG}" >&2
 }
 
 
 function re_log () {
 	echo -en "\e[A\e[K\r" >&2
-	echo "${LAST_LOG:+${LAST_LOG} }$*" >&2
+	echo "${HALCYON_LAST_LOG:+${HALCYON_LAST_LOG} }$*" >&2
 }
 
 

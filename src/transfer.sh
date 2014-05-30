@@ -2,7 +2,7 @@
 
 
 function has_s3 () {
-	has_vars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY S3_BUCKET S3_ACL
+	has_vars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY HALCYON_S3_BUCKET HALCYON_S3_ACL
 }
 
 
@@ -29,7 +29,7 @@ function download_original () {
 	fi
 
 	if has_s3; then
-		if s3_curl_download "${S3_BUCKET}" "${src_object}" "${dst_dir}"; then
+		if s3_curl_download "${HALCYON_S3_BUCKET}" "${src_object}" "${dst_dir}"; then
 			return 0
 		fi
 	fi
@@ -37,7 +37,7 @@ function download_original () {
 	curl_download "${original_url}" "${dst_dir}"
 
 	if has_s3; then
-		s3_curl_upload "${dst_dir}/${src_object}" "${S3_BUCKET}" "${S3_ACL}"
+		s3_curl_upload "${dst_dir}/${src_object}" "${HALCYON_S3_BUCKET}" "${HALCYON_S3_ACL}"
 	fi
 }
 
@@ -54,15 +54,15 @@ function download_prepared () {
 	fi
 
 	if has_s3; then
-		if s3_curl_download "${S3_BUCKET}" "${src_object}" "${dst_dir}"; then
+		if s3_curl_download "${HALCYON_S3_BUCKET}" "${src_object}" "${dst_dir}"; then
 			return 0
 		fi
 		return 1
 	fi
 
 	local prepared_url
-	if has_vars S3_BUCKET; then
-		prepared_url=$( echo_s3_url "${S3_BUCKET}" "${src_object}" ) || die
+	if has_vars HALCYON_S3_BUCKET; then
+		prepared_url=$( echo_s3_url "${HALCYON_S3_BUCKET}" "${src_object}" ) || die
 	else
 		prepared_url=$( echo_default_s3_url "${src_object}" ) || die
 	fi
@@ -73,15 +73,15 @@ function download_prepared () {
 
 function list_prepared () {
 	if has_s3; then
-		if s3_curl_list "${S3_BUCKET}"; then
+		if s3_curl_list "${HALCYON_S3_BUCKET}"; then
 			return 0
 		fi
 		return 1
 	fi
 
 	local prepared_url
-	if has_vars S3_BUCKET; then
-		prepared_url=$( echo_s3_url "${S3_BUCKET}" '' ) || die
+	if has_vars HALCYON_S3_BUCKET; then
+		prepared_url=$( echo_s3_url "${HALCYON_S3_BUCKET}" '' ) || die
 	else
 		prepared_url=$( echo_default_s3_url '' ) || die
 	fi
@@ -105,7 +105,7 @@ function upload_prepared () {
 	expect_args src_file -- "$@"
 
 	if has_s3; then
-		s3_curl_upload "${src_file}" "${S3_BUCKET}" "${S3_ACL}"
+		s3_curl_upload "${src_file}" "${HALCYON_S3_BUCKET}" "${HALCYON_S3_ACL}"
 	fi
 }
 

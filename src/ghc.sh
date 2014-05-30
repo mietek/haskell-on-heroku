@@ -467,11 +467,13 @@ function deactivate_ghc () {
 
 
 function prepare_ghc () {
+	expect_vars NO_CUT_GHC
+
 	local has_time build_dir
 	expect_args has_time build_dir -- "$@"
 
 	local ghc_label
-	if (( ${NO_CUT_GHC:-0} )); then
+	if (( ${NO_CUT_GHC} )); then
 		ghc_label='uncut'
 	else
 		ghc_label=''
@@ -489,7 +491,7 @@ function prepare_ghc () {
 	(( ${has_time} )) || return 1
 
 	build_ghc "${ghc_version}" || die
-	if ! (( ${NO_CUT_GHC:-0} )); then
+	if ! (( ${NO_CUT_GHC} )); then
 		cut_ghc || die
 	fi
 	strip_ghc || die

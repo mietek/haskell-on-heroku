@@ -250,6 +250,8 @@ function cabal_verbosely () {
 
 
 function sandboxed_cabal_silently () {
+	expect_vars HALCYON
+
 	local work_dir
 	expect_args work_dir -- "$@"
 	shift
@@ -260,6 +262,8 @@ function sandboxed_cabal_silently () {
 
 
 function sandboxed_cabal_verbosely () {
+	expect_vars HALCYON
+
 	local work_dir
 	expect_args work_dir -- "$@"
 	shift
@@ -316,6 +320,8 @@ function cabal_install_deps () {
 
 
 function cabal_configure_app () {
+	expect_vars HALCYON
+
 	local build_dir
 	expect_args build_dir -- "$@"
 
@@ -619,13 +625,15 @@ function deactivate_cabal () {
 
 
 function prepare_cabal () {
+	expect_vars FORCE_CABAL_UPDATE
+
 	local has_time
 	expect_args has_time -- "$@"
 
 	local cabal_version
 	cabal_version=$( infer_cabal_version ) || die
 
-	if ! (( ${FORCE_CABAL_UPDATE:-0} )) && restore_updated_cabal "${cabal_version}"; then
+	if ! (( ${FORCE_CABAL_UPDATE} )) && restore_updated_cabal "${cabal_version}"; then
 		activate_cabal || die
 		return 0
 	fi

@@ -45,6 +45,19 @@ function set_defaults () {
 	export LD_LIBRARY_PATH="${HALCYON}/ghc/lib:${LD_LIBRARY_PATH:-}"
 
 	export LANG="${LANG:-en_US.UTF-8}"
+
+	export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
+	export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
+	export HALCYON_S3_BUCKET="${HALCYON_S3_BUCKET:-}"
+	export HALCYON_S3_ACL="${HALCYON_S3_ACL:-private}"
+
+	export PURGE_HALCYON_CACHE="${PURGE_CACHE:-0}"
+	export FORCE_GHC_VERSION="${FORCE_GHC_VERSION:-}"
+	export NO_CUT_GHC="${NO_CUT_GHC:-0}"
+	export FORCE_CABAL_VERSION="${FORCE_CABAL_VERSION:-}"
+	export FORCE_CABAL_UPDATE="${FORCE_CABAL_UPDATE:-0}"
+	export NO_EXTEND_SANDBOX="${NO_EXTEND_SANDBOX:-0}"
+	export FORCE_SANDBOX_BUILD="${FORCE_SANDBOX_BUILD:-0}"
 }
 
 
@@ -56,19 +69,6 @@ set_defaults
 function set_config_vars () {
 	local env_dir
 	expect_args env_dir -- "$@"
-
-	export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
-	export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
-	export S3_BUCKET="${S3_BUCKET:-}"
-	export S3_ACL="${S3_ACL:-}"
-
-	export PURGE_CACHE="${PURGE_CACHE:-0}"
-	export FORCE_GHC_VERSION="${FORCE_GHC_VERSION:-}"
-	export NO_CUT_GHC="${NO_CUT_GHC:-0}"
-	export FORCE_CABAL_VERSION="${FORCE_CABAL_VERSION:-}"
-	export FORCE_CABAL_UPDATE="${FORCE_CABAL_UPDATE:-0}"
-	export NO_EXTEND_SANDBOX="${NO_EXTEND_SANDBOX:-0}"
-	export FORCE_SANDBOX_BUILD="${FORCE_SANDBOX_BUILD:-0}"
 
 	if ! [ -d "${env_dir}" ]; then
 		return 0
