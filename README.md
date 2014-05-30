@@ -7,9 +7,14 @@ Haskell on Heroku
 [Haskell on Heroku][] is a fast buildpack for deploying [Haskell][] web apps on [Heroku][].
 
 
-###  How fast, exactly?
+Features
+--------
 
-Under 60 seconds to deploy.
+*   **Fast:**  Deploy a new app in 45 seconds, on average.  Push a change in 30 seconds, on average.
+
+*   **Efficient:**  No unnecessary recompiling or relinking.  Minimal caching.  Minimal slugs, at 3MB for an average “Hello, world!”
+
+*   **Flexible:**  Use any Haskell web framework.  Use any GHC version.  Use GHCi as usual.
 
 
 Quick start
@@ -97,19 +102,21 @@ Yes.  Haskell on Heroku will also generate its own [`.profile.d` script][], name
 
 Trusting [any precompiled software][] requires careful thought.  Haskell on Heroku packages are prepared by [Least Fixed][], hosted on Amazon S3, and updated daily, as a service for the Haskell community.
 
-You can also prepare and host your own Haskell on Heroku packages, retaining control over your code through the entire process.
+You can also prepare and host your own Haskell on Heroku packages, retaining complete control over your code.
 
 
 ###  How exactly do I prepare my own packages?
 
-To prepare your own packages on Heroku, configure your Amazon S3 details, and attempt to deploy an app.  The compilation will fail, but the deployment will succeed, creating an app-less slug.  Next, use a [one-off PX dyno][] to prepare all the packages necessary for the app to compile:
+To prepare your own packages on Heroku, create a new Heroku app, configure your Amazon S3 details, and attempt to deploy the app.  Without prepared packages in place, Haskell on Heroku will deploy an app-less slug, containing only itself.  Next, use a [one-off PX dyno][] to prepare the packages:
 
     heroku run --size=PX prepare
 
-Once the preparation is done, compile the app again, by either commiting a change and pushing, or rebuilding the repo:
+Finally, deploy the app again, by either commiting a change and pushing, or rebuilding:
 
     heroku plugins:install https://github.com/heroku/heroku-repo.git
     heroku repo:rebuild
+
+It is also possible to prepare packages off Heroku, using any 64-bit machine running Ubuntu 10.04 LTS.
 
 
 ###  How do I configure this?
@@ -128,7 +135,7 @@ Variable                | Description
 `FORCE_CABAL_VERSION`   | Use this Cabal version instead of inferring the version
 `FORCE_CABAL_UPDATE`    | When `1`, update Cabal instead of using a recently updated prepared package
 `NO_EXTEND_SANDBOX`     | When `1`, avoid matching and extending prepared sandboxes
-`FORCE_SANDBOX_BUILD`   | When `1`, prepare a sandbox from scratch
+`FORCE_SANDBOX_BUILD`   | When `1`, prepare the sandbox from scratch
 
 
 ###  I still have questions.  Can I ask you a question?
