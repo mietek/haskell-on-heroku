@@ -23,11 +23,11 @@ function curl_quietly () {
 
 	case "${response}" in
 	'200')
-		re_log 'done';;
+		log_end 'done';;
 	'2'*)
-		re_log "done, ${response}";;
+		log_end "done, ${response}";;
 	*)
-		re_log "${response}"
+		log_end "${response}"
 	esac
 
 	return "${status}"
@@ -44,7 +44,7 @@ function curl_download () {
 	src_object=$( basename "${src_url}" ) || die
 	expect_no "${dst_dir}/${src_object}"
 
-	log_indent "Downloading ${src_url}..."
+	log_indent_begin "Downloading ${src_url}..."
 
 	mkdir -p "${dst_dir}" || die
 
@@ -57,7 +57,7 @@ function curl_check () {
 	local src_url
 	expect_args src_url -- "$@"
 
-	log_indent "Checking ${src_url}..."
+	log_indent_begin "Checking ${src_url}..."
 
 	curl_quietly "${src_url}" \
 		--head            \
@@ -70,7 +70,7 @@ function curl_upload () {
 	expect_args src_file dst_url -- "$@"
 	expect "${src_file}"
 
-	log_indent "Uploading ${dst_url}..."
+	log_indent_begin "Uploading ${dst_url}..."
 
 	curl_quietly "${dst_url}"    \
 		--output '/dev/null' \
@@ -82,7 +82,7 @@ function curl_delete () {
 	local dst_url
 	expect_args dst_url -- "$@"
 
-	log_indent "Deleting ${dst_url}..."
+	log_indent_begin "Deleting ${dst_url}..."
 
 	curl_quietly "${dst_url}"    \
 		--output '/dev/null' \

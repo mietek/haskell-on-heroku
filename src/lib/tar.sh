@@ -34,14 +34,14 @@ function tar_archive () {
 	format_flag=$( echo_tar_format_flag "${archive_name}" ) || die
 	dst_dir=$( dirname "${archive_file}" ) || die
 
-	log_indent "Archiving ${archive_name}..."
+	log_indent_begin "Archiving ${archive_name}..."
 
 	mkdir -p "${dst_dir}" || die
 	tar -c "${format_flag}" -f "${archive_file}" -C "${src_dir}" '.' || die
 
 	local archive_size
 	archive_size=$( measure_recursively "${archive_file}" ) || die
-	re_log "done, ${archive_size}"
+	log_end "done, ${archive_size}"
 }
 
 
@@ -55,10 +55,10 @@ function tar_extract () {
 	archive_name=$( basename "${archive_file}" ) || die
 	format_flag=$( echo_tar_format_flag "${archive_name}" ) || die
 
-	log_indent "Extracting ${archive_name}..."
+	log_indent_begin "Extracting ${archive_name}..."
 
 	mkdir -p "${dst_dir}" || die
 	tar -x "${format_flag}" -f "${archive_file}" -C "${dst_dir}" || die
 
-	re_log 'done'
+	log_end 'done'
 }

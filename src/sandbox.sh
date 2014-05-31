@@ -141,7 +141,7 @@ function build_sandbox () {
 	local sandbox_label
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
-	log "Building sandbox ${sandbox_label}..."
+	log "Building sandbox ${sandbox_label}"
 
 	if ! [ -d "${HALCYON}/sandbox" ]; then
 		cabal_create_sandbox "${HALCYON}/sandbox" || die
@@ -164,7 +164,7 @@ function build_sandbox () {
 
 	local sandbox_size
 	sandbox_size=$( measure_recursively "${HALCYON}/sandbox" ) || die
-	re_log "done, ${sandbox_size}"
+	log "Built sandbox ${sandbox_label}, ${sandbox_size}"
 }
 
 
@@ -176,7 +176,7 @@ function strip_sandbox () {
 	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
-	log "Stripping sandbox ${sandbox_label}..."
+	log_begin "Stripping sandbox ${sandbox_label}..."
 
 	find "${HALCYON}/sandbox"           \
 			-type f        -and \
@@ -190,7 +190,7 @@ function strip_sandbox () {
 
 	local sandbox_size
 	sandbox_size=$( measure_recursively "${HALCYON}/sandbox" ) || die
-	re_log "done, ${sandbox_size}"
+	log_end "done, ${sandbox_size}"
 }
 
 
@@ -263,17 +263,13 @@ function infer_sandbox_constraints () {
 	expect_args build_dir -- "$@"
 	expect "${build_dir}"
 
-	log 'Inferring sandbox constraints...'
+	log 'Inferring sandbox constraints'
 
 	local sandbox_constraints
 	if [ -f "${build_dir}/cabal.config" ]; then
 		sandbox_constraints=$( detect_constraints "${build_dir}" ) || die
-
-		re_log 'done'
 	else
 		sandbox_constraints=$( freeze_constraints "${build_dir}" 1 ) || die
-
-		re_log 'implicit'
 		if ! (( ${HALCYON_FAKE_BUILD:-0} )); then
 			log_warning 'Expected cabal.config with explicit constraints'
 			log
@@ -292,12 +288,12 @@ function infer_sandbox_digest () {
 	local sandbox_constraints
 	expect_args sandbox_constraints -- "$@"
 
-	log 'Inferring sandbox digest...'
+	log_begin 'Inferring sandbox digest...'
 
 	local sandbox_digest
 	sandbox_digest=$( echo_constraints_digest <<<"${sandbox_constraints}" ) || die
 
-	re_log "done, ${sandbox_digest}"
+	log_end "done, ${sandbox_digest}"
 
 	echo "${sandbox_digest}"
 }
@@ -385,7 +381,7 @@ function activate_sandbox () {
 	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
-	log "Activating sandbox ${sandbox_label}..."
+	log_begin "Activating sandbox ${sandbox_label}..."
 
 	if [ -e "${build_dir}/cabal.sandbox.config" ] && ! [ -h "${build_dir}/cabal.sandbox.config" ]; then
 		die "Expected no custom ${build_dir}/cabal.sandbox.config"
@@ -394,7 +390,7 @@ function activate_sandbox () {
 	rm -f "${build_dir}/cabal.sandbox.config" || die
 	ln -s "${HALCYON}/sandbox/cabal.sandbox.config" "${build_dir}/cabal.sandbox.config" || die
 
-	re_log 'done'
+	log_end 'done'
 }
 
 
@@ -410,7 +406,7 @@ function deactivate_sandbox () {
 	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
-	log "Deactivating sandbox ${sandbox_label}..."
+	log_begin "Deactivating sandbox ${sandbox_label}..."
 
 	if [ -e "${build_dir}/cabal.sandbox.config" ] && ! [ -h "${build_dir}/cabal.sandbox.config" ]; then
 		die "Expected no custom ${build_dir}/cabal.sandbox.config"
@@ -418,7 +414,7 @@ function deactivate_sandbox () {
 
 	rm -f "${build_dir}/cabal.sandbox.config" || die
 
-	re_log 'done'
+	log_end 'done'
 }
 
 

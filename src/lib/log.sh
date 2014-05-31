@@ -6,14 +6,16 @@ function prefix_log () {
 	prefix="$1"
 	shift
 
-	export HALCYON_LAST_LOG="${*:+${prefix}$*}"
-	echo "${HALCYON_LAST_LOG}" >&2
+	echo "${*:+${prefix}$*}" >&2
 }
 
 
-function re_log () {
-	echo -en "\e[A\e[K\r" >&2
-	echo "${HALCYON_LAST_LOG:+${HALCYON_LAST_LOG} }$*" >&2
+function prefix_log_begin () {
+	local prefix
+	prefix="$1"
+	shift
+
+	echo -n "${*:+${prefix}$* }" >&2
 }
 
 
@@ -24,8 +26,23 @@ function log () {
 }
 
 
+function log_begin () {
+	prefix_log_begin '-----> ' "$@"
+}
+
+
+function log_end () {
+	prefix_log '' "$@"
+}
+
+
 function log_indent () {
 	prefix_log '       ' "$@"
+}
+
+
+function log_indent_begin () {
+	prefix_log_begin '       ' "$@"
 }
 
 

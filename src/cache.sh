@@ -24,20 +24,22 @@ function prepare_cache () {
 	fi
 
 	if (( ${PURGE_HALCYON_CACHE} )); then
-		log 'Purging cache...'
+		log_begin 'Purging cache...'
+
 		rm -rf "${HALCYON_CACHE}" || die
 		mkdir -p "${HALCYON_CACHE}" || die
-		re_log 'done'
+
+		log_end 'done'
 		return 0
 	fi
 
-	log 'Preparing cache...'
+	log_begin 'Preparing cache...'
 
 	rm -rf "${HALCYON_CACHE_TMP_OLD_DIR}" || die
 	mkdir -p "${HALCYON_CACHE}" || die
 	cp -R "${HALCYON_CACHE}" "${HALCYON_CACHE_TMP_OLD_DIR}" || die
 
-	re_log 'done'
+	log_end 'done'
 
 	log 'Examining cache'
 
@@ -54,7 +56,7 @@ function clean_cache () {
 
 	expect_args build_dir -- "$@"
 
-	log 'Cleaning cache...'
+	log_begin 'Cleaning cache...'
 
 	local tmp_dir
 	tmp_dir=$( echo_cache_tmp_dir ) || die
@@ -102,7 +104,7 @@ function clean_cache () {
 	rm -rf "${HALCYON_CACHE}" || die
 	mv "${tmp_dir}" "${HALCYON_CACHE}" || die
 
-	re_log 'done'
+	log_end 'done'
 
 	if [ -d "${HALCYON_CACHE_TMP_OLD_DIR}" ]; then
 		log 'Examining cache changes'

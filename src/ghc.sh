@@ -169,7 +169,7 @@ function build_ghc () {
 
 	tar_extract "${HALCYON_CACHE}/${original_archive}" "${tmp_dir}" || die
 
-	log "Installing GHC ${ghc_version}..."
+	log "Installing GHC ${ghc_version}"
 
 	case "${ghc_version}" in
 	'7.8.'*)
@@ -201,7 +201,7 @@ function build_ghc () {
 
 	local ghc_size
 	ghc_size=$( measure_recursively "${HALCYON}/ghc" ) || die
-	re_log "done, ${ghc_size}"
+	log "Installed GHC ${ghc_version}, ${ghc_size}"
 }
 
 
@@ -213,7 +213,7 @@ function cut_ghc () {
 	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 
-	log "Cutting GHC ${ghc_version}..."
+	log_begin "Cutting GHC ${ghc_version}..."
 
 	case "${ghc_version}" in
 	'7.8.'*)
@@ -263,7 +263,7 @@ function cut_ghc () {
 
 	local ghc_size
 	ghc_size=$( measure_recursively "${HALCYON}/ghc" ) || die
-	re_log "done, ${ghc_size}"
+	log_end "done, ${ghc_size}"
 }
 
 
@@ -276,7 +276,7 @@ function strip_ghc () {
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
-	log "Stripping ${ghc_description}..."
+	log_begin "Stripping ${ghc_description}..."
 
 	case "${ghc_version}" in
 	'7.8.'*)
@@ -318,7 +318,7 @@ function strip_ghc () {
 
 	local ghc_size
 	ghc_size=$( measure_recursively "${HALCYON}/ghc" ) || die
-	re_log "done, ${ghc_size}"
+	log_end "done, ${ghc_size}"
 }
 
 
@@ -387,13 +387,13 @@ function infer_ghc_version () {
 	local build_dir
 	expect_args build_dir -- "$@"
 
-	log 'Inferring GHC version...'
+	log_begin 'Inferring GHC version...'
 
 	local ghc_version
 	if has_vars FORCE_GHC_VERSION; then
 		ghc_version="${FORCE_GHC_VERSION}"
 
-		re_log "${ghc_version}, forced"
+		log_end "${ghc_version}, forced"
 	elif [ -f "${build_dir}/cabal.config" ]; then
 		local base_version
 		base_version=$(
@@ -405,11 +405,11 @@ function infer_ghc_version () {
 
 		ghc_version=$( echo_ghc_base_version "${base_version}" ) || die
 
-		re_log "done, ${ghc_version}"
+		log_end "done, ${ghc_version}"
 	else
 		ghc_version=$( echo_ghc_default_version ) || die
 
-		re_log "${ghc_version}, default"
+		log_end "${ghc_version}, default"
 		if ! (( "${HALCYON_FAKE_BUILD:-0}" )); then
 			log_warning 'Expected cabal.config with explicit constraints'
 		fi
@@ -429,13 +429,13 @@ function activate_ghc () {
 	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
-	log "Activating ${ghc_description}..."
+	log_begin "Activating ${ghc_description}..."
 
 	if [ -e "${HOME}/.ghc" ]; then
 		die "Expected no custom ${HOME}/.ghc"
 	fi
 
-	re_log 'done'
+	log_end 'done'
 }
 
 
@@ -447,13 +447,13 @@ function deactivate_ghc () {
 	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
-	log "Dectivating ${ghc_description}..."
+	log_begin "Dectivating ${ghc_description}..."
 
 	if [ -e "${HOME}/.ghc" ]; then
 		die "Expected no custom ${HOME}/.ghc"
 	fi
 
-	re_log 'done'
+	log_end 'done'
 }
 
 

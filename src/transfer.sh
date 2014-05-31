@@ -85,7 +85,7 @@ function list_prepared () {
 		prepared_url=$( echo_default_s3_url '' ) || die
 	fi
 
-	log_indent "Listing ${prepared_url}..."
+	log_indent_begin "Listing ${prepared_url}..."
 
 	local status response
 	status=0

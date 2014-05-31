@@ -82,7 +82,7 @@ function s3_curl_download () {
 	local src_resource
 	src_resource=$( echo_s3_resource "${src_bucket}" "${src_object}" ) || die
 
-	log_indent "Downloading s3:/${src_resource}..."
+	log_indent_begin "Downloading s3:/${src_resource}..."
 
 	mkdir -p "${dst_dir}" || die
 
@@ -105,7 +105,7 @@ function s3_curl_list () {
 	local src_resource
 	src_resource=$( echo_s3_resource "${src_bucket}" '' ) || die
 
-	log_indent "Listing s3:/${src_resource}..."
+	log_indent_begin "Listing s3:/${src_resource}..."
 
 	local status response
 	status=0
@@ -136,7 +136,7 @@ function s3_curl_check () {
 	local src_resource
 	src_resource=$( echo_s3_resource "${src_bucket}" "${src_object}" ) || die
 
-	log_indent "Checking s3:/${src_resource}..."
+	log_indent_begin "Checking s3:/${src_resource}..."
 
 	s3_curl_quietly "${src_resource}" \
 		--head                    \
@@ -160,7 +160,7 @@ function s3_curl_upload () {
 	src_object=$( basename "${src_file}" ) || die
 	dst_resource=$( echo_s3_resource "${dst_bucket}" "${src_object}" ) || die
 
-	log_indent "Uploading s3:/${dst_resource}..."
+	log_indent_begin "Uploading s3:/${dst_resource}..."
 
 	local src_digest
 	src_digest=$(
@@ -191,7 +191,7 @@ function s3_curl_create () {
 	local dst_resource
 	dst_resource=$( echo_s3_resource "${dst_bucket}" '' ) || die
 
-	log_indent "Creating s3:/${dst_resource}..."
+	log_indent_begin "Creating s3:/${dst_resource}..."
 
 	s3_curl_quietly "${dst_resource}"        \
 		--header "x-amz-acl: ${dst_acl}" \
@@ -216,7 +216,7 @@ function s3_curl_copy () {
 	src_resource=$( echo_s3_resource "${src_bucket}" "${src_object}" ) || die
 	dst_resource=$( echo_s3_resource "${dst_bucket}" "${dst_object}" ) || die
 
-	log_indent "Copying s3:/${src_resource} to s3:/${dst_resource}..."
+	log_indent_begin "Copying s3:/${src_resource} to s3:/${dst_resource}..."
 
 	s3_curl_quietly "${dst_resource}"                     \
 		--header "x-amz-acl: ${dst_acl}"              \
@@ -242,7 +242,7 @@ function s3_curl_delete () {
 	local dst_resource
 	dst_resource=$( echo_s3_resource "${dst_bucket}" "${dst_object}" ) || die
 
-	log_indent "Deleting s3:/${dst_resource}..."
+	log_indent_begin "Deleting s3:/${dst_resource}..."
 
 	s3_curl_quietly "${dst_resource}" \
 		--output '/dev/null'      \

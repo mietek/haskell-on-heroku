@@ -312,7 +312,7 @@ function build_cabal () {
 
 	tar_extract "${HALCYON_CACHE}/${original_archive}" "${tmp_dir}" || die
 
-	log "Bootstrapping Cabal ${cabal_version}..."
+	log "Bootstrapping Cabal ${cabal_version}"
 
 	local ghc_tag ghc_version
 	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
@@ -355,7 +355,7 @@ EOF
 
 	local cabal_size
 	cabal_size=$( measure_recursively "${HALCYON}/cabal" ) || die
-	re_log "done, ${cabal_size}"
+	log "Bootstrapped Cabal ${cabal_version}, ${cabal_size}"
 }
 
 
@@ -367,7 +367,7 @@ function update_cabal () {
 	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
 	cabal_version=$( echo_cabal_tag_version "${cabal_tag}" ) || die
 
-	log "Updating Cabal ${cabal_version}..."
+	log "Updating Cabal ${cabal_version}"
 
 	cabal_update || die
 
@@ -377,7 +377,7 @@ function update_cabal () {
 
 	local cabal_size
 	cabal_size=$( measure_recursively "${HALCYON}/cabal" ) || die
-	re_log "done, ${cabal_size}"
+	log "Updated Cabal ${cabal_version}, ${cabal_size}"
 }
 
 
@@ -510,17 +510,17 @@ function restore_updated_cabal () {
 
 
 function infer_cabal_version () {
-	log 'Inferring Cabal version...'
+	log_begin 'Inferring Cabal version...'
 
 	local cabal_version
 	if has_vars FORCE_CABAL_VERSION; then
 		cabal_version="${FORCE_CABAL_VERSION}"
 
-		re_log "${cabal_version}, forced"
+		log_end "${cabal_version}, forced"
 	else
 		cabal_version=$( echo_cabal_default_version ) || die
 
-		re_log "done, ${cabal_version}"
+		log_end "done, ${cabal_version}"
 	fi
 
 	echo "${cabal_version}"
@@ -537,7 +537,7 @@ function activate_cabal () {
 	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
 	cabal_description=$( echo_cabal_description "${cabal_tag}" ) || die
 
-	log "Activating ${cabal_description}..."
+	log_begin "Activating ${cabal_description}..."
 
 	if [ -e "${HOME}/.cabal/config" ] && ! [ -h "${HOME}/.cabal/config" ]; then
 		die "Expected no custom ${HOME}/.cabal/config"
@@ -547,7 +547,7 @@ function activate_cabal () {
 	rm -f "${HOME}/.cabal/config" || die
 	ln -s "${HALCYON}/cabal/config" "${HOME}/.cabal/config" || die
 
-	re_log 'done'
+	log_end 'done'
 }
 
 
@@ -559,7 +559,7 @@ function deactivate_cabal () {
 	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
 	cabal_description=$( echo_cabal_description "${cabal_tag}" ) || die
 
-	log "Deactivating ${cabal_description}..."
+	log_begin "Deactivating ${cabal_description}..."
 
 	if [ -e "${HOME}/.cabal/config" ] && ! [ -h "${HOME}/.cabal/config" ]; then
 		die "Expected no custom ${HOME}/.cabal/config"
@@ -567,7 +567,7 @@ function deactivate_cabal () {
 
 	rm -f "${HOME}/.cabal/config" || die
 
-	re_log 'done'
+	log_end 'done'
 }
 
 
