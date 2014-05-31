@@ -195,16 +195,16 @@ function build_ghc () {
 
 	if ! (
 		cd "${tmp_dir}/ghc-${ghc_version}" &&
-		./configure --prefix="${HALCYON}/ghc" &> "${tmp_log}" &&
-		make install &>> "${tmp_log}"
+		./configure --prefix="${HALCYON}/ghc" &>"${tmp_log}" &&
+		make install &>>"${tmp_log}"
 	); then
-		log_file_indent < "${tmp_log}"
+		log_file_indent <"${tmp_log}"
 		die 'Installing GHC failed'
 	fi
 
 	rm -rf "${HALCYON}/ghc/share" "${tmp_dir}" "${tmp_log}" || die
 
-	echo_ghc_tag "${ghc_version}" 'uncut' > "${HALCYON}/ghc/tag" || die
+	echo_ghc_tag "${ghc_version}" 'uncut' >"${HALCYON}/ghc/tag" || die
 
 	local ghc_size
 	ghc_size=$( measure_recursively "${HALCYON}/ghc" ) || die
@@ -217,7 +217,7 @@ function cut_ghc () {
 	expect "${HALCYON}/ghc/tag"
 
 	local ghc_tag ghc_version
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 
 	log "Cutting GHC ${ghc_version}..."
@@ -266,7 +266,7 @@ function cut_ghc () {
 		die "Cutting GHC ${ghc_version} is not implemented yet"
 	esac
 
-	echo_ghc_tag "${ghc_version}" '' > "${HALCYON}/ghc/tag" || die
+	echo_ghc_tag "${ghc_version}" '' >"${HALCYON}/ghc/tag" || die
 
 	local ghc_size
 	ghc_size=$( measure_recursively "${HALCYON}/ghc" ) || die
@@ -279,7 +279,7 @@ function strip_ghc () {
 	expect "${HALCYON}/ghc/tag"
 
 	local ghc_tag ghc_version
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
@@ -336,7 +336,7 @@ function cache_ghc () {
 	expect "${HALCYON}/ghc/tag"
 
 	local ghc_tag ghc_description
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
 	log "Caching ${ghc_description}"
@@ -362,7 +362,7 @@ function restore_ghc () {
 	log "Restoring ${ghc_description}"
 
 	if [ -f "${HALCYON}/ghc/tag" ] &&
-		validate_ghc_tag "${ghc_tag}" < "${HALCYON}/ghc/tag"
+		validate_ghc_tag "${ghc_tag}" <"${HALCYON}/ghc/tag"
 	then
 		return 0
 	fi
@@ -379,7 +379,7 @@ function restore_ghc () {
 	tar_extract "${HALCYON_CACHE}/${ghc_archive}" "${HALCYON}/ghc" || die
 
 	if ! [ -f "${HALCYON}/ghc/tag" ] ||
-		! validate_ghc_tag "${ghc_tag}" < "${HALCYON}/ghc/tag"
+		! validate_ghc_tag "${ghc_tag}" <"${HALCYON}/ghc/tag"
 	then
 		log_warning "Restoring ${ghc_archive} failed"
 		rm -rf "${HALCYON}/ghc" || die
@@ -433,7 +433,7 @@ function activate_ghc () {
 	expect "${HALCYON}/ghc/tag"
 
 	local ghc_tag ghc_description
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
 	log "Activating ${ghc_description}..."
@@ -451,7 +451,7 @@ function deactivate_ghc () {
 	expect "${HALCYON}/ghc/tag"
 
 	local ghc_tag ghc_description
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	ghc_description=$( echo_ghc_description "${ghc_tag}" ) || die
 
 	log "Dectivating ${ghc_description}..."

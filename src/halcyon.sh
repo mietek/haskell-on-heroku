@@ -88,9 +88,9 @@ function set_config_vars () {
 			filter_not_matching "^(${ignored_pattern})$"
 	); do
 		local value
-		value=$( match_exactly_one < "${env_dir}/${var}" ) || die
-		if filter_matching "^(${secret_pattern})$" <<< "${var}" |
-			match_exactly_one > '/dev/null'
+		value=$( match_exactly_one <"${env_dir}/${var}" ) || die
+		if filter_matching "^(${secret_pattern})$" <<<"${var}" |
+			match_exactly_one >'/dev/null'
 		then
 			log_indent "${var} (secret)"
 		else
@@ -164,7 +164,7 @@ function halcyon_prepare () {
 
 
 function log_extend_sandbox_help () {
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		In case of timeout, disable sandbox extending and try again:
 		$ export NO_EXTEND_SANDBOX=1
 EOF
@@ -175,10 +175,10 @@ function log_add_config_help () {
 	local sandbox_constraints
 	expect_args sandbox_constraints -- "$@"
 
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		To use explicit constraints, add cabal.config:
-		$ cat > cabal.config << EOF
+		$ cat >cabal.config <<EOF
 EOF
-	echo_constraints <<< "${sandbox_constraints}" >&2 || die
+	echo_constraints <<<"${sandbox_constraints}" >&2 || die
 	echo 'EOF' >&2
 }

@@ -72,11 +72,11 @@ function echo_fake_package () {
 	fake_app_label=$( echo_fake_app_label "${real_app_label}" ) || die
 	fake_app_name=$( echo_app_label_name "${fake_app_label}" ) || die
 
-	cat <<- EOF
+	cat <<-EOF
 		name:           ${fake_app_name}
 		version:        ${app_version}
 		build-type:     Simple
-		cabal-version:  >=1.2
+		cabal-version:  >= 1.2
 
 		executable ${fake_app_name}
 EOF

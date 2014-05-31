@@ -24,15 +24,15 @@ function echo_constraints_difference () {
 	expect_args old_constraints new_constraints -- "$@"
 
 	local old_digest new_digest
-	old_digest=$( echo_constraints_digest <<< "${old_constraints}" ) || die
-	new_digest=$( echo_constraints_digest <<< "${new_constraints}" ) || die
+	old_digest=$( echo_constraints_digest <<<"${old_constraints}" ) || die
+	new_digest=$( echo_constraints_digest <<<"${new_constraints}" ) || die
 
 	local tmp_old_config tmp_new_config
 	tmp_old_config=$( echo_constraints_tmp_config ) || die
 	tmp_new_config=$( echo_constraints_tmp_config ) || die
 
-	echo_constraints <<< "${old_constraints}" > "${tmp_old_config}" || die
-	echo_constraints <<< "${new_constraints}" > "${tmp_new_config}" || die
+	echo_constraints <<<"${old_constraints}" >"${tmp_old_config}" || die
+	echo_constraints <<<"${new_constraints}" >"${tmp_new_config}" || die
 
 	echo "--- ${old_digest}/cabal.config"
 	echo "+++ ${new_digest}/cabal.config"
@@ -80,7 +80,7 @@ function score_constraints () {
 	local package version
 	while read -r package version; do
 		constraints_A["${package}"]="${version}"
-	done <<< "${constraints}"
+	done <<<"${constraints}"
 
 	local score candidate_package candidate_version
 	score=0
@@ -126,7 +126,7 @@ function detect_constraints () {
 	local app_constraint
 	app_constraint=$( detect_app_constraint "${build_dir}" ) || die
 
-	read_constraints < "${build_dir}/cabal.config" |
+	read_constraints <"${build_dir}/cabal.config" |
 		sort_naturally |
 		filter_valid_constraints |
 		filter_not_matching "^${app_constraint}$" || die

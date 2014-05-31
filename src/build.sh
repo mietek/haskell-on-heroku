@@ -48,7 +48,7 @@ function fake_build_dir () {
 	build_dir=$( echo_build_tmp_dir ) || die
 
 	mkdir -p "${build_dir}" || die
-	echo_fake_package "${app_label}" > "${build_dir}/${app_label}.cabal" || die
+	echo_fake_package "${app_label}" >"${build_dir}/${app_label}.cabal" || die
 
 	echo "${build_dir}"
 }
@@ -86,7 +86,7 @@ function infer_build_tag () {
 	expect_args build_dir -- "$@"
 
 	local ghc_tag app_label
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	app_label=$( detect_app_label "${build_dir}" ) || die
 
 	echo_build_tag "${ghc_tag}" "${app_label}" || die
@@ -144,12 +144,12 @@ function restore_build () {
 
 	local build_changes path
 	build_changes=$( compare_recursively "${tmp_old_dir}" "${build_dir}" ) || die
-	filter_matching '^= ' <<< "${build_changes}" |
+	filter_matching '^= ' <<<"${build_changes}" |
 		sed 's/^= //' |
 		while read -r path; do
 			cp -p "${tmp_old_dir}/${path}" "${build_dir}/${path}" || die
 		done
-	filter_not_matching '^= ' <<< "${build_changes}" | log_file_indent || die
+	filter_not_matching '^= ' <<<"${build_changes}" | log_file_indent || die
 
 	mv "${tmp_dist_dir}" "${build_dir}/dist" || die
 	rm -rf "${tmp_old_dir}" || die

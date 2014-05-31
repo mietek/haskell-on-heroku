@@ -115,7 +115,7 @@ function validate_sandbox () {
 
 	local actual_constraints actual_digest
 	actual_constraints=$( freeze_constraints "${build_dir}" 0 ) || die
-	actual_digest=$( echo_constraints_digest <<< "${actual_constraints}" ) || die
+	actual_digest=$( echo_constraints_digest <<<"${actual_constraints}" ) || die
 
 	if [ "${actual_digest}" = "${sandbox_digest}" ]; then
 		return 0
@@ -164,8 +164,8 @@ function build_sandbox () {
 
 	validate_sandbox "${build_dir}" "${sandbox_tag}" "${sandbox_constraints}" || die
 
-	echo_constraints <<< "${sandbox_constraints}" > "${HALCYON}/sandbox/cabal.config" || die
-	echo "${sandbox_tag}" > "${HALCYON}/sandbox/tag" || die
+	echo_constraints <<<"${sandbox_constraints}" >"${HALCYON}/sandbox/cabal.config" || die
+	echo "${sandbox_tag}" >"${HALCYON}/sandbox/tag" || die
 
 	local sandbox_size
 	sandbox_size=$( measure_recursively "${HALCYON}/sandbox" ) || die
@@ -178,7 +178,7 @@ function strip_sandbox () {
 	expect "${HALCYON}/sandbox/tag"
 
 	local sandbox_tag sandbox_label
-	sandbox_tag=$(< "${HALCYON}/sandbox/tag" ) || die
+	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
 	log "Stripping sandbox ${sandbox_label}..."
@@ -206,7 +206,7 @@ function cache_sandbox () {
 	expect "${HALCYON}/sandbox/tag"
 
 	local sandbox_tag sandbox_label
-	sandbox_tag=$(< "${HALCYON}/sandbox/tag" ) || die
+	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
 	log "Caching sandbox ${sandbox_label}"
@@ -235,7 +235,7 @@ function restore_sandbox () {
 	log "Restoring sandbox ${sandbox_label}"
 
 	if [ -f "${HALCYON}/sandbox/tag" ] &&
-		validate_sandbox_tag "${sandbox_tag}" < "${HALCYON}/sandbox/tag"
+		validate_sandbox_tag "${sandbox_tag}" <"${HALCYON}/sandbox/tag"
 	then
 		return 0
 	fi
@@ -252,7 +252,7 @@ function restore_sandbox () {
 	tar_extract "${HALCYON_CACHE}/${sandbox_archive}" "${HALCYON}/sandbox" || die
 
 	if ! [ -f "${HALCYON}/sandbox/tag" ] ||
-		! validate_sandbox_tag "${sandbox_tag}" < "${HALCYON}/sandbox/tag"
+		! validate_sandbox_tag "${sandbox_tag}" <"${HALCYON}/sandbox/tag"
 	then
 		log_warning "Restoring ${sandbox_archive} failed"
 		rm -rf "${HALCYON}/sandbox" || die
@@ -285,7 +285,7 @@ function infer_sandbox_constraints () {
 			log_add_config_help "${sandbox_constraints}"
 			log
 		else
-			echo_constraints <<< "${sandbox_constraints}" >&2 || die
+			echo_constraints <<<"${sandbox_constraints}" >&2 || die
 		fi
 	fi
 
@@ -300,7 +300,7 @@ function infer_sandbox_digest () {
 	log 'Inferring sandbox digest...'
 
 	local sandbox_digest
-	sandbox_digest=$( echo_constraints_digest <<< "${sandbox_constraints}" ) || die
+	sandbox_digest=$( echo_constraints_digest <<<"${sandbox_constraints}" ) || die
 
 	re_log "done, ${sandbox_digest}"
 
@@ -318,7 +318,7 @@ function locate_matched_sandbox_tag () {
 	log 'Locating matched sandboxes'
 
 	local ghc_tag config_pattern
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	config_pattern=$( echo_sandbox_config_pattern "${ghc_tag}" ) || die
 
 	local matched_configs
@@ -345,7 +345,7 @@ function locate_matched_sandbox_tag () {
 
 			local score
 			if ! score=$(
-				read_constraints < "${HALCYON_CACHE}/${config}" |
+				read_constraints <"${HALCYON_CACHE}/${config}" |
 				sort_naturally |
 				filter_valid_constraints |
 				score_constraints "${sandbox_constraints}" "${tag}"
@@ -354,7 +354,7 @@ function locate_matched_sandbox_tag () {
 			fi
 
 			echo -e "${score}\t${tag}"
-		done <<< "${matched_configs}" |
+		done <<<"${matched_configs}" |
 			filter_not_matching '^0\t' |
 			sort_naturally |
 			match_at_least_one
@@ -363,11 +363,11 @@ function locate_matched_sandbox_tag () {
 		return 1
 	fi
 
-	log_file_indent <<< "${matched_scores}"
+	log_file_indent <<<"${matched_scores}"
 
 	local matched_tag
 	matched_tag=$(
-		filter_last <<< "${matched_scores}" |
+		filter_last <<<"${matched_scores}" |
 		match_exactly_one |
 		sed 's/^.*'$'\t''//'
 	) || die
@@ -387,7 +387,7 @@ function activate_sandbox () {
 	expect "${build_dir}"
 
 	local sandbox_tag sandbox_label
-	sandbox_tag=$(< "${HALCYON}/sandbox/tag" ) || die
+	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
 	log "Activating sandbox ${sandbox_label}..."
@@ -412,7 +412,7 @@ function deactivate_sandbox () {
 	expect "${build_dir}"
 
 	local sandbox_tag sandbox_label
-	sandbox_tag=$(< "${HALCYON}/sandbox/tag" ) || die
+	sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 	sandbox_label=$( echo_sandbox_tag_label "${sandbox_tag}" ) || die
 
 	log "Deactivating sandbox ${sandbox_label}..."
@@ -450,7 +450,7 @@ function prepare_extended_sandbox () {
 	if [ "${sandbox_digest}" = "${matched_digest}" ]; then
 		log "Using matched sandbox ${matched_label} as sandbox ${sandbox_label}"
 
-		echo "${sandbox_tag}" > "${HALCYON}/sandbox/tag" || die
+		echo "${sandbox_tag}" >"${HALCYON}/sandbox/tag" || die
 		cache_sandbox || die
 		activate_sandbox "${build_dir}" || die
 		return 0
@@ -478,7 +478,7 @@ function prepare_sandbox () {
 	expect_args has_time build_dir -- "$@"
 
 	local ghc_tag app_label
-	ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 	app_label=$( detect_app_label "${build_dir}" ) || die
 
 	local sandbox_constraints sandbox_digest
@@ -487,8 +487,8 @@ function prepare_sandbox () {
 
 	local unhappy_workaround
 	unhappy_workaround=0
-	if filter_matching '^(language-javascript|haskell-src-exts) ' <<< "${sandbox_constraints}" |
-		match_at_least_one > '/dev/null'
+	if filter_matching '^(language-javascript|haskell-src-exts) ' <<<"${sandbox_constraints}" |
+		match_at_least_one >'/dev/null'
 	then
 		unhappy_workaround=1
 	fi

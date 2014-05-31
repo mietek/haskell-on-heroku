@@ -122,7 +122,7 @@ function download_any_prepared () {
 		if download_prepared "${src_object}" "${dst_dir}"; then
 			status=0
 		fi
-	done <<< "${src_objects}"
+	done <<<"${src_objects}"
 
 	return "${status}"
 }

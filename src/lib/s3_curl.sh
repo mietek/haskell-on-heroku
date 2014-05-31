@@ -88,7 +88,7 @@ function s3_curl_download () {
 
 	s3_curl_quietly "${src_resource}"           \
 		--output "${dst_dir}/${src_object}" \
-		<<- EOF
+		<<-EOF
 			GET
 
 
@@ -112,7 +112,7 @@ function s3_curl_list () {
 	if ! response=$(
 		s3_curl_quietly "${src_resource}"        \
 			--output >( read_s3_bucket_xml ) \
-			<<- EOF
+			<<-EOF
 				GET
 
 
@@ -141,7 +141,7 @@ function s3_curl_check () {
 	s3_curl_quietly "${src_resource}" \
 		--head                    \
 		--output '/dev/null'      \
-		<<- EOF
+		<<-EOF
 			HEAD
 
 
@@ -164,7 +164,7 @@ function s3_curl_upload () {
 
 	local src_digest
 	src_digest=$(
-		openssl md5 -binary < "${src_file}" |
+		openssl md5 -binary <"${src_file}" |
 			base64
 	) || die
 
@@ -173,7 +173,7 @@ function s3_curl_upload () {
 		--header "x-amz-acl: ${dst_acl}"      \
 		--output '/dev/null'                  \
 		--upload-file "${src_file}"           \
-		<<- EOF
+		<<-EOF
 			PUT
 			${src_digest}
 
@@ -197,7 +197,7 @@ function s3_curl_create () {
 		--header "x-amz-acl: ${dst_acl}" \
 		--output '/dev/null'             \
 		--request PUT                    \
-		<<- EOF
+		<<-EOF
 			PUT
 
 
@@ -223,7 +223,7 @@ function s3_curl_copy () {
 		--header "x-amz-copy-source: ${src_resource}" \
 		--output '/dev/null'                          \
 		--request PUT                                 \
-		<<- EOF
+		<<-EOF
 			PUT
 
 
@@ -247,7 +247,7 @@ function s3_curl_delete () {
 	s3_curl_quietly "${dst_resource}" \
 		--output '/dev/null'      \
 		--request DELETE          \
-		<<- EOF
+		<<-EOF
 			DELETE
 
 

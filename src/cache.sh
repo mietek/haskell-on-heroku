@@ -63,7 +63,7 @@ function clean_cache () {
 
 	if [ -f "${HALCYON}/ghc/tag" ]; then
 		local ghc_tag ghc_archive
-		ghc_tag=$(< "${HALCYON}/ghc/tag" ) || die
+		ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
 		ghc_archive=$( echo_ghc_archive "${ghc_tag}" ) || die
 
 		if [ -f "${HALCYON_CACHE}/${ghc_archive}" ]; then
@@ -73,7 +73,7 @@ function clean_cache () {
 
 	if [ -f "${HALCYON}/cabal/tag" ]; then
 		local cabal_tag cabal_archive
-		cabal_tag=$(< "${HALCYON}/cabal/tag" ) || die
+		cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
 		cabal_archive=$( echo_cabal_archive "${cabal_tag}" ) || die
 
 		if [ -f "${HALCYON_CACHE}/${cabal_archive}" ]; then
@@ -83,7 +83,7 @@ function clean_cache () {
 
 	if [ -f "${HALCYON}/sandbox/tag" ]; then
 		local sandbox_tag sandbox_archive
-		sandbox_tag=$(< "${HALCYON}/sandbox/tag" ) || die
+		sandbox_tag=$( <"${HALCYON}/sandbox/tag" ) || die
 		sandbox_archive=$( echo_sandbox_archive "${sandbox_tag}" ) || die
 
 		if [ -f "${HALCYON_CACHE}/${sandbox_archive}" ]; then

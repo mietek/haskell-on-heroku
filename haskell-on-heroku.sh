@@ -26,7 +26,7 @@ function slug_buildpack () {
 	cp -R "${buildpack_dir}/"* "${slugged_halcyon}/buildpack" || die
 
 	mkdir -p "${build_dir}/.profile.d" || die
-	echo "source \"${HALCYON}/buildpack/haskell-on-heroku.sh\"" > "${build_dir}/.profile.d/haskell-on-heroku.sh" || die
+	echo "source \"${HALCYON}/buildpack/haskell-on-heroku.sh\"" >"${build_dir}/.profile.d/haskell-on-heroku.sh" || die
 }
 
 
@@ -50,7 +50,7 @@ function slug_app () {
 		app_executable=$( detect_app_executable "${build_dir}" ) || die
 		expect "${slugged_halcyon}/app/bin/${app_executable}"
 
-		echo "web: ${HALCYON}/app/bin/${app_executable}" > "${build_dir}/Procfile" || die
+		echo "web: ${HALCYON}/app/bin/${app_executable}" >"${build_dir}/Procfile" || die
 	fi
 }
 
@@ -58,7 +58,7 @@ function slug_app () {
 
 
 function log_compile_succeeded_help () {
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		To see it, use at least one web dyno:
 		$ heroku ps:scale web=1
 		$ heroku open
@@ -72,7 +72,7 @@ EOF
 
 
 function log_compile_failed_help () {
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		To prepare, use a one-off PX dyno:
 		$ heroku run --size=PX prepare
 EOF
@@ -80,7 +80,7 @@ EOF
 
 
 function log_prepare_succeeded_help () {
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		To compile again, commit a change and push, or rebuild:
 		$ heroku plugins:install https://github.com/heroku/heroku-repo.git
 		$ heroku repo:rebuild
@@ -89,7 +89,7 @@ EOF
 
 
 function log_restore_succeeded_help () {
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		To use sandboxed GHCi:
 		$ cabal repl
 EOF
@@ -99,7 +99,7 @@ EOF
 
 
 function log_extend_sandbox_help () {
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		In case of timeout, disable sandbox extending and push again:
 		$ heroku config:set NO_EXTEND_SANDBOX=1
 		$ git push heroku master
@@ -111,13 +111,13 @@ function log_add_config_help () {
 	local sandbox_constraints
 	expect_args sandbox_constraints -- "$@"
 
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		To use explicit constraints, add cabal.config and push again:
-		$ cat > cabal.config << EOF
+		$ cat >cabal.config <<EOF
 EOF
-	echo_constraints <<< "${sandbox_constraints}" >&2 || die
+	echo_constraints <<<"${sandbox_constraints}" >&2 || die
 	echo 'EOF' >&2
-	log_file_indent <<- EOF
+	log_file_indent <<-EOF
 		$ git add cabal.config
 		$ git commit -m 'Use explicit constraints' cabal.config
 		$ git push heroku master

@@ -16,7 +16,7 @@ function curl_quietly () {
 			--show-error               \
 			--write-out "%{http_code}" \
 			"$@"                       \
-			2> '/dev/null'
+			2>'/dev/null'
 	); then
 		status=1
 	fi
