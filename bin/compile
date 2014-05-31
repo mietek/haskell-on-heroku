@@ -7,6 +7,8 @@ source "${self_dir}/../haskell-on-heroku.sh"
 
 
 function heroku_compile () {
+	expect_vars NO_HALCYON_RESTORE
+
 	local build_dir cache_dir env_dir
 	expect_args build_dir cache_dir env_dir -- "$@"
 	expect "${build_dir}"
@@ -35,7 +37,7 @@ function heroku_compile () {
 	prepare_sandbox 0 "${build_dir}" || return 1
 	log
 
-	if ! restore_build "${build_dir}"; then
+	if (( ${NO_HALCYON_RESTORE} )) || ! restore_build "${build_dir}"; then
 		configure_build "${build_dir}" || die
 	fi
 	build "${build_dir}" || die

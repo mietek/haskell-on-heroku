@@ -462,7 +462,7 @@ function prepare_extended_sandbox () {
 
 
 function prepare_sandbox () {
-	expect_vars HALCYON NO_EXTEND_SANDBOX FORCE_SANDBOX_BUILD
+	expect_vars HALCYON NO_HALCYON_RESTORE NO_EXTEND_SANDBOX
 	expect "${HALCYON}/ghc/tag"
 
 	local has_time build_dir
@@ -488,15 +488,13 @@ function prepare_sandbox () {
 	sandbox_label=$( echo_sandbox_label "${ghc_tag}" "${app_label}" ) || die
 	sandbox_tag=$( echo_sandbox_tag "${sandbox_digest}" "${sandbox_label}" ) || die
 
-	if ! (( ${FORCE_SANDBOX_BUILD} )) && restore_sandbox "${sandbox_tag}"; then
+	if ! (( ${NO_HALCYON_RESTORE} )) && restore_sandbox "${sandbox_tag}"; then
 		activate_sandbox "${build_dir}" || die
 		return 0
 	fi
 
-	(( ${has_time} )) || ! (( ${NO_EXTEND_SANDBOX} )) || return 1
-
 	local matched_tag
-	if ! (( ${FORCE_SANDBOX_BUILD} )) &&
+	if ! (( ${NO_HALCYON_RESTORE} )) && ! (( ${NO_EXTEND_SANDBOX} )) &&
 		matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
 		prepare_extended_sandbox "${has_time}" "${build_dir}" "${sandbox_tag}" "${matched_tag}" "${unhappy_workaround}"
 	then

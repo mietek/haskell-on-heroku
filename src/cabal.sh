@@ -574,7 +574,7 @@ function deactivate_cabal () {
 
 
 function prepare_cabal () {
-	expect_vars FORCE_CABAL_UPDATE
+	expect_vars FORCE_CABAL_UPDATE NO_HALCYON_RESTORE
 
 	local has_time
 	expect_args has_time -- "$@"
@@ -582,12 +582,14 @@ function prepare_cabal () {
 	local cabal_version
 	cabal_version=$( infer_cabal_version ) || die
 
-	if ! (( ${FORCE_CABAL_UPDATE} )) && restore_updated_cabal "${cabal_version}"; then
+	if ! (( ${NO_HALCYON_RESTORE} )) && ! (( ${FORCE_CABAL_UPDATE} )) &&
+		restore_updated_cabal "${cabal_version}"
+	then
 		activate_cabal || die
 		return 0
 	fi
 
-	if restore_cabal "${cabal_version}"; then
+	if ! (( ${NO_HALCYON_RESTORE} )) && restore_cabal "${cabal_version}"; then
 		update_cabal || die
 		cache_cabal || die
 		activate_cabal || die
