@@ -44,7 +44,6 @@ function download_original () {
 
 
 
-
 function download_prepared () {
 	local src_object dst_dir
 	expect_args src_object dst_dir -- "$@"

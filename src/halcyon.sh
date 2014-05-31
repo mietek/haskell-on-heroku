@@ -24,9 +24,7 @@ source "${self_dir}/transfer.sh"
 
 
 function set_defaults () {
-	if (( ${HALCYON_DEFAULTS_SET:-0} )); then
-		return 0
-	fi
+	! (( ${HALCYON_DEFAULTS_SET:-0} )) || return 0
 	export HALCYON_DEFAULTS_SET=1
 
 	export HALCYON_S3_URL="${HALCYON_S3_URL:-http://s3.halcyon.sh/}"

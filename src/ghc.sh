@@ -287,7 +287,7 @@ function strip_ghc () {
 
 	case "${ghc_version}" in
 	'7.8.'*)
-		strip --strip-unneeded                                            \
+		strip --strip-unneeded                                                \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/bin/ghc"               \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/bin/ghc-pkg"           \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/bin/hsc2hs"            \
@@ -304,7 +304,7 @@ function strip_ghc () {
 				-print0 |
 			strip0 --strip-unneeded || die;;
 	'7.6.'*)
-		strip --strip-unneeded                              \
+		strip --strip-unneeded                                  \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/ghc"     \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/ghc-pkg" \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/hsc2hs"  \
