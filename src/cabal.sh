@@ -305,12 +305,6 @@ function cabal_install_deps () {
 	if (( ${unhappy_workaround} )); then
 		log_warning "Installing implicit versions of alex and happy"
 		log
-		log_indent "Congratulations!  You have reproduced a complex Cabal issue!"
-		log_indent "Please let the Cabal developers know:"
-		log_indent "https://github.com/haskell/cabal/issues/220"
-		log_indent "https://github.com/haskell/cabal/issues/779"
-		log
-		log
 
 		sandboxed_cabal_silently "${build_dir}" install alex happy || die
 	fi

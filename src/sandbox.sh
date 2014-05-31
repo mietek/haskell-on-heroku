@@ -125,11 +125,6 @@ function validate_sandbox () {
 	log_warning 'Unexpected constraints difference:'
 	echo_constraints_difference "${sandbox_constraints}" "${actual_constraints}" | log_file_indent
 	log
-	log_indent "Congratulations!  You have reproduced a Cabal issue!"
-	log_indent "Please let the Cabal developers know:"
-	log_indent "https://github.com/haskell/cabal/issues/1896"
-	log
-	log
 }
 
 
