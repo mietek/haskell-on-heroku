@@ -63,19 +63,9 @@ function log_error () {
 
 
 
-if [ "$( uname )" = 'Linux' ]; then
-	function log_file_indent () {
-		sed -u "s/^/       /" >&2
-	}
-elif [ "$( uname )" = 'Darwin' ]; then
-	function log_file_indent () {
-		sed -l "s/^/       /"
-	}
-else
-	function log_file_indent () {
-		sed "s/^/       /"
-	}
-fi
+function log_file_indent () {
+	unbuffered_sed "s/^/       /" >&2
+}
 
 
 
