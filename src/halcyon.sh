@@ -27,8 +27,6 @@ function set_defaults () {
 	! (( ${HALCYON_DEFAULTS_SET:-0} )) || return 0
 	export HALCYON_DEFAULTS_SET=1
 
-	export HALCYON_S3_URL="${HALCYON_S3_URL:-http://s3.halcyon.sh/}"
-
 	export HALCYON_PREFIX="${HALCYON_PREFIX:-/app}"
 	export HALCYON_SUFFIX="${HALCYON_SUFFIX:-.halcyon}"
 	export HALCYON="${HALCYON_PREFIX}/${HALCYON_SUFFIX}"

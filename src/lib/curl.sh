@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-function curl_quietly () {
+function curl_do () {
 	local url
 	expect_args url -- "$@"
 	shift
@@ -37,19 +37,18 @@ function curl_quietly () {
 
 
 function curl_download () {
-	local src_url dst_dir
-	expect_args src_url dst_dir -- "$@"
+	local src_file_url dst_file
+	expect_args src_file_url dst_file -- "$@"
+	expect_no "${dst_file}"
 
-	local src_object
-	src_object=$( basename "${src_url}" ) || die
-	expect_no "${dst_dir}/${src_object}"
+	log_indent_begin "Downloading ${src_file_url}..."
 
-	log_indent_begin "Downloading ${src_url}..."
-
+	local dst_dir
+	dst_dir=$( dirname "${dst_file}" ) || die
 	mkdir -p "${dst_dir}" || die
 
-	curl_quietly "${src_url}" \
-		--output "${dst_dir}/${src_object}"
+	curl_do "${src_file_url}" \
+		--output "${dst_file}"
 }
 
 
@@ -59,20 +58,20 @@ function curl_check () {
 
 	log_indent_begin "Checking ${src_url}..."
 
-	curl_quietly "${src_url}" \
-		--head            \
-		--output '/dev/null'
+	curl_do "${src_url}"         \
+		--output '/dev/null' \
+		--head
 }
 
 
 function curl_upload () {
-	local src_file dst_url
-	expect_args src_file dst_url -- "$@"
+	local src_file dst_file_url
+	expect_args src_file dst_file_url -- "$@"
 	expect "${src_file}"
 
-	log_indent_begin "Uploading ${dst_url}..."
+	log_indent_begin "Uploading ${dst_file_url}..."
 
-	curl_quietly "${dst_url}"    \
+	curl_do "${dst_file_url}"    \
 		--output '/dev/null' \
 		--upload-file "${src_file}"
 }
@@ -84,7 +83,7 @@ function curl_delete () {
 
 	log_indent_begin "Deleting ${dst_url}..."
 
-	curl_quietly "${dst_url}"    \
+	curl_do "${dst_url}"         \
 		--output '/dev/null' \
 		--request DELETE
 }

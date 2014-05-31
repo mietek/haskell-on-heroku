@@ -96,6 +96,14 @@ function echo_cabal_archive_tag () {
 }
 
 
+function echo_updated_cabal_archive_prefix () {
+	local cabal_version
+	expect_args cabal_version -- "$@"
+
+	echo "halcyon-cabal-${cabal_version}-"
+}
+
+
 function echo_updated_cabal_archive_pattern () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
@@ -393,12 +401,13 @@ function cache_cabal () {
 
 	log "Caching ${cabal_description}"
 
-	local cabal_archive
+	local cabal_archive os
 	cabal_archive=$( echo_cabal_archive "${cabal_tag}" ) || die
+	os=$( detect_os ) || die
 
 	rm -f "${HALCYON_CACHE}/${cabal_archive}" || die
 	tar_archive "${HALCYON}/cabal" "${HALCYON_CACHE}/${cabal_archive}" || die
-	upload_prepared "${HALCYON_CACHE}/${cabal_archive}" || die
+	upload_prepared "${HALCYON_CACHE}/${cabal_archive}" "${os}" || die
 }
 
 
@@ -417,11 +426,12 @@ function restore_cabal () {
 	fi
 	rm -rf "${HALCYON}/cabal" || die
 
-	local cabal_tag cabal_archive
+	local os cabal_tag cabal_archive
+	os=$( detect_os ) || die
 	cabal_tag=$( echo_cabal_tag "${cabal_version}" '' ) || die
 	cabal_archive=$( echo_cabal_archive "${cabal_tag}" ) || die
 
-	if ! download_prepared "${cabal_archive}" "${HALCYON_CACHE}"; then
+	if ! download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE}"; then
 		log_warning "Cabal ${cabal_version} is not prepared"
 		return 1
 	fi
@@ -485,16 +495,21 @@ function restore_updated_cabal () {
 
 	log "Locating updated Cabal ${cabal_version}"
 
+	local os archive_prefix
+	os=$( detect_os ) || die
+	archive_prefix=$( echo_updated_cabal_archive_prefix "${cabal_version}" ) || die
+
 	local cabal_archive
 	if ! cabal_archive=$(
-		list_prepared |
+		list_prepared "${os}/${archive_prefix}" |
+		sed "s:${os}/::" |
 		match_updated_cabal_archive "${cabal_version}"
 	); then
 		log_warning "No updated Cabal ${cabal_version} is prepared"
 		return 1
 	fi
 
-	download_prepared "${cabal_archive}" "${HALCYON_CACHE}" || die
+	download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE}" || die
 	tar_extract "${HALCYON_CACHE}/${cabal_archive}" "${HALCYON}/cabal" || die
 
 	if ! [ -f "${HALCYON}/cabal/tag" ] ||

@@ -6,21 +6,12 @@ function echo_s3_host () {
 }
 
 
-function echo_s3_resource () {
-	local bucket object
-	expect_args bucket object -- "$@"
-
-	echo "/${bucket}/${object:-}"
-}
-
-
 function echo_s3_url () {
-	local bucket object
-	expect_args bucket object -- "$@"
+	local resource
+	expect_args resource -- "$@"
 
-	local host resource
+	local host
 	host=$( echo_s3_host ) || die
-	resource=$( echo_s3_resource "${bucket}" "${object}" ) || die
 
 	echo "https://${host}${resource}"
 }
@@ -28,7 +19,7 @@ function echo_s3_url () {
 
 
 
-function read_s3_bucket_xml () {
+function read_s3_listing_xml () {
 	IFS='>'
 
 	local element contents
@@ -42,11 +33,11 @@ function read_s3_bucket_xml () {
 
 
 
-function s3_curl_quietly () {
+function s3_do () {
 	expect_vars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
 
-	local resource
-	expect_args resource -- "$@"
+	local url
+	expect_args url -- "$@"
 	shift
 
 	local host date
@@ -55,16 +46,16 @@ function s3_curl_quietly () {
 
 	local signature
 	signature=$(
-		sed "s/HTTP_DATE/${date}/" |
-			perl -pe 'chomp if eof' |
-			openssl sha1 -hmac "${AWS_SECRET_ACCESS_KEY}" -binary |
-			base64
+		sed "s/S3_DATE/${date}/" |
+		perl -pe 'chomp if eof' |
+		openssl sha1 -hmac "${AWS_SECRET_ACCESS_KEY}" -binary |
+		base64
 	) || die
 
 	local auth
 	auth="AWS ${AWS_ACCESS_KEY_ID}:${signature}"
 
-	curl_quietly "https://${host}${resource}" \
+	curl_do "${url}"                          \
 		--header "Host: ${host}"          \
 		--header "Date: ${date}"          \
 		--header "Authorization: ${auth}" \
@@ -74,50 +65,57 @@ function s3_curl_quietly () {
 
 
 
-function s3_curl_download () {
-	local src_bucket src_object dst_dir
-	expect_args src_bucket src_object dst_dir -- "$@"
-	expect_no "${dst_dir}/${src_object}"
+function s3_download () {
+	local src_bucket src_object dst_file
+	expect_args src_bucket src_object dst_file -- "$@"
+	expect_no "${dst_file}"
 
 	local src_resource
-	src_resource=$( echo_s3_resource "${src_bucket}" "${src_object}" ) || die
+	src_resource="/${src_bucket}/${src_object}"
 
 	log_indent_begin "Downloading s3:/${src_resource}..."
 
+	local src_url dst_dir
+	src_url=$( echo_s3_url "${src_resource}" ) || die
+	dst_dir=$( dirname "${dst_file}" ) || die
 	mkdir -p "${dst_dir}" || die
 
-	s3_curl_quietly "${src_resource}"           \
-		--output "${dst_dir}/${src_object}" \
+	s3_do "${src_url}"             \
+		--output "${dst_file}" \
 		<<-EOF
 			GET
 
 
-			HTTP_DATE
+			S3_DATE
 			${src_resource}
 EOF
 }
 
 
-function s3_curl_list () {
-	local src_bucket
-	expect_args src_bucket -- "$@"
+function s3_list () {
+	local src_bucket src_prefix
+	expect_args src_bucket src_prefix -- "$@"
 
-	local src_resource
-	src_resource=$( echo_s3_resource "${src_bucket}" '' ) || die
+	local bucket_resource src_resource
+	bucket_resource="/${src_bucket}/"
+	src_resource="${bucket_resource}${src_prefix:+?prefix=${src_prefix}}"
 
 	log_indent_begin "Listing s3:/${src_resource}..."
+
+	local src_url
+	src_url=$( echo_s3_url "${src_resource}" ) || die
 
 	local status response
 	status=0
 	if ! response=$(
-		s3_curl_quietly "${src_resource}"        \
-			--output >( read_s3_bucket_xml ) \
+		s3_do "${src_url}"                        \
+			--output >( read_s3_listing_xml ) \
 			<<-EOF
 				GET
 
 
-				HTTP_DATE
-				${src_resource}
+				S3_DATE
+				${bucket_resource}
 EOF
 	); then
 		status=1
@@ -129,105 +127,116 @@ EOF
 }
 
 
-function s3_curl_check () {
+function s3_check () {
 	local src_bucket src_object
 	expect_args src_bucket src_object -- "$@"
 
 	local src_resource
-	src_resource=$( echo_s3_resource "${src_bucket}" "${src_object}" ) || die
+	src_resource="/${src_bucket}/${src_object}"
 
 	log_indent_begin "Checking s3:/${src_resource}..."
 
-	s3_curl_quietly "${src_resource}" \
-		--head                    \
-		--output '/dev/null'      \
+	local src_url
+	src_url=$( echo_s3_url "${src_resource}" ) || die
+
+	s3_do "${src_url}"           \
+		--output '/dev/null' \
+		--head               \
 		<<-EOF
 			HEAD
 
 
-			HTTP_DATE
+			S3_DATE
 			${src_resource}
 EOF
 }
 
 
-function s3_curl_upload () {
-	local src_file dst_bucket dst_acl
-	expect_args src_file dst_bucket dst_acl -- "$@"
+function s3_upload () {
+	local src_file dst_bucket dst_object dst_acl
+	expect_args src_file dst_bucket dst_object dst_acl -- "$@"
 	expect "${src_file}"
 
-	local src_object dst_resource
-	src_object=$( basename "${src_file}" ) || die
-	dst_resource=$( echo_s3_resource "${dst_bucket}" "${src_object}" ) || die
+	local dst_resource
+	dst_resource="/${dst_bucket}/${dst_object}"
 
 	log_indent_begin "Uploading s3:/${dst_resource}..."
 
 	local src_digest
 	src_digest=$(
 		openssl md5 -binary <"${src_file}" |
-			base64
+		base64
 	) || die
 
-	s3_curl_quietly "${dst_resource}"             \
+	local dst_url
+	dst_url=$( echo_s3_url "${dst_resource}" ) || die
+
+	s3_do "${dst_url}"                            \
+		--output '/dev/null'                  \
 		--header "Content-MD5: ${src_digest}" \
 		--header "x-amz-acl: ${dst_acl}"      \
-		--output '/dev/null'                  \
 		--upload-file "${src_file}"           \
 		<<-EOF
 			PUT
 			${src_digest}
 
-			HTTP_DATE
+			S3_DATE
 			x-amz-acl:${dst_acl}
 			${dst_resource}
 EOF
 }
 
 
-function s3_curl_create () {
+function s3_create () {
 	local dst_bucket dst_acl
 	expect_args dst_bucket dst_acl -- "$@"
 
 	local dst_resource
-	dst_resource=$( echo_s3_resource "${dst_bucket}" '' ) || die
+	dst_resource="/${dst_bucket}/"
 
 	log_indent_begin "Creating s3:/${dst_resource}..."
 
-	s3_curl_quietly "${dst_resource}"        \
-		--header "x-amz-acl: ${dst_acl}" \
+	local dst_url
+	dst_url=$( echo_s3_url "${dst_resource}" ) || die
+
+	s3_do "${dst_url}"                       \
 		--output '/dev/null'             \
+		--header "x-amz-acl: ${dst_acl}" \
 		--request PUT                    \
 		<<-EOF
 			PUT
 
 
-			HTTP_DATE
+			S3_DATE
 			x-amz-acl:${dst_acl}
 			${dst_resource}
 EOF
 }
 
 
-function s3_curl_copy () {
-	local src_object src_bucket dst_object dst_bucket dst_acl
-	expect_args src_object src_bucket dst_object dst_bucket dst_acl -- "$@"
+function s3_copy () {
+	local src_bucket src_object dst_bucket dst_object dst_acl
+	expect_args src_bucket src_object dst_bucket dst_object dst_acl -- "$@"
 
 	local src_resource dst_resource
-	src_resource=$( echo_s3_resource "${src_bucket}" "${src_object}" ) || die
-	dst_resource=$( echo_s3_resource "${dst_bucket}" "${dst_object}" ) || die
+	src_resource="/${src_bucket}/${src_object}"
+	dst_resource="/${dst_bucket}/${dst_object}"
 
-	log_indent_begin "Copying s3:/${src_resource} to s3:/${dst_resource}..."
+	log_indent_begin "Copying s3:/${src_resource} to s3:/${src_resource}..."
 
-	s3_curl_quietly "${dst_resource}"                     \
+	local dst_url
+	dst_url=$( echo_s3_url "${dst_resource}" ) || die
+
+	s3_do "${dst_url}"                                    \
+		--output '/dev/null'                          \
 		--header "x-amz-acl: ${dst_acl}"              \
 		--header "x-amz-copy-source: ${src_resource}" \
-		--output '/dev/null'                          \
 		--request PUT                                 \
 		<<-EOF
 			PUT
 
 
-			HTTP_DATE
+			S3_DATE
 			x-amz-acl:${dst_acl}
 			x-amz-copy-source:${src_resource}
 			${dst_resource}
@@ -235,23 +244,26 @@ EOF
 }
 
 
-function s3_curl_delete () {
+function s3_delete () {
 	local dst_bucket dst_object
 	expect_args dst_bucket dst_object -- "$@"
 
 	local dst_resource
-	dst_resource=$( echo_s3_resource "${dst_bucket}" "${dst_object}" ) || die
+	dst_resource="/${dst_bucket}/${dst_object}"
 
 	log_indent_begin "Deleting s3:/${dst_resource}..."
 
-	s3_curl_quietly "${dst_resource}" \
-		--output '/dev/null'      \
-		--request DELETE          \
+	local dst_url
+	dst_url=$( echo_s3_url "${dst_resource}" ) || die
+
+	s3_do "${dst_url}"           \
+		--output '/dev/null' \
+		--request DELETE     \
 		<<-EOF
 			DELETE
 
 
-			HTTP_DATE
+			S3_DATE
 			${dst_resource}
 EOF
 }

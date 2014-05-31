@@ -1,7 +1,22 @@
 #!/usr/bin/env bash
 
 
-function echo_ghc_original_url () {
+function echo_ghc_libgmp10_x64_original_url () {
+	local ghc_version
+	expect_args ghc_version -- "$@"
+
+	case "${ghc_version}" in
+	'7.8.2')
+		echo 'http://www.haskell.org/ghc/dist/7.8.2/ghc-7.8.2-x86_64-unknown-linux-deb7.tar.xz';;
+	'7.8.1')
+		echo 'http://www.haskell.org/ghc/dist/7.8.1/ghc-7.8.1-x86_64-unknown-linux-deb7.tar.xz';;
+	*)
+		die "Unexpected GHC version for use with libgmp.so.10: ${ghc_version}"
+	esac
+}
+
+
+function echo_ghc_libgmp3_x64_original_url () {
 	local ghc_version
 	expect_args ghc_version -- "$@"
 
@@ -47,7 +62,7 @@ function echo_ghc_original_url () {
 	'6.10.1')
 		echo 'http://www.haskell.org/ghc/dist/6.10.1/ghc-6.10.1-x86_64-unknown-linux-libedit2.tar.bz2';;
 	*)
-		die "Unexpected GHC version: ${ghc_version}"
+		die "Unexpected GHC version for use with libgmp.so.3: ${ghc_version}"
 	esac
 }
 
@@ -149,6 +164,80 @@ function validate_ghc_tag () {
 
 
 
+function detect_base_version () {
+	expect_vars HALCYON
+	expect "${HALCYON}/ghc"
+
+	ghc-pkg list --simple-output |
+		grep -oE '\bbase-[0-9\.]+\b' |
+		sed 's/^base-//' || die
+}
+
+
+
+
+function prepare_ghc_libs () {
+	expect_vars HALCYON
+	expect_no "${HALCYON}/ghc/lib"
+
+	local ghc_version
+	expect_args ghc_version -- "$@"
+
+	local os
+	os=$( detect_os ) || die
+
+	case "${os}-ghc-${ghc_version}" in
+	'linux-ubuntu-14-04-x64-ghc-7.8.'*)
+		libtinfo5_file='/lib/x86_64-linux-gnu/libtinfo.so.5'
+		libgmp10_file='/usr/lib/x86_64-linux-gnu/libgmp.so.10'
+		expect "${libtinfo5_file}" "${libgmp10_file}"
+
+		mkdir -p "${HALCYON}/ghc/lib" || die
+		ln -s "${libgmp10_file}" "${HALCYON}/ghc/lib/libgmp.so" || die
+
+		echo_ghc_libgmp10_x64_original_url "${ghc_version}" || die
+		;;
+	'linux-ubuntu-12-04-x64-ghc-7.8.'*)
+		libtinfo5_file='/lib/x86_64-linux-gnu/libtinfo.so.5'
+		libgmp10_file='/usr/lib/x86_64-linux-gnu/libgmp.so.10'
+		expect "${libtinfo5_file}" "${libgmp10_file}"
+
+		mkdir -p "${HALCYON}/ghc/lib" || die
+		ln -s "${libgmp10_file}" "${HALCYON}/ghc/lib/libgmp.so" || die
+
+		echo_ghc_libgmp10_x64_original_url "${ghc_version}" || die
+		;;
+	'linux-ubuntu-12-04-x64-ghc-7.6.'*)
+		libtinfo5_file='/lib/x86_64-linux-gnu/libtinfo.so.5'
+		libgmp3_file='/usr/lib/libgmp.so.3'
+		expect "${libtinfo5_file}" "${libgmp3_file}"
+
+		mkdir -p "${HALCYON}/ghc/lib" || die
+		ln -s "${libgmp3_file}" "${HALCYON}/ghc/lib/libgmp.so" || die
+
+		echo_ghc_libgmp3_x64_original_url "${ghc_version}" || die
+		;;
+	'linux-ubuntu-10-04-x64-ghc-7.'[68]'.'*)
+		libncurses5_file='/lib/libncurses.so.5'
+		libgmp3_file='/usr/lib/libgmp.so.3'
+		expect "${libncurses5_file}" "${libgmp3_file}"
+
+		mkdir -p "${HALCYON}/ghc/lib" || die
+		ln -s "${libncurses5_file}" "${HALCYON}/ghc/lib/libtinfo.so.5" || die
+		ln -s "${libgmp3_file}" "${HALCYON}/ghc/lib/libgmp.so" || die
+
+		echo_ghc_libgmp3_x64_original_url "${ghc_version}" || die
+		;;
+	*)
+		local os_description
+		os_description=$( echo_os_description "${os}" ) || die
+		die "Installing GHC ${ghc_version} on ${os_description} is not implemented yet"
+	esac
+}
+
+
+
+
 function build_ghc () {
 	expect_vars HALCYON HALCYON_CACHE
 	expect_no "${HALCYON}/ghc"
@@ -158,8 +247,10 @@ function build_ghc () {
 
 	log "Building GHC ${ghc_version}"
 
-	local original_url original_archive tmp_dir
-	original_url=$( echo_ghc_original_url "${ghc_version}" ) || die
+	local original_url
+	original_url=$( prepare_ghc_libs "${ghc_version}" ) || die
+
+	local original_archive tmp_dir
 	original_archive=$( basename "${original_url}" ) || die
 	tmp_dir=$( echo_ghc_tmp_dir ) || die
 
@@ -170,22 +261,6 @@ function build_ghc () {
 	tar_extract "${HALCYON_CACHE}/${original_archive}" "${tmp_dir}" || die
 
 	log "Installing GHC ${ghc_version}"
-
-	case "${ghc_version}" in
-	'7.8.'*)
-		expect '/usr/lib/libncurses.so.5' '/usr/lib/libgmp.so.3'
-
-		mkdir -p "${HALCYON}/ghc/lib" || die
-		ln -s '/usr/lib/libncurses.so.5' "${HALCYON}/ghc/lib/libtinfo.so.5" || die
-		ln -s '/usr/lib/libgmp.so.3' "${HALCYON}/ghc/lib/libgmp.so" || die;;
-	'7.6.'*)
-		expect '/usr/lib/libgmp.so.3'
-
-		mkdir -p "${HALCYON}/ghc/lib" || die
-		ln -s '/usr/lib/libgmp.so.3' "${HALCYON}/ghc/lib/libgmp.so" || die;;
-	*)
-		die "Installing GHC ${ghc_version} is not implemented yet"
-	esac
 
 	if ! (
 		cd "${tmp_dir}/ghc-${ghc_version}" &&
@@ -334,12 +409,13 @@ function cache_ghc () {
 
 	log "Caching ${ghc_description}"
 
-	local ghc_archive
+	local ghc_archive os
 	ghc_archive=$( echo_ghc_archive "${ghc_tag}" ) || die
+	os=$( detect_os ) || die
 
 	rm -f "${HALCYON_CACHE}/${ghc_archive}" || die
 	tar_archive "${HALCYON}/ghc" "${HALCYON_CACHE}/${ghc_archive}" || die
-	upload_prepared "${HALCYON_CACHE}/${ghc_archive}" || die
+	upload_prepared "${HALCYON_CACHE}/${ghc_archive}" "${os}" || die
 }
 
 
@@ -361,10 +437,11 @@ function restore_ghc () {
 	fi
 	rm -rf "${HALCYON}/ghc" || die
 
-	local ghc_archive
+	local os ghc_archive
+	os=$( detect_os ) || die
 	ghc_archive=$( echo_ghc_archive "${ghc_tag}" ) || die
 
-	if ! download_prepared "${ghc_archive}" "${HALCYON_CACHE}"; then
+	if ! download_prepared "${os}" "${ghc_archive}" "${HALCYON_CACHE}"; then
 		log_warning "${ghc_description} is not prepared"
 		return 1
 	fi

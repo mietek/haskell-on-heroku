@@ -80,6 +80,17 @@ function echo_sandbox_config_tag () {
 }
 
 
+function echo_sandbox_config_prefix () {
+	local ghc_tag
+	expect_args ghc_tag -- "$@"
+
+	local ghc_version
+	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
+
+	echo "halcyon-sandbox-ghc-${ghc_version}"
+}
+
+
 function echo_sandbox_config_pattern () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
@@ -206,15 +217,16 @@ function cache_sandbox () {
 
 	log "Caching sandbox ${sandbox_label}"
 
-	local sandbox_archive sandbox_config
+	local sandbox_archive sandbox_config os
 	sandbox_archive=$( echo_sandbox_archive "${sandbox_tag}" ) || die
 	sandbox_config=$( echo_sandbox_config "${sandbox_tag}" ) || die
+	os=$( detect_os ) || die
 
 	rm -f "${HALCYON_CACHE}/${sandbox_archive}" "${HALCYON_CACHE}/${sandbox_config}" || die
 	tar_archive "${HALCYON}/sandbox" "${HALCYON_CACHE}/${sandbox_archive}" || die
 	cp "${HALCYON}/sandbox/cabal.config" "${HALCYON_CACHE}/${sandbox_config}" || die
-	upload_prepared "${HALCYON_CACHE}/${sandbox_archive}" || die
-	upload_prepared "${HALCYON_CACHE}/${sandbox_config}" || die
+	upload_prepared "${HALCYON_CACHE}/${sandbox_archive}" "${os}" || die
+	upload_prepared "${HALCYON_CACHE}/${sandbox_config}" "${os}" || die
 }
 
 
@@ -236,10 +248,11 @@ function restore_sandbox () {
 	fi
 	rm -rf "${HALCYON}/sandbox" || die
 
-	local sandbox_archive
+	local os sandbox_archive
+	os=$( detect_os ) || die
 	sandbox_archive=$( echo_sandbox_archive "${sandbox_tag}" ) || die
 
-	if ! download_prepared "${sandbox_archive}" "${HALCYON_CACHE}"; then
+	if ! download_prepared "${os}" "${sandbox_archive}" "${HALCYON_CACHE}"; then
 		log_warning "Sandbox ${sandbox_label} is not prepared"
 		return 1
 	fi
@@ -308,13 +321,16 @@ function locate_matched_sandbox_tag () {
 
 	log 'Locating matched sandboxes'
 
-	local ghc_tag config_pattern
+	local os ghc_tag config_prefix config_pattern
+	os=$( detect_os ) || die
 	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
+	config_prefix=$( echo_sandbox_config_prefix "${ghc_tag}" ) || die
 	config_pattern=$( echo_sandbox_config_pattern "${ghc_tag}" ) || die
 
 	local matched_configs
 	if ! matched_configs=$(
-		list_prepared |
+		list_prepared "${os}/${config_prefix}" |
+		sed "s:${os}/::" |
 		filter_matching "^${config_pattern}$" |
 		sort_naturally |
 		match_at_least_one
@@ -323,7 +339,7 @@ function locate_matched_sandbox_tag () {
 		return 1
 	fi
 
-	download_any_prepared "${matched_configs}" "${HALCYON_CACHE}" || die
+	download_any_prepared "${os}" "${matched_configs}" "${HALCYON_CACHE}" || die
 
 	log "Scoring matched sandboxes"
 
