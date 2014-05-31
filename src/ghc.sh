@@ -132,11 +132,6 @@ function echo_ghc_tmp_dir () {
 }
 
 
-function echo_ghc_tmp_log () {
-	mktemp -u "/tmp/halcyon-ghc.log.XXXXXXXXXX"
-}
-
-
 
 
 function validate_ghc_tag () {
@@ -163,11 +158,10 @@ function build_ghc () {
 
 	log "Building GHC ${ghc_version}"
 
-	local original_url original_archive tmp_dir tmp_log
+	local original_url original_archive tmp_dir
 	original_url=$( echo_ghc_original_url "${ghc_version}" ) || die
 	original_archive=$( basename "${original_url}" ) || die
 	tmp_dir=$( echo_ghc_tmp_dir ) || die
-	tmp_log=$( echo_ghc_tmp_log ) || die
 
 	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE}"; then
 		die "GHC ${ghc_version} is not available"
@@ -195,14 +189,13 @@ function build_ghc () {
 
 	if ! (
 		cd "${tmp_dir}/ghc-${ghc_version}" &&
-		./configure --prefix="${HALCYON}/ghc" &>"${tmp_log}" &&
-		make install &>>"${tmp_log}"
+		silently ./configure --prefix="${HALCYON}/ghc" &&
+		silently make install
 	); then
-		log_file_indent <"${tmp_log}"
 		die 'Installing GHC failed'
 	fi
 
-	rm -rf "${HALCYON}/ghc/share" "${tmp_dir}" "${tmp_log}" || die
+	rm -rf "${HALCYON}/ghc/share" "${tmp_dir}" || die
 
 	echo_ghc_tag "${ghc_version}" 'uncut' >"${HALCYON}/ghc/tag" || die
 

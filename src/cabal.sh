@@ -131,11 +131,6 @@ function echo_cabal_tmp_dir () {
 }
 
 
-function echo_cabal_tmp_log () {
-	mktemp -u "/tmp/halcyon-cabal.log.XXXXXXXXXX"
-}
-
-
 
 
 function validate_cabal_tag () {
@@ -205,31 +200,7 @@ function match_updated_cabal_archive () {
 
 
 
-function cabal_silently () {
-	expect_vars HALCYON
-	expect "${HALCYON}/cabal/tag"
-
-	local work_dir
-	expect_args work_dir -- "$@"
-	shift
-	expect "${work_dir}"
-
-	local tmp_log
-	tmp_log=$( echo_cabal_tmp_log ) || die
-
-	if ! (
-		cd "${work_dir}" &&
-		cabal --config-file="${HALCYON}/cabal/config" "$@" &>"${tmp_log}"
-	); then
-		log_file_indent <"${tmp_log}"
-		die 'Using Cabal failed'
-	fi
-
-	rm -f "${tmp_log}" || die
-}
-
-
-function cabal_verbosely () {
+function cabal_do () {
 	expect_vars HALCYON
 	expect "${HALCYON}/cabal/tag"
 
@@ -240,35 +211,21 @@ function cabal_verbosely () {
 
 	if ! (
 		cd "${work_dir}" &&
-		cabal --config-file="${HALCYON}/cabal/config" "$@" |& log_file_indent
+		cabal --config-file="${HALCYON}/cabal/config" "$@"
 	); then
 		die 'Using Cabal failed'
 	fi
 }
 
 
-
-
-function sandboxed_cabal_silently () {
+function sandboxed_cabal_do () {
 	expect_vars HALCYON
 
 	local work_dir
 	expect_args work_dir -- "$@"
 	shift
 
-	cabal_silently "${work_dir}" \
-		--sandbox-config-file="${HALCYON}/sandbox/cabal.sandbox.config" "$@"
-}
-
-
-function sandboxed_cabal_verbosely () {
-	expect_vars HALCYON
-
-	local work_dir
-	expect_args work_dir -- "$@"
-	shift
-
-	cabal_verbosely "${work_dir}" \
+	cabal_do "${work_dir}" \
 		--sandbox-config-file="${HALCYON}/sandbox/cabal.sandbox.config" "$@"
 }
 
@@ -276,7 +233,7 @@ function sandboxed_cabal_verbosely () {
 
 
 function cabal_update () {
-	cabal_silently '.' update || die
+	silently cabal_do '.' update || die
 }
 
 
@@ -286,7 +243,7 @@ function cabal_create_sandbox () {
 	expect_no "${sandbox_dir}"
 
 	mkdir -p "${sandbox_dir}" || die
-	cabal_silently "${sandbox_dir}" sandbox init --sandbox '.' || die
+	silently cabal_do "${sandbox_dir}" sandbox init --sandbox '.' || die
 }
 
 
@@ -294,7 +251,7 @@ function cabal_install () {
 	local build_dir
 	expect_args build_dir -- "$@"
 
-	sandboxed_cabal_silently "${build_dir}" install "$@" || die
+	silently sandboxed_cabal_do "${build_dir}" install "$@" || die
 }
 
 
@@ -306,10 +263,10 @@ function cabal_install_deps () {
 		log_warning "Installing implicit versions of alex and happy"
 		log
 
-		sandboxed_cabal_silently "${build_dir}" install alex happy || die
+		silently sandboxed_cabal_do "${build_dir}" install alex happy || die
 	fi
 
-	sandboxed_cabal_silently "${build_dir}" install --dependencies-only || die
+	silently sandboxed_cabal_do "${build_dir}" install --dependencies-only || die
 }
 
 
@@ -319,7 +276,7 @@ function cabal_configure_app () {
 	local build_dir
 	expect_args build_dir -- "$@"
 
-	sandboxed_cabal_verbosely "${build_dir}" configure --prefix="${HALCYON}/app" || die
+	silently sandboxed_cabal_do "${build_dir}" configure --prefix="${HALCYON}/app" || die
 }
 
 
@@ -327,8 +284,8 @@ function cabal_build_app () {
 	local build_dir
 	expect_args build_dir -- "$@"
 
-	sandboxed_cabal_verbosely "${build_dir}" build || die
-	sandboxed_cabal_silently "${build_dir}" copy || die
+	silently sandboxed_cabal_do "${build_dir}" build || die
+	silently sandboxed_cabal_do "${build_dir}" copy || die
 }
 
 
@@ -344,11 +301,10 @@ function build_cabal () {
 
 	log "Building Cabal ${cabal_version}"
 
-	local original_url original_archive tmp_dir tmp_log
+	local original_url original_archive tmp_dir
 	original_url=$( echo_cabal_original_url "${cabal_version}" ) || die
 	original_archive=$( basename "${original_url}" ) || die
 	tmp_dir=$( echo_cabal_tmp_dir ) || die
-	tmp_log=$( echo_cabal_tmp_log ) || die
 
 	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE}"; then
 		die "Cabal ${cabal_version} is not available"
@@ -385,15 +341,14 @@ EOF
 		export EXTRA_CONFIGURE_OPTS="--extra-lib-dirs=${HALCYON}/ghc/lib -O2" &&
 		alias curl="curl -fsS" &&
 		cd "${tmp_dir}/cabal-install-${cabal_version}" &&
-		./bootstrap.sh --no-doc &>"${tmp_log}"
+		silently ./bootstrap.sh --no-doc
 	); then
-		log_file_indent <"${tmp_log}"
 		die 'Bootstrapping Cabal failed'
 	fi
 
 	mkdir -p "${HALCYON}/cabal/bin" || die
 	mv "${HOME}/.cabal/bin/cabal" "${HALCYON}/cabal/bin/cabal" || die
-	rm -rf "${HOME}/.cabal" "${HOME}/.ghc" "${tmp_dir}" "${tmp_log}" || die
+	rm -rf "${HOME}/.cabal" "${HOME}/.ghc" "${tmp_dir}" || die
 
 	echo_cabal_config >"${HALCYON}/cabal/config" || die
 	echo_cabal_tag "${cabal_version}" '' >"${HALCYON}/cabal/tag" || die

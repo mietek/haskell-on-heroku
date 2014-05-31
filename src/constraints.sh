@@ -148,9 +148,9 @@ function freeze_constraints () {
 	fi
 
 	if (( ${implicit} )); then
-		cabal_silently "${build_dir}" --no-require-sandbox freeze || die
+		silently cabal_do "${build_dir}" --no-require-sandbox freeze || die
 	else
-		sandboxed_cabal_silently "${build_dir}" freeze || die
+		silently sandboxed_cabal_do "${build_dir}" freeze || die
 	fi
 
 	local sandbox_constraints

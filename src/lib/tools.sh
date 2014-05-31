@@ -205,3 +205,27 @@ function compare_recursively () {
 		sort_naturally |
 		awk '{ print $2 " " $1 }'
 }
+
+
+
+
+function silently () {
+	expect_vars SILENCE_HALCYON_OUTPUT
+
+	expect_args cmd -- "$@"
+	shift
+
+	if (( ${SILENCE_HALCYON_OUTPUT} )); then
+		local tmp_log
+		tmp_log=$( mktemp -u "/tmp/${cmd}.log.XXXXXXXXXX" ) || die
+
+		if ! "${cmd}" "$@" >&"${tmp_log}"; then
+			log_file_indent <"${tmp_log}"
+			die
+		fi
+
+		rm -f "${tmp_log}" || die
+	else
+		"${cmd}" "$@" |& log_file_indent || die
+	fi
+}
