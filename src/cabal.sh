@@ -237,8 +237,34 @@ function sandboxed_cabal_do () {
 	expect_args work_dir -- "$@"
 	shift
 
-	cabal_do "${work_dir}" \
-		--sandbox-config-file="${HALCYON}/sandbox/cabal.sandbox.config" "$@"
+	# NOTE: Specifying a sandbox config file should not change where Cabal looks
+	# for a config file.
+	# https://github.com/haskell/cabal/issues/1915
+
+	local saved_config
+	saved_config=''
+	if [ -f "${work_dir}/cabal.config" ]; then
+		if [ -f "${HALCYON}/sandbox/cabal.config" ]; then
+			saved_config=$( echo_sandbox_tmp_config ) || die
+			mv "${HALCYON}/sandbox/cabal.config" "${saved_config}" || die
+		fi
+		cp "${work_dir}/cabal.config" "${HALCYON}/sandbox/cabal.config" || die
+	fi
+
+	local status
+	status=0
+	if ! cabal_do "${work_dir}"                                             \
+		--sandbox-config-file="${HALCYON}/sandbox/cabal.sandbox.config" \
+		"$@"
+	then
+		status=1
+	fi
+
+	if [ -n "${saved_config}" ]; then
+		mv "${saved_config}" "${HALCYON}/sandbox/cabal.config" || die
+	fi
+
+	return "${status}"
 }
 
 
@@ -270,6 +296,15 @@ function cabal_install () {
 function cabal_install_deps () {
 	local build_dir unhappy_workaround
 	expect_args build_dir unhappy_workaround -- "$@"
+
+	# NOTE: Listing executable-only packages in build-tools causes Cabal to
+	# expect the executables to be installed, but not to install the packages.
+	# https://github.com/haskell/cabal/issues/220
+
+	# NOTE: Listing executable-only packages in build-depends causes Cabal to
+	# install the packages, and to fail to recognise the packages have been
+	# installed.
+	# https://github.com/haskell/cabal/issues/779
 
 	if (( ${unhappy_workaround} )); then
 		log_warning "Installing implicit versions of alex and happy"

@@ -127,6 +127,9 @@ function detect_constraints () {
 	expect_args build_dir -- "$@"
 	expect "${build_dir}/cabal.config"
 
+	# NOTE: An application should not be its own dependency.
+	# https://github.com/haskell/cabal/issues/1908
+
 	local app_constraint
 	app_constraint=$( detect_app_constraint "${build_dir}" ) || die
 
@@ -144,11 +147,14 @@ function freeze_constraints () {
 	expect_args build_dir implicit -- "$@"
 	expect "${build_dir}"
 
+	# NOTE: Cabal freeze should be able to output to stdout.
+	# https://github.com/haskell/cabal/issues/1916
+
 	local saved_config
 	saved_config=''
 	if [ -f "${build_dir}/cabal.config" ]; then
 		saved_config=$( echo_constraints_tmp_config ) || die
-		mv "${build_dir}/cabal.config" "${saved_config}"
+		mv "${build_dir}/cabal.config" "${saved_config}" || die
 	fi
 
 	if (( ${implicit} )); then

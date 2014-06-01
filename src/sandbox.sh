@@ -135,6 +135,13 @@ function echo_sandbox_description () {
 
 
 
+function echo_sandbox_tmp_config () {
+	mktemp -u "/tmp/halcyon-sandbox.cabal.config.XXXXXXXXXX"
+}
+
+
+
+
 function validate_sandbox_tag () {
 	local sandbox_tag
 	expect_args sandbox_tag -- "$@"
@@ -154,6 +161,9 @@ function validate_sandbox () {
 
 	local sandbox_digest
 	sandbox_digest=$( echo_sandbox_tag_digest "${sandbox_tag}" ) || die
+
+	# NOTE: Frozen constraints should never differ before and after installation.
+	# https://github.com/haskell/cabal/issues/1896
 
 	local actual_constraints actual_digest
 	actual_constraints=$( freeze_constraints "${build_dir}" 0 ) || die
@@ -175,8 +185,8 @@ function build_sandbox () {
 	expect_vars HALCYON
 	expect "${HALCYON}/ghc/tag" "${HALCYON}/cabal/tag"
 
-	local build_dir sandbox_tag unhappy_workaround
-	expect_args build_dir sandbox_tag unhappy_workaround -- "$@"
+	local build_dir sandbox_constraints unhappy_workaround sandbox_tag
+	expect_args build_dir sandbox_constraints unhappy_workaround sandbox_tag -- "$@"
 	expect "${build_dir}"
 
 	local sandbox_description
@@ -191,21 +201,16 @@ function build_sandbox () {
 
 	rm -rf "${HALCYON}/sandbox/logs" "${HALCYON}/sandbox/share" || die
 
-	local sandbox_constraints
-	if [ -f "${build_dir}/cabal.config" ]; then
-		sandbox_constraints=$( detect_constraints "${build_dir}" ) || die
-	else
-		sandbox_constraints=$( freeze_constraints "${build_dir}" 1 ) || die
-	fi
-
-	validate_sandbox "${build_dir}" "${sandbox_tag}" "${sandbox_constraints}" || die
-
 	echo_constraints <<<"${sandbox_constraints}" >"${HALCYON}/sandbox/cabal.config" || die
 	echo "${sandbox_tag}" >"${HALCYON}/sandbox/tag" || die
 
 	local sandbox_size
 	sandbox_size=$( measure_recursively "${HALCYON}/sandbox" ) || die
 	log "Built ${sandbox_description}, ${sandbox_size}"
+
+	log "Validating ${sandbox_description}"
+
+	validate_sandbox "${build_dir}" "${sandbox_tag}" "${sandbox_constraints}" || die
 }
 
 
@@ -465,8 +470,8 @@ function deactivate_sandbox () {
 function prepare_extended_sandbox () {
 	expect_vars HALCYON
 
-	local has_time build_dir sandbox_tag matched_tag unhappy_workaround
-	expect_args has_time build_dir sandbox_tag matched_tag unhappy_workaround -- "$@"
+	local has_time build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag
+	expect_args has_time build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag -- "$@"
 
 	if ! restore_sandbox "${matched_tag}"; then
 		return 1
@@ -496,7 +501,9 @@ function prepare_extended_sandbox () {
 		log
 	fi
 
-	build_sandbox "${build_dir}" "${sandbox_tag}" "${unhappy_workaround}" || die
+	rm -f "${HALCYON}/sandbox/tag" "${HALCYON}/sandbox/cabal.config" || die
+
+	build_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" || die
 	strip_sandbox || die
 	cache_sandbox || die
 	activate_sandbox "${build_dir}" || die
@@ -538,14 +545,14 @@ function prepare_sandbox () {
 	local matched_tag
 	if ! (( ${NO_HALCYON_RESTORE} )) && ! (( ${NO_EXTEND_SANDBOX} )) &&
 		matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
-		prepare_extended_sandbox "${has_time}" "${build_dir}" "${sandbox_tag}" "${matched_tag}" "${unhappy_workaround}"
+		prepare_extended_sandbox "${has_time}" "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
 	then
 		return 0
 	fi
 
 	(( ${has_time} )) || return 1
 
-	build_sandbox "${build_dir}" "${sandbox_tag}" "${unhappy_workaround}" || die
+	build_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" || die
 	strip_sandbox || die
 	cache_sandbox || die
 	activate_sandbox "${build_dir}" || die
