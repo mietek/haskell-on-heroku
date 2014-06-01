@@ -99,7 +99,7 @@ function detect_package () {
 	local package_file
 	if ! package_file=$(
 		find_spaceless "${build_dir}" -maxdepth 1 -name '*.cabal' |
-			match_exactly_one
+		match_exactly_one
 	); then
 		die "Expected exactly one ${build_dir}/*.cabal"
 	fi
@@ -115,8 +115,8 @@ function detect_app_name () {
 	local app_name
 	if ! app_name=$(
 		detect_package "${build_dir}" |
-			awk '/^ *[Nn]ame:/ { print $2 }' |
-			match_exactly_one
+		awk '/^ *[Nn]ame:/ { print $2 }' |
+		match_exactly_one
 	); then
 		die 'Expected exactly one app name'
 	fi
@@ -132,8 +132,8 @@ function detect_app_version () {
 	local app_version
 	if ! app_version=$(
 		detect_package "${build_dir}" |
-			awk '/^ *[Vv]ersion:/ { print $2 }' |
-			match_exactly_one
+		awk '/^ *[Vv]ersion:/ { print $2 }' |
+		match_exactly_one
 	); then
 		die 'Expected exactly one app version'
 	fi
@@ -149,8 +149,8 @@ function detect_app_executable () {
 	local app_executable
 	if ! app_executable=$(
 		detect_package "${build_dir}" |
-			awk '/^ *[Ee]xecutable / { print $2 }' |
-			match_exactly_one
+		awk '/^ *[Ee]xecutable / { print $2 }' |
+		match_exactly_one
 	); then
 		die 'Expected exactly one app executable'
 	fi

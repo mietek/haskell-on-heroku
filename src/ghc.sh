@@ -120,6 +120,8 @@ function echo_ghc_tag_label () {
 }
 
 
+
+
 function echo_ghc_archive () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
@@ -309,7 +311,8 @@ function cut_ghc () {
 				-name '*_debug.a'      \
 				\)                     \
 				-delete || die
-		ghc-pkg recache || die;;
+		ghc-pkg recache || die
+		;;
 	'7.6.'*)
 		rm -rf  "${HALCYON}/ghc/bin/haddock"                    \
 			"${HALCYON}/ghc/bin/haddock-ghc-${ghc_version}" \
@@ -329,7 +332,8 @@ function cut_ghc () {
 				-name '*_debug.a'      \
 				\)                     \
 				-delete || die
-		ghc-pkg recache || die;;
+		ghc-pkg recache || die
+		;;
 	*)
 		die "Cutting GHC ${ghc_version} is not implemented yet"
 	esac
@@ -370,7 +374,8 @@ function strip_ghc () {
 				-name '*.a'         \
 				\)                  \
 				-print0 |
-			strip0 --strip-unneeded || die;;
+			strip0 --strip-unneeded || die
+		;;
 	'7.6.'*)
 		strip --strip-unneeded                                  \
 			"${HALCYON}/ghc/lib/ghc-${ghc_version}/ghc"     \
@@ -386,7 +391,8 @@ function strip_ghc () {
 				-name '*.a'         \
 				\)                  \
 				-print0 |
-			strip0 --strip-unneeded || die;;
+			strip0 --strip-unneeded || die
+		;;
 	*)
 		die "Stripping GHC ${ghc_version} is not implemented yet"
 	esac
@@ -475,9 +481,9 @@ function infer_ghc_version () {
 		local base_version
 		base_version=$(
 			detect_constraints "${build_dir}" |
-				filter_matching "^base " |
-				match_exactly_one |
-				sed 's/^.* //'
+			filter_matching "^base " |
+			match_exactly_one |
+			sed 's/^.* //'
 		) || die
 
 		ghc_version=$( echo_ghc_base_version "${base_version}" ) || die

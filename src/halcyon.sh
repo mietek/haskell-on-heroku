@@ -8,7 +8,7 @@ self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "${self_dir}/lib/curl.sh"
 source "${self_dir}/lib/expect.sh"
 source "${self_dir}/lib/log.sh"
-source "${self_dir}/lib/s3_curl.sh"
+source "${self_dir}/lib/s3.sh"
 source "${self_dir}/lib/tar.sh"
 source "${self_dir}/lib/tools.sh"
 source "${self_dir}/build.sh"
@@ -80,9 +80,9 @@ function set_config_vars () {
 	local var
 	for var in $(
 		find_spaceless "${env_dir}" -maxdepth 1 |
-			sed "s:^${env_dir}/::" |
-			sort_naturally |
-			filter_not_matching "^(${ignored_pattern})$"
+		sed "s:^${env_dir}/::" |
+		sort_naturally |
+		filter_not_matching "^(${ignored_pattern})$"
 	); do
 		local value
 		value=$( match_exactly_one <"${env_dir}/${var}" ) || die

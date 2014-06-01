@@ -77,6 +77,8 @@ function echo_cabal_tag_timestamp () {
 }
 
 
+
+
 function echo_cabal_archive () {
 	local cabal_tag
 	expect_args cabal_tag -- "$@"
@@ -96,6 +98,8 @@ function echo_cabal_archive_tag () {
 }
 
 
+
+
 function echo_updated_cabal_archive_prefix () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
@@ -110,6 +114,8 @@ function echo_updated_cabal_archive_pattern () {
 
 	echo "halcyon-cabal-${cabal_version}-.*\.tar\.xz"
 }
+
+
 
 
 function echo_cabal_description () {
@@ -269,7 +275,6 @@ function cabal_install_deps () {
 
 	if (( ${unhappy_workaround} )); then
 		log_warning "Installing implicit versions of alex and happy"
-		log
 
 		silently sandboxed_cabal_do "${build_dir}" install alex happy || die
 	fi
@@ -339,7 +344,8 @@ function build_cabal () {
 				+  \${GHC} -j -L"${HALCYON}/ghc/lib" -O2 --make Setup -o Setup ||
 				      die "Compiling the Setup script failed."
 EOF
-		) || die;;
+		) || die
+		;;
 	*)
 		die "Bootstrapping Cabal ${cabal_version} with GHC ${ghc_version} is not implemented yet"
 	esac
@@ -347,7 +353,6 @@ EOF
 	if ! (
 		export EXTRA_BUILD_OPTS="-j" &&
 		export EXTRA_CONFIGURE_OPTS="--extra-lib-dirs=${HALCYON}/ghc/lib -O2" &&
-		alias curl="curl -fsS" &&
 		cd "${tmp_dir}/cabal-install-${cabal_version}" &&
 		silently ./bootstrap.sh --no-doc
 	); then

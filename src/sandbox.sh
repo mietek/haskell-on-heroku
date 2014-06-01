@@ -13,6 +13,8 @@ function echo_sandbox_label () {
 }
 
 
+
+
 function echo_sandbox_tag () {
 	local sandbox_digest sandbox_label
 	expect_args sandbox_digest sandbox_label -- "$@"
@@ -42,22 +44,13 @@ function echo_sandbox_tag_label () {
 }
 
 
+
+
 function echo_sandbox_archive () {
 	local sandbox_tag
 	expect_args sandbox_tag -- "$@"
 
 	echo "halcyon-sandbox-${sandbox_tag}.tar.gz"
-}
-
-
-function echo_sandbox_archive_tag () {
-	local sandbox_archive
-	expect_args sandbox_archive -- "$@"
-
-	local archive_part
-	archive_part="${sandbox_archive#halcyon-sandbox-}"
-
-	echo "${archive_part%.tar.xz}"
 }
 
 
@@ -135,7 +128,6 @@ function validate_sandbox () {
 	log_warning "Actual sandbox digest is ${actual_digest}"
 	log_warning 'Unexpected constraints difference:'
 	echo_constraints_difference "${sandbox_constraints}" "${actual_constraints}" | log_file_indent
-	log
 }
 
 

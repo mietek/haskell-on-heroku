@@ -51,7 +51,8 @@ function detect_os () {
 			echo "linux-ubuntu-${release}-${arch}"
 		else
 			echo "linux-${arch}"
-		fi;;
+		fi
+		;;
 	'Darwin')
 		echo "osx-${arch}";;
 	*)
@@ -66,7 +67,8 @@ case "$( detect_os )" in
 'linux-'*)
 	function check_date () {
 		date "$@"
-	};;
+	}
+	;;
 *)
 	function check_date () {
 		gdate "$@"
@@ -135,11 +137,13 @@ case "$( detect_os )" in
 'linux-'*)
 	function unbuffered_sed () {
 		sed -u "$@" >&2
-	};;
+	}
+	;;
 'darwin-'*)
 	function unbuffered_sed () {
 		sed -l "$@" >&2
-	};;
+	}
+	;;
 *)
 	function unbuffered_sed () {
 		sed "$@" >&2
@@ -153,7 +157,8 @@ case "$( detect_os )" in
 'linux-'*)
 	function sort_naturally () {
 		sort -V "$@"
-	};;
+	}
+	;;
 *)
 	function sort_naturally () {
 		gsort -V "$@"
