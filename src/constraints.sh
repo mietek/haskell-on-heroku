@@ -9,7 +9,7 @@ function echo_constraints_tmp_config () {
 
 
 function echo_constraints_digest () {
-	openssl md5
+	openssl sha1 | sed 's/^.* //'
 }
 
 
@@ -34,8 +34,8 @@ function echo_constraints_difference () {
 	echo_constraints <<<"${old_constraints}" >"${tmp_old_config}" || die
 	echo_constraints <<<"${new_constraints}" >"${tmp_new_config}" || die
 
-	echo "--- ${old_digest}/cabal.config"
-	echo "+++ ${new_digest}/cabal.config"
+	echo "--- ${old_digest:0:7}/cabal.config"
+	echo "+++ ${new_digest:0:7}/cabal.config"
 	diff -u "${tmp_old_config}" "${tmp_new_config}" | tail -n +3 || true
 
 	rm -f "${tmp_old_config}" "${tmp_new_config}" || die
@@ -75,6 +75,9 @@ function score_constraints () {
 	local constraints sandbox_tag
 	expect_args constraints sandbox_tag -- "$@"
 
+	local sandbox_description
+	sandbox_description=$( echo_sandbox_description "${sandbox_tag}" ) || die
+
 	local -A constraints_A
 
 	local package version
@@ -88,18 +91,19 @@ function score_constraints () {
 		local version
 		version="${constraints_A[${candidate_package}]:-}"
 		if [ -z "${version}" ]; then
-			log_debug "Rejecting sandbox ${sandbox_tag} because ${candidate_package}-${candidate_version} is extraneous"
+			log_indent "Ignoring ${sandbox_description} as ${candidate_package} is not needed"
 			echo 0
 			return 0
 		fi
 		if [ "${candidate_version}" != "${version}" ]; then
-			log_debug "Rejecting sandbox ${sandbox_tag} because ${candidate_package}-${candidate_version} is not ${candidate_package}-${version}"
+			log_indent "Ignoring ${sandbox_description} as ${candidate_package}-${version} is needed and not ${candidate_version}"
 			echo 0
 			return 0
 		fi
 		score=$(( ${score} + 1 ))
 	done
 
+	log_indent "${score}"$'\t'"${sandbox_description}"
 	echo "${score}"
 }
 

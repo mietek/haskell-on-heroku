@@ -2,22 +2,45 @@
 
 
 function echo_build_tag () {
-	local ghc_tag app_label
-	expect_args ghc_tag app_label -- "$@"
+	expect_vars HALCYON
 
-	local ghc_version real_label
-	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
-	real_label=$( echo_real_app_label "${app_label}" ) || die
+	local ghc_version app_label
+	expect_args ghc_version app_label -- "$@"
 
-	echo "ghc-${ghc_version}${real_label:+-${real_label}}"
+	local os
+	os=$( detect_os ) || die
+
+	echo -e "${HALCYON}\t${os}\tghc-${ghc_version}\t${app_label}"
 }
+
+
+function echo_build_tag_ghc_version () {
+	local build_tag
+	expect_args build_tag -- "$@"
+
+	awk '{ print $3 }' <<<"${build_tag}" | sed 's/^ghc-//'
+}
+
+
+function echo_build_tag_app_label () {
+	local build_tag
+	expect_args build_tag -- "$@"
+
+	awk '{ print $4 }' <<<"${build_tag}"
+}
+
+
 
 
 function echo_build_archive () {
 	local build_tag
 	expect_args build_tag -- "$@"
 
-	echo "halcyon-build-${build_tag}.tar.gz"
+	local ghc_version app_label
+	ghc_version=$( echo_build_tag_ghc_version "${build_tag}" ) || die
+	app_label=$( echo_build_tag_app_label "${build_tag}" ) || die
+
+	echo "halcyon-build-ghc-${ghc_version}-${app_label}.tar.gz"
 }
 
 
@@ -87,9 +110,10 @@ function infer_build_tag () {
 
 	local ghc_tag app_label
 	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
+	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 	app_label=$( detect_app_label "${build_dir}" ) || die
 
-	echo_build_tag "${ghc_tag}" "${app_label}" || die
+	echo_build_tag "${ghc_version}" "${app_label}" || die
 }
 
 

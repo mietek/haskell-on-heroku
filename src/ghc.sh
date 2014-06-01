@@ -67,7 +67,7 @@ function echo_ghc_libgmp3_x64_original_url () {
 }
 
 
-function echo_ghc_base_version () {
+function echo_ghc_version_from_base_version () {
 	local base_version
 	expect_args base_version -- "$@"
 
@@ -92,10 +92,15 @@ function echo_ghc_default_version () {
 
 
 function echo_ghc_tag () {
-	local ghc_version ghc_label
-	expect_args ghc_version ghc_label -- "$@"
+	expect_vars HALCYON
 
-	echo "${ghc_version}${ghc_label:+-${ghc_label}}"
+	local ghc_version ghc_variant
+	expect_args ghc_version ghc_variant -- "$@"
+
+	local os
+	os=$( detect_os ) || die
+
+	echo -e "${HALCYON}\t${os}\tghc-${ghc_version}\t${ghc_variant}"
 }
 
 
@@ -103,20 +108,15 @@ function echo_ghc_tag_version () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
 
-	echo "${ghc_tag%%-*}"
+	awk '{ print $3 }' <<<"${ghc_tag}" | sed 's/^ghc-//'
 }
 
 
-function echo_ghc_tag_label () {
+function echo_ghc_tag_variant () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
 
-	case "${ghc_tag}" in
-	*'-'*)
-		echo "${ghc_tag#*-}";;
-	*)
-		echo
-	esac
+	awk '{ print $4 }' <<<"${ghc_tag}"
 }
 
 
@@ -126,7 +126,11 @@ function echo_ghc_archive () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
 
-	echo "halcyon-ghc-${ghc_tag}.tar.xz"
+	local ghc_version ghc_variant
+	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
+	ghc_variant=$( echo_ghc_tag_variant "${ghc_tag}" ) || die
+
+	echo "halcyon-ghc-${ghc_version}${ghc_variant:+-${ghc_variant}}.tar.xz"
 }
 
 
@@ -134,11 +138,11 @@ function echo_ghc_description () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
 
-	local ghc_version ghc_label
+	local ghc_version ghc_variant
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
-	ghc_label=$( echo_ghc_tag_label "${ghc_tag}" ) || die
+	ghc_variant=$( echo_ghc_tag_variant "${ghc_tag}" ) || die
 
-	echo "GHC ${ghc_version}${ghc_label:+ (${ghc_label})}"
+	echo "GHC ${ghc_version}${ghc_variant:+ (${ghc_variant})}"
 }
 
 
@@ -155,7 +159,7 @@ function validate_ghc_tag () {
 	local ghc_tag
 	expect_args ghc_tag -- "$@"
 
-	local ghc_version candidate_tag
+	local candidate_tag
 	candidate_tag=$( match_exactly_one ) || die
 
 	if [ "${candidate_tag}" != "${ghc_tag}" ]; then
@@ -486,7 +490,7 @@ function infer_ghc_version () {
 			sed 's/^.* //'
 		) || die
 
-		ghc_version=$( echo_ghc_base_version "${base_version}" ) || die
+		ghc_version=$( echo_ghc_version_from_base_version "${base_version}" ) || die
 
 		log_end "done, ${ghc_version}"
 	else
@@ -548,16 +552,16 @@ function prepare_ghc () {
 	local has_time build_dir
 	expect_args has_time build_dir -- "$@"
 
-	local ghc_label
+	local ghc_variant
 	if (( ${NO_CUT_GHC} )); then
-		ghc_label='uncut'
+		ghc_variant='uncut'
 	else
-		ghc_label=''
+		ghc_variant=''
 	fi
 
 	local ghc_version ghc_tag
 	ghc_version=$( infer_ghc_version "${build_dir}" ) || die
-	ghc_tag=$( echo_ghc_tag "${ghc_version}" "${ghc_label}" ) || die
+	ghc_tag=$( echo_ghc_tag "${ghc_version}" "${ghc_variant}" ) || die
 
 	if ! (( ${NO_HALCYON_RESTORE} )) && restore_ghc "${ghc_tag}"; then
 		activate_ghc || die

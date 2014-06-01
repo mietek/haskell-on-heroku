@@ -116,7 +116,6 @@ function halcyon_prepare () {
 	app_label=''
 	if [ -z "${app}" ]; then
 		export HALCYON_FAKE_BUILD=1
-		app_label='base-0.0'
 		app_description='base sandbox'
 	elif ! [ -d "${app}" ]; then
 		export HALCYON_FAKE_BUILD=1
@@ -135,6 +134,11 @@ function halcyon_prepare () {
 	log
 
 	if (( ${HALCYON_FAKE_BUILD:-0} )); then
+		if [ -z "${app_label}" ]; then
+			base_version=$( detect_base_version ) || die
+			app_label="base-${base_version}"
+		fi
+
 		build_dir=$( fake_build_dir "${app_label}" ) || die
 	fi
 

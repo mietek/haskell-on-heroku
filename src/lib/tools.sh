@@ -102,7 +102,7 @@ function filter_matching () {
 	local pattern
 	expect_args pattern -- "$@"
 
-	awk '/'"${pattern}"'/ { print }'
+	awk '/'"${pattern//\//\\/}"'/ { print }'
 }
 
 
@@ -110,7 +110,7 @@ function filter_not_matching () {
 	local pattern
 	expect_args pattern -- "$@"
 
-	awk '!/'"${pattern}"'/ { print }'
+	awk '!/'"${pattern//\//\\/}"'/ { print }'
 }
 
 

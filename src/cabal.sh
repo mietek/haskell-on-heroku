@@ -49,10 +49,15 @@ EOF
 
 
 function echo_cabal_tag () {
+	expect_vars HALCYON
+
 	local cabal_version cabal_timestamp
 	expect_args cabal_version cabal_timestamp -- "$@"
 
-	echo "${cabal_version}${cabal_timestamp:+-${cabal_timestamp}}"
+	local os
+	os=$( detect_os ) || die
+
+	echo -e "${HALCYON}\t${os}\tcabal-${cabal_version}\t${cabal_timestamp}"
 }
 
 
@@ -60,7 +65,7 @@ function echo_cabal_tag_version () {
 	local cabal_tag
 	expect_args cabal_tag -- "$@"
 
-	echo "${cabal_tag%%-*}"
+	awk '{ print $3 }' <<<"${cabal_tag}" | sed 's/^cabal-//'
 }
 
 
@@ -68,12 +73,7 @@ function echo_cabal_tag_timestamp () {
 	local cabal_tag
 	expect_args cabal_tag -- "$@"
 
-	case "${cabal_tag}" in
-	*'-'*)
-		echo "${cabal_tag#*-}";;
-	*)
-		echo
-	esac
+	awk '{ print $4 }' <<<"${cabal_tag}"
 }
 
 
@@ -83,21 +83,22 @@ function echo_cabal_archive () {
 	local cabal_tag
 	expect_args cabal_tag -- "$@"
 
-	echo "halcyon-cabal-${cabal_tag}.tar.xz"
+	local cabal_version cabal_timestamp
+	cabal_version=$( echo_cabal_tag_version "${cabal_tag}" ) || die
+	cabal_timestamp=$( echo_cabal_tag_timestamp "${cabal_tag}" ) || die
+
+	echo "halcyon-cabal-${cabal_version}${cabal_timestamp:+-${cabal_timestamp}}.tar.xz"
 }
 
 
-function echo_cabal_archive_tag () {
-	local cabal_archive
-	expect_args cabal_archive -- "$@"
 
-	local archive_part
-	archive_part="${cabal_archive#halcyon-cabal-}"
 
-	echo "${archive_part%.tar.xz}"
+function echo_updated_cabal_tag_pattern () {
+	local cabal_version
+	expect_args cabal_version -- "$@"
+
+	echo_cabal_tag "${cabal_version}" '.*'
 }
-
-
 
 
 function echo_updated_cabal_archive_prefix () {
@@ -151,11 +152,11 @@ function validate_cabal_tag () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
 
-	local candidate_tag candidate_version
+	local cabal_tag candidate_tag
+	cabal_tag=$( echo_cabal_tag "${cabal_version}" '' ) || die
 	candidate_tag=$( match_exactly_one ) || die
-	candidate_version=$( echo_cabal_tag_version "${candidate_tag}" ) || die
 
-	if [ "${candidate_version}" != "${cabal_version}" ]; then
+	if [ "${candidate_tag}" != "${cabal_tag}" ]; then
 		return 1
 	fi
 }
@@ -165,11 +166,14 @@ function validate_updated_cabal_tag () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
 
-	local candidate_tag candidate_version
-	candidate_tag=$( match_exactly_one ) || die
-	candidate_version=$( echo_cabal_tag_version "${candidate_tag}" ) || die
+	local updated_pattern
+	updated_pattern=$( echo_updated_cabal_tag_pattern "${cabal_version}" ) || die
 
-	if [ "${candidate_version}" != "${cabal_version}" ]; then
+	local candidate_tag
+	if ! candidate_tag=$(
+		filter_matching "^${updated_pattern}$" |
+		match_exactly_one
+	); then
 		return 1
 	fi
 
@@ -199,12 +203,6 @@ function match_updated_cabal_archive () {
 		filter_last |
 		match_exactly_one
 	); then
-		return 1
-	fi
-
-	if ! echo_cabal_archive_tag "${updated_archive}" |
-		validate_updated_cabal_tag "${cabal_version}"
-	then
 		return 1
 	fi
 
