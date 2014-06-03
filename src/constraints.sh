@@ -50,6 +50,12 @@ function read_constraints () {
 }
 
 
+function read_constraints_dry_run () {
+	tail -n +3 |
+		sed 's/ == / /'
+}
+
+
 
 
 function filter_valid_constraints () {
@@ -122,10 +128,9 @@ function detect_app_constraint () {
 }
 
 
-function detect_constraints () {
+function filter_correct_constraints () {
 	local build_dir
 	expect_args build_dir -- "$@"
-	expect "${build_dir}/cabal.config"
 
 	# NOTE: An application should not be its own dependency.
 	# https://github.com/haskell/cabal/issues/1908
@@ -133,43 +138,43 @@ function detect_constraints () {
 	local app_constraint
 	app_constraint=$( detect_app_constraint "${build_dir}" ) || die
 
-	read_constraints <"${build_dir}/cabal.config" |
-		sort_naturally |
-		filter_valid_constraints |
-		filter_not_matching "^${app_constraint}$" || die
+	filter_valid_constraints |
+		filter_not_matching "^${app_constraint}$" |
+		sort_naturally
 }
 
 
 
 
-function freeze_constraints () {
-	local build_dir implicit
-	expect_args build_dir implicit -- "$@"
+function detect_constraints () {
+	local build_dir
+	expect_args build_dir -- "$@"
+	expect "${build_dir}/cabal.config"
+
+	read_constraints <"${build_dir}/cabal.config" |
+		filter_correct_constraints "${build_dir}" || die
+}
+
+
+
+
+function freeze_implicit_constraints () {
+	local build_dir
+	expect_args build_dir -- "$@"
 	expect "${build_dir}"
 
-	# NOTE: Cabal freeze should be able to output to stdout.
-	# https://github.com/haskell/cabal/issues/1916
+	cabal_do "${build_dir}" --no-require-sandbox freeze --dry-run |
+		read_constraints_dry_run |
+		filter_correct_constraints "${build_dir}" || die
+}
 
-	local saved_config
-	saved_config=''
-	if [ -f "${build_dir}/cabal.config" ]; then
-		saved_config=$( echo_constraints_tmp_config ) || die
-		mv "${build_dir}/cabal.config" "${saved_config}" || die
-	fi
 
-	if (( ${implicit} )); then
-		silently cabal_do "${build_dir}" --no-require-sandbox freeze || die
-	else
-		silently sandboxed_cabal_do "${build_dir}" freeze || die
-	fi
+function freeze_actual_constraints () {
+	local build_dir
+	expect_args build_dir -- "$@"
+	expect "${build_dir}"
 
-	local sandbox_constraints
-	sandbox_constraints=$( detect_constraints "${build_dir}" ) || die
-
-	rm -f "${build_dir}/cabal.config" || die
-	if [ -n "${saved_config}" ]; then
-		mv "${saved_config}" "${build_dir}/cabal.config" || die
-	fi
-
-	echo "${sandbox_constraints}"
+	sandboxed_cabal_do "${build_dir}" freeze --dry-run |
+		read_constraints_dry_run |
+		filter_correct_constraints "${build_dir}" || die
 }

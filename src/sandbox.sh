@@ -166,7 +166,7 @@ function validate_sandbox () {
 	# https://github.com/haskell/cabal/issues/1896
 
 	local actual_constraints actual_digest
-	actual_constraints=$( freeze_constraints "${build_dir}" 0 ) || die
+	actual_constraints=$( freeze_actual_constraints "${build_dir}" ) || die
 	actual_digest=$( echo_constraints_digest <<<"${actual_constraints}" ) || die
 
 	if [ "${actual_digest}" = "${sandbox_digest}" ]; then
@@ -317,7 +317,7 @@ function infer_sandbox_constraints () {
 	if [ -f "${build_dir}/cabal.config" ]; then
 		sandbox_constraints=$( detect_constraints "${build_dir}" ) || die
 	else
-		sandbox_constraints=$( freeze_constraints "${build_dir}" 1 ) || die
+		sandbox_constraints=$( freeze_implicit_constraints "${build_dir}" ) || die
 		if ! (( ${HALCYON_FAKE_BUILD:-0} )); then
 			log_warning 'Expected cabal.config with explicit constraints'
 			log
