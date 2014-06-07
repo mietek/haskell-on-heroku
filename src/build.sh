@@ -51,12 +51,12 @@ function echo_build_tmp_dir () {
 }
 
 
-function echo_build_tmp_old_dir () {
+function echo_old_build_tmp_dir () {
 	mktemp -du "/tmp/halcyon-build.old.XXXXXXXXXX"
 }
 
 
-function echo_build_tmp_dist_dir () {
+function echo_build_dist_tmp_dir () {
 	mktemp -du "/tmp/halcyon-build.dist.XXXXXXXXXX"
 }
 
@@ -133,9 +133,13 @@ function cache_build () {
 	build_archive=$( echo_build_archive "${build_tag}" ) || die
 
 	rm -f "${HALCYON_CACHE_DIR}/${build_archive}" || die
-	tar_archive "${build_dir}" "${HALCYON_CACHE_DIR}/${build_archive}" || die
-
-	rm -rf "${build_dir}/dist" || die
+	tar_archive "${build_dir}"                      \
+		"${HALCYON_CACHE_DIR}/${build_archive}" \
+		--exclude '.halcyon'                    \
+		--exclude '.ghc'                        \
+		--exclude '.cabal'                      \
+		--exclude '.cabal-sandbox'              \
+		--exclude 'cabal.sandbox.config' || die
 }
 
 
@@ -158,8 +162,8 @@ function restore_build () {
 	log 'Restoring build'
 
 	local tmp_old_dir tmp_dist_dir
-	tmp_old_dir=$( echo_build_tmp_old_dir ) || die
-	tmp_dist_dir=$( echo_build_tmp_dist_dir ) || die
+	tmp_old_dir=$( echo_old_build_tmp_dir ) || die
+	tmp_dist_dir=$( echo_build_dist_tmp_dir ) || die
 
 	tar_extract "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" || die
 	mv "${tmp_old_dir}/dist" "${tmp_dist_dir}" || die

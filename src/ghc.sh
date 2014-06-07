@@ -518,10 +518,6 @@ function activate_ghc () {
 
 	log_begin "Activating ${ghc_description}..."
 
-	if [ -e "${HOME}/.ghc" ]; then
-		die "Expected no custom ${HOME}/.ghc"
-	fi
-
 	log_end 'done'
 }
 
@@ -536,21 +532,17 @@ function deactivate_ghc () {
 
 	log_begin "Dectivating ${ghc_description}..."
 
-	if [ -e "${HOME}/.ghc" ]; then
-		die "Expected no custom ${HOME}/.ghc"
-	fi
-
 	log_end 'done'
 }
 
 
 
 
-function prepare_ghc () {
-	expect_vars HALCYON_NO_CUT_GHC
+function install_ghc () {
+	expect_vars HALCYON_PREPARED_ONLY HALCYON_NO_CUT_GHC
 
-	local has_time build_dir
-	expect_args has_time build_dir -- "$@"
+	local build_dir
+	expect_args build_dir -- "$@"
 
 	local ghc_variant
 	if (( ${HALCYON_NO_CUT_GHC} )); then
@@ -568,7 +560,7 @@ function prepare_ghc () {
 		return 0
 	fi
 
-	(( ${has_time} )) || return 1
+	! (( ${HALCYON_PREPARED_ONLY} )) || return 1
 
 	build_ghc "${ghc_version}" || die
 	if ! (( ${HALCYON_NO_CUT_GHC} )); then

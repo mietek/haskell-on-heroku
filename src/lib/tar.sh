@@ -26,6 +26,7 @@ function echo_tar_format_flag () {
 function tar_archive () {
 	local src_dir archive_file
 	expect_args src_dir archive_file -- "$@"
+	shift 2
 	expect "${src_dir}"
 	expect_no "${archive_file}"
 
@@ -37,7 +38,7 @@ function tar_archive () {
 	log_indent_begin "Archiving ${archive_name}..."
 
 	mkdir -p "${dst_dir}" || die
-	tar -c "${format_flag}" -f "${archive_file}" -C "${src_dir}" '.' || die
+	tar -c "${format_flag}" -f "${archive_file}" -C "${src_dir}" '.' "$@" || die
 
 	local archive_size
 	archive_size=$( measure_recursively "${archive_file}" ) || die
@@ -48,6 +49,7 @@ function tar_archive () {
 function tar_extract () {
 	local archive_file dst_dir
 	expect_args archive_file dst_dir -- "$@"
+	shift 2
 	expect "${archive_file}"
 	expect_no "${dst_dir}"
 
@@ -58,7 +60,7 @@ function tar_extract () {
 	log_indent_begin "Extracting ${archive_name}..."
 
 	mkdir -p "${dst_dir}" || die
-	tar -x "${format_flag}" -f "${archive_file}" -C "${dst_dir}" || die
+	tar -x "${format_flag}" -f "${archive_file}" -C "${dst_dir}" "$@" || die
 
 	log_end 'done'
 }

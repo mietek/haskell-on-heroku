@@ -467,7 +467,7 @@ function deactivate_sandbox () {
 
 
 
-function prepare_extended_sandbox () {
+function install_extended_sandbox () {
 	expect_vars HALCYON_DIR
 
 	local build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag
@@ -505,12 +505,12 @@ function prepare_extended_sandbox () {
 }
 
 
-function prepare_sandbox () {
-	expect_vars HALCYON_DIR
+function install_sandbox () {
+	expect_vars HALCYON_DIR HALCYON_PREPARED_ONLY
 	expect "${HALCYON_DIR}/ghc/tag"
 
-	local has_time build_dir
-	expect_args has_time build_dir -- "$@"
+	local build_dir
+	expect_args build_dir -- "$@"
 
 	local ghc_tag
 	ghc_tag=$( <"${HALCYON_DIR}/ghc/tag" ) || die
@@ -537,11 +537,11 @@ function prepare_sandbox () {
 		return 0
 	fi
 
-	(( ${has_time} )) || return 1
+	! (( ${HALCYON_PREPARED_ONLY} )) || return 1
 
 	local matched_tag
 	if matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
-		prepare_extended_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
+		install_extended_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
 	then
 		return 0
 	fi

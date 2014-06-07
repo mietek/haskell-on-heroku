@@ -253,13 +253,14 @@ function sandboxed_cabal_do () {
 
 	local status
 	status=0
-	if ! cabal_do "${work_dir}"                                             \
+	if ! cabal_do "${work_dir}"                                                 \
 		--sandbox-config-file="${HALCYON_DIR}/sandbox/cabal.sandbox.config" \
 		"$@"
 	then
 		status=1
 	fi
 
+	rm -f "${HALCYON_DIR}/sandbox/cabal.config" || die
 	if [ -n "${saved_config}" ]; then
 		mv "${saved_config}" "${HALCYON_DIR}/sandbox/cabal.config" || die
 	fi
@@ -317,12 +318,12 @@ function cabal_install_deps () {
 
 
 function cabal_configure_app () {
-	expect_vars HALCYON_DIR
+	expect_vars HALCYON_INSTALL_DIR
 
 	local build_dir
 	expect_args build_dir -- "$@"
 
-	silently sandboxed_cabal_do "${build_dir}" configure --prefix="${HALCYON_DIR}/app" || die
+	silently sandboxed_cabal_do "${build_dir}" configure --prefix="${HALCYON_INSTALL_DIR}" || die
 }
 
 
@@ -626,11 +627,8 @@ function deactivate_cabal () {
 
 
 
-function prepare_cabal () {
-	expect_vars HALCYON_FORCE_CABAL_UPDATE
-
-	local has_time
-	expect_args has_time -- "$@"
+function install_cabal () {
+	expect_vars HALCYON_PREPARED_ONLY HALCYON_FORCE_CABAL_UPDATE
 
 	local cabal_version
 	cabal_version=$( infer_cabal_version ) || die
@@ -649,7 +647,7 @@ function prepare_cabal () {
 		return 0
 	fi
 
-	(( ${has_time} )) || return 1
+	! (( ${HALCYON_PREPARED_ONLY} )) || return 1
 
 	build_cabal "${cabal_version}" || die
 	cache_cabal || die
