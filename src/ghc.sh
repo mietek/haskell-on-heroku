@@ -547,7 +547,7 @@ function deactivate_ghc () {
 
 
 function prepare_ghc () {
-	expect_vars NO_CUT_GHC NO_HALCYON_RESTORE
+	expect_vars NO_CUT_GHC
 
 	local has_time build_dir
 	expect_args has_time build_dir -- "$@"
@@ -563,7 +563,7 @@ function prepare_ghc () {
 	ghc_version=$( infer_ghc_version "${build_dir}" ) || die
 	ghc_tag=$( echo_ghc_tag "${ghc_version}" "${ghc_variant}" ) || die
 
-	if ! (( ${NO_HALCYON_RESTORE} )) && restore_ghc "${ghc_tag}"; then
+	if restore_ghc "${ghc_tag}"; then
 		activate_ghc || die
 		return 0
 	fi

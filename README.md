@@ -131,7 +131,6 @@ Variable                 | Default   | Description
 `HALCYON_S3_ACL`         | `private` | Use this Amazon S3 ACL to control access to prepared packages
 `PURGE_HALCYON_CACHE`    | `0`       | When `1`, delete all prepared packages from cache before compiling
 `SILENCE_HALCYON_OUTPUT` | `0`       | When `1`, hide all expected external command output
-`NO_HALCYON_RESTORE`     | `0`       | When `1`, prepare all packages from scratch
 `FORCE_GHC_VERSION`      | —         | Use this GHC version instead of inferring it
 `NO_CUT_GHC`             | `0`       | When `1`, use GHC prepared without deleting extraneous files
 `FORCE_CABAL_VERSION`    | —         | Use this Cabal version instead of inferring the version
