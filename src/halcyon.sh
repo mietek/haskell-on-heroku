@@ -53,7 +53,6 @@ function set_defaults () {
 	export NO_CUT_GHC="${NO_CUT_GHC:-0}"
 	export FORCE_CABAL_VERSION="${FORCE_CABAL_VERSION:-}"
 	export FORCE_CABAL_UPDATE="${FORCE_CABAL_UPDATE:-0}"
-	export NO_EXTEND_SANDBOX="${NO_EXTEND_SANDBOX:-0}"
 }
 
 
@@ -161,14 +160,6 @@ function halcyon_prepare () {
 }
 
 
-
-
-function log_extend_sandbox_help () {
-	log_file_indent <<-EOF
-		In case of timeout, disable sandbox extending and try again:
-		$ export NO_EXTEND_SANDBOX=1
-EOF
-}
 
 
 function log_add_config_help () {

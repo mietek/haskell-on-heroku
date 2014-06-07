@@ -98,15 +98,6 @@ EOF
 
 
 
-function log_extend_sandbox_help () {
-	log_file_indent <<-EOF
-		In case of timeout, disable sandbox extending and push again:
-		$ heroku config:set NO_EXTEND_SANDBOX=1
-		$ git push heroku master
-EOF
-}
-
-
 function log_add_config_help () {
 	local sandbox_constraints
 	expect_args sandbox_constraints -- "$@"

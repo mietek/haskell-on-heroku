@@ -135,7 +135,6 @@ Variable                 | Default   | Description
 `NO_CUT_GHC`             | `0`       | When `1`, use GHC prepared without deleting extraneous files
 `FORCE_CABAL_VERSION`    | —         | Use this Cabal version instead of inferring the version
 `FORCE_CABAL_UPDATE`     | `0`       | When `1`, update Cabal instead of using a recently updated prepared package
-`NO_EXTEND_SANDBOX`      | `0`       | When `1`, avoid matching and extending prepared sandboxes
 
 
 ###  I still have questions.  Can I ask you a question?

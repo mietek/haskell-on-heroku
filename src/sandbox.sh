@@ -470,8 +470,8 @@ function deactivate_sandbox () {
 function prepare_extended_sandbox () {
 	expect_vars HALCYON
 
-	local has_time build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag
-	expect_args has_time build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag -- "$@"
+	local build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag
+	expect_args build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag -- "$@"
 
 	if ! restore_sandbox "${matched_tag}"; then
 		return 1
@@ -495,11 +495,6 @@ function prepare_extended_sandbox () {
 	fi
 
 	log "Extending matched ${matched_description} to ${sandbox_description}"
-	if ! (( ${has_time} )); then
-		log
-		log_extend_sandbox_help
-		log
-	fi
 
 	rm -f "${HALCYON}/sandbox/tag" "${HALCYON}/sandbox/cabal.config" || die
 
@@ -511,7 +506,7 @@ function prepare_extended_sandbox () {
 
 
 function prepare_sandbox () {
-	expect_vars HALCYON NO_EXTEND_SANDBOX
+	expect_vars HALCYON
 	expect "${HALCYON}/ghc/tag"
 
 	local has_time build_dir
@@ -542,15 +537,14 @@ function prepare_sandbox () {
 		return 0
 	fi
 
+	(( ${has_time} )) || return 1
+
 	local matched_tag
-	if ! (( ${NO_EXTEND_SANDBOX} )) &&
-		matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
-		prepare_extended_sandbox "${has_time}" "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
+	if matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
+		prepare_extended_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
 	then
 		return 0
 	fi
-
-	(( ${has_time} )) || return 1
 
 	build_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" || die
 	strip_sandbox || die
