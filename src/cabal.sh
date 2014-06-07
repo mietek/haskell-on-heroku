@@ -32,11 +32,11 @@ function echo_cabal_default_version () {
 
 
 function echo_cabal_config () {
-	expect_vars HALCYON
+	expect_vars HALCYON_DIR
 
 	cat <<-EOF
 		remote-repo:                    hackage.haskell.org:http://hackage.haskell.org/packages/archive
-		remote-repo-cache:              ${HALCYON}/cabal/packages
+		remote-repo-cache:              ${HALCYON_DIR}/cabal/packages
 		avoid-reinstalls:               True
 		reorder-goals:                  True
 		require-sandbox:                True
@@ -49,7 +49,7 @@ EOF
 
 
 function echo_cabal_tag () {
-	expect_vars HALCYON
+	expect_vars HALCYON_DIR
 
 	local cabal_version cabal_timestamp
 	expect_args cabal_version cabal_timestamp -- "$@"
@@ -57,7 +57,7 @@ function echo_cabal_tag () {
 	local os
 	os=$( detect_os ) || die
 
-	echo -e "${HALCYON}\t${os}\tcabal-${cabal_version}\t${cabal_timestamp}"
+	echo -e "${HALCYON_DIR}\t${os}\tcabal-${cabal_version}\t${cabal_timestamp}"
 }
 
 
@@ -213,8 +213,8 @@ function match_updated_cabal_archive () {
 
 
 function cabal_do () {
-	expect_vars HALCYON
-	expect "${HALCYON}/cabal/tag"
+	expect_vars HALCYON_DIR
+	expect "${HALCYON_DIR}/cabal/tag"
 
 	local work_dir
 	expect_args work_dir -- "$@"
@@ -223,7 +223,7 @@ function cabal_do () {
 
 	if ! (
 		cd "${work_dir}" &&
-		cabal --config-file="${HALCYON}/cabal/config" "$@"
+		cabal --config-file="${HALCYON_DIR}/cabal/config" "$@"
 	); then
 		die 'Using Cabal failed'
 	fi
@@ -231,7 +231,7 @@ function cabal_do () {
 
 
 function sandboxed_cabal_do () {
-	expect_vars HALCYON
+	expect_vars HALCYON_DIR
 
 	local work_dir
 	expect_args work_dir -- "$@"
@@ -244,24 +244,24 @@ function sandboxed_cabal_do () {
 	local saved_config
 	saved_config=''
 	if [ -f "${work_dir}/cabal.config" ]; then
-		if [ -f "${HALCYON}/sandbox/cabal.config" ]; then
+		if [ -f "${HALCYON_DIR}/sandbox/cabal.config" ]; then
 			saved_config=$( echo_sandbox_tmp_config ) || die
-			mv "${HALCYON}/sandbox/cabal.config" "${saved_config}" || die
+			mv "${HALCYON_DIR}/sandbox/cabal.config" "${saved_config}" || die
 		fi
-		cp "${work_dir}/cabal.config" "${HALCYON}/sandbox/cabal.config" || die
+		cp "${work_dir}/cabal.config" "${HALCYON_DIR}/sandbox/cabal.config" || die
 	fi
 
 	local status
 	status=0
 	if ! cabal_do "${work_dir}"                                             \
-		--sandbox-config-file="${HALCYON}/sandbox/cabal.sandbox.config" \
+		--sandbox-config-file="${HALCYON_DIR}/sandbox/cabal.sandbox.config" \
 		"$@"
 	then
 		status=1
 	fi
 
 	if [ -n "${saved_config}" ]; then
-		mv "${saved_config}" "${HALCYON}/sandbox/cabal.config" || die
+		mv "${saved_config}" "${HALCYON_DIR}/sandbox/cabal.config" || die
 	fi
 
 	return "${status}"
@@ -317,12 +317,12 @@ function cabal_install_deps () {
 
 
 function cabal_configure_app () {
-	expect_vars HALCYON
+	expect_vars HALCYON_DIR
 
 	local build_dir
 	expect_args build_dir -- "$@"
 
-	silently sandboxed_cabal_do "${build_dir}" configure --prefix="${HALCYON}/app" || die
+	silently sandboxed_cabal_do "${build_dir}" configure --prefix="${HALCYON_DIR}/app" || die
 }
 
 
@@ -338,9 +338,9 @@ function cabal_build_app () {
 
 
 function build_cabal () {
-	expect_vars HOME HALCYON HALCYON_CACHE
-	expect "${HOME}" "${HALCYON}/ghc/tag"
-	expect_no "${HOME}/.cabal" "${HOME}/.ghc" "${HALCYON}/cabal"
+	expect_vars HOME HALCYON_DIR HALCYON_CACHE_DIR
+	expect "${HOME}" "${HALCYON_DIR}/ghc/tag"
+	expect_no "${HOME}/.cabal" "${HOME}/.ghc" "${HALCYON_DIR}/cabal"
 
 	local cabal_version
 	expect_args cabal_version -- "$@"
@@ -352,16 +352,16 @@ function build_cabal () {
 	original_archive=$( basename "${original_url}" ) || die
 	tmp_dir=$( echo_cabal_tmp_dir ) || die
 
-	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE}"; then
+	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
 		die "Cabal ${cabal_version} is not available"
 	fi
 
-	tar_extract "${HALCYON_CACHE}/${original_archive}" "${tmp_dir}" || die
+	tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
 
 	log "Bootstrapping Cabal ${cabal_version}"
 
 	local ghc_tag ghc_version
-	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON_DIR}/ghc/tag" ) || die
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 
 	case "${ghc_version}-${cabal_version}" in
@@ -374,7 +374,7 @@ function build_cabal () {
 				@@ -217,3 +217,3 @@ install_pkg () {
 
 				-  \${GHC} --make Setup -o Setup ||
-				+  \${GHC} -j -L"${HALCYON}/ghc/lib" -O2 --make Setup -o Setup ||
+				+  \${GHC} -j -L"${HALCYON_DIR}/ghc/lib" -O2 --make Setup -o Setup ||
 				      die "Compiling the Setup script failed."
 EOF
 		) || die
@@ -385,32 +385,32 @@ EOF
 
 	if ! (
 		export EXTRA_BUILD_OPTS="-j" &&
-		export EXTRA_CONFIGURE_OPTS="--extra-lib-dirs=${HALCYON}/ghc/lib -O2" &&
+		export EXTRA_CONFIGURE_OPTS="--extra-lib-dirs=${HALCYON_DIR}/ghc/lib -O2" &&
 		cd "${tmp_dir}/cabal-install-${cabal_version}" &&
 		silently ./bootstrap.sh --no-doc
 	); then
 		die 'Bootstrapping Cabal failed'
 	fi
 
-	mkdir -p "${HALCYON}/cabal/bin" || die
-	mv "${HOME}/.cabal/bin/cabal" "${HALCYON}/cabal/bin/cabal" || die
+	mkdir -p "${HALCYON_DIR}/cabal/bin" || die
+	mv "${HOME}/.cabal/bin/cabal" "${HALCYON_DIR}/cabal/bin/cabal" || die
 	rm -rf "${HOME}/.cabal" "${HOME}/.ghc" "${tmp_dir}" || die
 
-	echo_cabal_config >"${HALCYON}/cabal/config" || die
-	echo_cabal_tag "${cabal_version}" '' >"${HALCYON}/cabal/tag" || die
+	echo_cabal_config >"${HALCYON_DIR}/cabal/config" || die
+	echo_cabal_tag "${cabal_version}" '' >"${HALCYON_DIR}/cabal/tag" || die
 
 	local cabal_size
-	cabal_size=$( measure_recursively "${HALCYON}/cabal" ) || die
+	cabal_size=$( measure_recursively "${HALCYON_DIR}/cabal" ) || die
 	log "Bootstrapped Cabal ${cabal_version}, ${cabal_size}"
 }
 
 
 function update_cabal () {
-	expect_vars HALCYON
-	expect "${HALCYON}/cabal/tag"
+	expect_vars HALCYON_DIR
+	expect "${HALCYON_DIR}/cabal/tag"
 
 	local cabal_tag cabal_version
-	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
+	cabal_tag=$( <"${HALCYON_DIR}/cabal/tag" ) || die
 	cabal_version=$( echo_cabal_tag_version "${cabal_tag}" ) || die
 
 	log "Updating Cabal ${cabal_version}"
@@ -419,10 +419,10 @@ function update_cabal () {
 
 	local cabal_timestamp
 	cabal_timestamp=$( check_timestamp ) || die
-	echo_cabal_tag "${cabal_version}" "${cabal_timestamp}" >"${HALCYON}/cabal/tag" || die
+	echo_cabal_tag "${cabal_version}" "${cabal_timestamp}" >"${HALCYON_DIR}/cabal/tag" || die
 
 	local cabal_size
-	cabal_size=$( measure_recursively "${HALCYON}/cabal" ) || die
+	cabal_size=$( measure_recursively "${HALCYON_DIR}/cabal" ) || die
 	log "Updated Cabal ${cabal_version}, ${cabal_size}"
 }
 
@@ -430,11 +430,11 @@ function update_cabal () {
 
 
 function cache_cabal () {
-	expect_vars HALCYON HALCYON_CACHE
-	expect "${HALCYON}/cabal/tag"
+	expect_vars HALCYON_DIR HALCYON_CACHE_DIR
+	expect "${HALCYON_DIR}/cabal/tag"
 
 	local cabal_tag
-	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
+	cabal_tag=$( <"${HALCYON_DIR}/cabal/tag" ) || die
 	cabal_description=$( echo_cabal_description "${cabal_tag}" ) || die
 
 	log "Caching ${cabal_description}"
@@ -443,84 +443,84 @@ function cache_cabal () {
 	cabal_archive=$( echo_cabal_archive "${cabal_tag}" ) || die
 	os=$( detect_os ) || die
 
-	rm -f "${HALCYON_CACHE}/${cabal_archive}" || die
-	tar_archive "${HALCYON}/cabal" "${HALCYON_CACHE}/${cabal_archive}" || die
-	upload_prepared "${HALCYON_CACHE}/${cabal_archive}" "${os}" || die
+	rm -f "${HALCYON_CACHE_DIR}/${cabal_archive}" || die
+	tar_archive "${HALCYON_DIR}/cabal" "${HALCYON_CACHE_DIR}/${cabal_archive}" || die
+	upload_prepared "${HALCYON_CACHE_DIR}/${cabal_archive}" "${os}" || die
 }
 
 
 function restore_cabal () {
-	expect_vars HALCYON HALCYON_CACHE
+	expect_vars HALCYON_DIR HALCYON_CACHE_DIR
 
 	local cabal_version
 	expect_args cabal_version -- "$@"
 
 	log "Restoring Cabal ${cabal_version}"
 
-	if [ -f "${HALCYON}/cabal/tag" ] &&
-		validate_cabal_tag "${cabal_version}" <"${HALCYON}/cabal/tag"
+	if [ -f "${HALCYON_DIR}/cabal/tag" ] &&
+		validate_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
 		return 0
 	fi
-	rm -rf "${HALCYON}/cabal" || die
+	rm -rf "${HALCYON_DIR}/cabal" || die
 
 	local os cabal_tag cabal_archive
 	os=$( detect_os ) || die
 	cabal_tag=$( echo_cabal_tag "${cabal_version}" '' ) || die
 	cabal_archive=$( echo_cabal_archive "${cabal_tag}" ) || die
 
-	if ! download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE}"; then
+	if ! download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE_DIR}"; then
 		log_warning "Cabal ${cabal_version} is not prepared"
 		return 1
 	fi
 
-	tar_extract "${HALCYON_CACHE}/${cabal_archive}" "${HALCYON}/cabal" || die
+	tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
 
-	if ! [ -f "${HALCYON}/cabal/tag" ] ||
-		! validate_cabal_tag "${cabal_version}" <"${HALCYON}/cabal/tag"
+	if ! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+		! validate_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
 		log_warning "Restoring ${cabal_archive} failed"
-		rm -rf "${HALCYON}/cabal" || die
+		rm -rf "${HALCYON_DIR}/cabal" || die
 		return 1
 	fi
 }
 
 
 function restore_cached_updated_cabal () {
-	expect_vars HALCYON HALCYON_CACHE
+	expect_vars HALCYON_DIR HALCYON_CACHE_DIR
 
 	local cabal_version
 	expect_args cabal_version -- "$@"
 
-	if [ -f "${HALCYON}/cabal/tag" ] &&
-		validate_updated_cabal_tag "${cabal_version}" <"${HALCYON}/cabal/tag"
+	if [ -f "${HALCYON_DIR}/cabal/tag" ] &&
+		validate_updated_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
 		return 0
 	fi
-	rm -rf "${HALCYON}/cabal" || die
+	rm -rf "${HALCYON_DIR}/cabal" || die
 
 	local cabal_archive
 	if ! cabal_archive=$(
-		find_spaceless "${HALCYON_CACHE}" |
+		find_spaceless "${HALCYON_CACHE_DIR}" |
 		match_updated_cabal_archive "${cabal_version}"
 	); then
 		return 1
 	fi
 
-	tar_extract "${HALCYON_CACHE}/${cabal_archive}" "${HALCYON}/cabal" || die
+	tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
 
-	if ! [ -f "${HALCYON}/cabal/tag" ] ||
-		! validate_updated_cabal_tag "${cabal_version}" <"${HALCYON}/cabal/tag"
+	if ! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+		! validate_updated_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
 		log_warning "Restoring cached ${cabal_archive} failed"
-		rm -rf "${HALCYON}/cabal" || die
+		rm -rf "${HALCYON_DIR}/cabal" || die
 		return 1
 	fi
 }
 
 
 function restore_updated_cabal () {
-	expect_vars HALCYON HALCYON_CACHE
+	expect_vars HALCYON_DIR HALCYON_CACHE_DIR
 
 	local cabal_version
 	expect_args cabal_version -- "$@"
@@ -547,14 +547,14 @@ function restore_updated_cabal () {
 		return 1
 	fi
 
-	download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE}" || die
-	tar_extract "${HALCYON_CACHE}/${cabal_archive}" "${HALCYON}/cabal" || die
+	download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE_DIR}" || die
+	tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
 
-	if ! [ -f "${HALCYON}/cabal/tag" ] ||
-		! validate_updated_cabal_tag "${cabal_version}" <"${HALCYON}/cabal/tag"
+	if ! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+		! validate_updated_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
 		log_warning "Restoring ${cabal_archive} failed"
-		rm -rf "${HALCYON}/cabal" || die
+		rm -rf "${HALCYON_DIR}/cabal" || die
 		return 1
 	fi
 }
@@ -566,8 +566,8 @@ function infer_cabal_version () {
 	log_begin 'Inferring Cabal version...'
 
 	local cabal_version
-	if has_vars FORCE_CABAL_VERSION; then
-		cabal_version="${FORCE_CABAL_VERSION}"
+	if has_vars HALCYON_FORCE_CABAL_VERSION; then
+		cabal_version="${HALCYON_FORCE_CABAL_VERSION}"
 
 		log_end "${cabal_version}, forced"
 	else
@@ -583,11 +583,11 @@ function infer_cabal_version () {
 
 
 function activate_cabal () {
-	expect_vars HOME HALCYON
-	expect "${HOME}" "${HALCYON}/cabal/tag"
+	expect_vars HOME HALCYON_DIR
+	expect "${HOME}" "${HALCYON_DIR}/cabal/tag"
 
 	local cabal_tag cabal_description
-	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
+	cabal_tag=$( <"${HALCYON_DIR}/cabal/tag" ) || die
 	cabal_description=$( echo_cabal_description "${cabal_tag}" ) || die
 
 	log_begin "Activating ${cabal_description}..."
@@ -598,18 +598,18 @@ function activate_cabal () {
 
 	mkdir -p "${HOME}/.cabal" || die
 	rm -f "${HOME}/.cabal/config" || die
-	ln -s "${HALCYON}/cabal/config" "${HOME}/.cabal/config" || die
+	ln -s "${HALCYON_DIR}/cabal/config" "${HOME}/.cabal/config" || die
 
 	log_end 'done'
 }
 
 
 function deactivate_cabal () {
-	expect_vars HOME HALCYON
-	expect "${HOME}" "${HALCYON}/cabal/tag"
+	expect_vars HOME HALCYON_DIR
+	expect "${HOME}" "${HALCYON_DIR}/cabal/tag"
 
 	local cabal_tag cabal_description
-	cabal_tag=$( <"${HALCYON}/cabal/tag" ) || die
+	cabal_tag=$( <"${HALCYON_DIR}/cabal/tag" ) || die
 	cabal_description=$( echo_cabal_description "${cabal_tag}" ) || die
 
 	log_begin "Deactivating ${cabal_description}..."
@@ -627,7 +627,7 @@ function deactivate_cabal () {
 
 
 function prepare_cabal () {
-	expect_vars FORCE_CABAL_UPDATE
+	expect_vars HALCYON_FORCE_CABAL_UPDATE
 
 	local has_time
 	expect_args has_time -- "$@"
@@ -635,7 +635,7 @@ function prepare_cabal () {
 	local cabal_version
 	cabal_version=$( infer_cabal_version ) || die
 
-	if ! (( ${FORCE_CABAL_UPDATE} )) &&
+	if ! (( ${HALCYON_FORCE_CABAL_UPDATE} )) &&
 		restore_updated_cabal "${cabal_version}"
 	then
 		activate_cabal || die

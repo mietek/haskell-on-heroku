@@ -11,7 +11,7 @@ function heroku_compile () {
 	expect_args build_dir cache_dir env_dir -- "$@"
 	expect "${build_dir}"
 
-	export HALCYON_CACHE="${cache_dir}"
+	export HALCYON_CACHE_DIR="${cache_dir}"
 
 	set_config_vars "${env_dir}" || die
 

@@ -27,32 +27,35 @@ function set_defaults () {
 	! (( ${HALCYON_DEFAULTS_SET:-0} )) || return 0
 	export HALCYON_DEFAULTS_SET=1
 
-	export HALCYON_PREFIX="${HALCYON_PREFIX:-/app}"
-	export HALCYON_SUFFIX="${HALCYON_SUFFIX:-.halcyon}"
-	export HALCYON="${HALCYON_PREFIX}/${HALCYON_SUFFIX}"
-	export HALCYON_CACHE="${HALCYON_CACHE:-/var/tmp/halcyon-cache}"
-
-	export PATH="${HALCYON}/buildpack/bin:${PATH:-}"
-	export PATH="${HALCYON}/ghc/bin:${PATH}"
-	export PATH="${HALCYON}/cabal/bin:${PATH}"
-	export PATH="${HALCYON}/sandbox/bin:${PATH}"
-	export PATH="${HALCYON}/app/bin:${PATH}"
-	export LIBRARY_PATH="${HALCYON}/ghc/lib:${LIBRARY_PATH:-}"
-	export LD_LIBRARY_PATH="${HALCYON}/ghc/lib:${LD_LIBRARY_PATH:-}"
-
-	export LANG="${LANG:-en_US.UTF-8}"
-
-	export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
-	export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
+	export HALCYON_DIR="${HALCYON_DIR:-/app/.halcyon}"
+	export HALCYON_INSTALL_DIR="${HALCYON_INSTALL_DIR:-/app/.halcyon/install}"
+	export HALCYON_CACHE_DIR="${HALCYON_CACHE_DIR:-/var/tmp/halcyon-cache}"
+	export HALCYON_PURGE_CACHE="${HALCYON_PURGE_CACHE:-0}"
+	export HALCYON_DEPENDENCIES_ONLY="${HALCYON_DEPENDENCIES_ONLY:-0}"
+	export HALCYON_PREPARED_ONLY="${HALCYON_PREPARED_ONLY:-0}"
+	export HALCYON_ASSUME_GHC="${HALCYON_ASSUME_GHC:-0}"
+	export HALCYON_FORCE_GHC_VERSION="${HALCYON_FORCE_GHC_VERSION:-}"
+	export HALCYON_NO_CUT_GHC="${HALCYON_NO_CUT_GHC:-0}"
+	export HALCYON_ASSUME_CABAL="${HALCYON_ASSUME_CABAL:-0}"
+	export HALCYON_FORCE_CABAL_VERSION="${HALCYON_FORCE_CABAL_VERSION:-}"
+	export HALCYON_FORCE_CABAL_UPDATE="${HALCYON_FORCE_CABAL_UPDATE:-0}"
+	export HALCYON_ISOLATE_SANDBOX="${HALCYON_ISOLATE_SANDBOX:-0}"
+	export HALCYON_AWS_ACCESS_KEY_ID="${HALCYON_AWS_ACCESS_KEY_ID:-}"
+	export HALCYON_AWS_SECRET_ACCESS_KEY="${HALCYON_AWS_SECRET_ACCESS_KEY:-}"
 	export HALCYON_S3_BUCKET="${HALCYON_S3_BUCKET:-}"
 	export HALCYON_S3_ACL="${HALCYON_S3_ACL:-private}"
+	export HALCYON_DRY_RUN="${HALCYON_DRY_RUN:-0}"
+	export HALCYON_SILENT="${HALCYON_SILENT:-0}"
 
-	export PURGE_HALCYON_CACHE="${PURGE_CACHE:-0}"
-	export SILENCE_HALCYON_OUTPUT="${SILENCE_HALCYON_OUTPUT:-0}"
-	export FORCE_GHC_VERSION="${FORCE_GHC_VERSION:-}"
-	export NO_CUT_GHC="${NO_CUT_GHC:-0}"
-	export FORCE_CABAL_VERSION="${FORCE_CABAL_VERSION:-}"
-	export FORCE_CABAL_UPDATE="${FORCE_CABAL_UPDATE:-0}"
+	export PATH="${HALCYON_DIR}/buildpack/bin:${PATH:-}"
+	export PATH="${HALCYON_DIR}/ghc/bin:${PATH}"
+	export PATH="${HALCYON_DIR}/cabal/bin:${PATH}"
+	export PATH="${HALCYON_DIR}/sandbox/bin:${PATH}"
+	export PATH="${HALCYON_DIR}/app/bin:${PATH}"
+	export LIBRARY_PATH="${HALCYON_DIR}/ghc/lib:${LIBRARY_PATH:-}"
+	export LD_LIBRARY_PATH="${HALCYON_DIR}/ghc/lib:${LD_LIBRARY_PATH:-}"
+
+	export LANG="${LANG:-en_US.UTF-8}"
 }
 
 
@@ -73,7 +76,7 @@ function set_config_vars () {
 
 	local ignored_pattern secret_pattern
 	ignored_pattern='GIT_DIR|PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LD_PRELOAD'
-	secret_pattern='AWS_SECRET_ACCESS_KEY|DATABASE_URL|.*_POSTGRESQL_.*_URL'
+	secret_pattern='HALCYON_AWS_SECRET_ACCESS_KEY|DATABASE_URL|.*_POSTGRESQL_.*_URL'
 
 	local var
 	for var in $(

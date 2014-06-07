@@ -2,7 +2,7 @@
 
 
 function echo_build_tag () {
-	expect_vars HALCYON
+	expect_vars HALCYON_DIR
 
 	local ghc_version app_label
 	expect_args ghc_version app_label -- "$@"
@@ -10,7 +10,7 @@ function echo_build_tag () {
 	local os
 	os=$( detect_os ) || die
 
-	echo -e "${HALCYON}\t${os}\tghc-${ghc_version}\t${app_label}"
+	echo -e "${HALCYON_DIR}\t${os}\tghc-${ghc_version}\t${app_label}"
 }
 
 
@@ -102,14 +102,14 @@ function build () {
 
 
 function infer_build_tag () {
-	expect_vars HALCYON
-	expect "${HALCYON}/ghc/tag"
+	expect_vars HALCYON_DIR
+	expect "${HALCYON_DIR}/ghc/tag"
 
 	local build_dir
 	expect_args build_dir -- "$@"
 
 	local ghc_tag app_label
-	ghc_tag=$( <"${HALCYON}/ghc/tag" ) || die
+	ghc_tag=$( <"${HALCYON_DIR}/ghc/tag" ) || die
 	ghc_version=$( echo_ghc_tag_version "${ghc_tag}" ) || die
 	app_label=$( detect_app_label "${build_dir}" ) || die
 
@@ -120,7 +120,7 @@ function infer_build_tag () {
 
 
 function cache_build () {
-	expect_vars HALCYON_CACHE
+	expect_vars HALCYON_CACHE_DIR
 
 	local build_dir
 	expect_args build_dir -- "$@"
@@ -132,15 +132,15 @@ function cache_build () {
 	build_tag=$( infer_build_tag "${build_dir}" ) || die
 	build_archive=$( echo_build_archive "${build_tag}" ) || die
 
-	rm -f "${HALCYON_CACHE}/${build_archive}" || die
-	tar_archive "${build_dir}" "${HALCYON_CACHE}/${build_archive}" || die
+	rm -f "${HALCYON_CACHE_DIR}/${build_archive}" || die
+	tar_archive "${build_dir}" "${HALCYON_CACHE_DIR}/${build_archive}" || die
 
 	rm -rf "${build_dir}/dist" || die
 }
 
 
 function restore_build () {
-	expect_vars HALCYON_CACHE
+	expect_vars HALCYON_CACHE_DIR
 
 	local build_dir
 	expect_args build_dir -- "$@"
@@ -151,7 +151,7 @@ function restore_build () {
 	build_tag=$( infer_build_tag "${build_dir}" ) || die
 	build_archive=$( echo_build_archive "${build_tag}" ) || die
 
-	if ! [ -f "${HALCYON_CACHE}/${build_archive}" ]; then
+	if ! [ -f "${HALCYON_CACHE_DIR}/${build_archive}" ]; then
 		return 1
 	fi
 
@@ -161,7 +161,7 @@ function restore_build () {
 	tmp_old_dir=$( echo_build_tmp_old_dir ) || die
 	tmp_dist_dir=$( echo_build_tmp_dist_dir ) || die
 
-	tar_extract "${HALCYON_CACHE}/${build_archive}" "${tmp_old_dir}" || die
+	tar_extract "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" || die
 	mv "${tmp_old_dir}/dist" "${tmp_dist_dir}" || die
 
 	log 'Examining build changes'

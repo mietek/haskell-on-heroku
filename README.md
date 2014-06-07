@@ -123,18 +123,18 @@ It is also possible to prepare packages off Heroku, using any 64-bit machine run
 
 To set [configuration variables][], use `heroku config:set`.
 
-Variable                 | Default   | Description
--------------------------|-----------|------------
-`AWS_ACCESS_KEY_ID`      | —         | Use this Amazon S3 key to access private prepared packages
-`AWS_SECRET_ACCESS_KEY`  | —         | Use this Amazon S3 key to access private prepared packages
-`HALCYON_S3_BUCKET`      | —         | Use this Amazon S3 bucket to keep prepared packages
-`HALCYON_S3_ACL`         | `private` | Use this Amazon S3 ACL to control access to prepared packages
-`PURGE_HALCYON_CACHE`    | `0`       | When `1`, delete all prepared packages from cache before compiling
-`SILENCE_HALCYON_OUTPUT` | `0`       | When `1`, hide all expected external command output
-`FORCE_GHC_VERSION`      | —         | Use this GHC version instead of inferring it
-`NO_CUT_GHC`             | `0`       | When `1`, use GHC prepared without deleting extraneous files
-`FORCE_CABAL_VERSION`    | —         | Use this Cabal version instead of inferring the version
-`FORCE_CABAL_UPDATE`     | `0`       | When `1`, update Cabal instead of using a recently updated prepared package
+Variable                        | Default   | Description
+--------------------------------|-----------|------------
+`HALCYON_AWS_ACCESS_KEY_ID`     | —         | Use this Amazon S3 key to access private prepared packages
+`HALCYON_AWS_SECRET_ACCESS_KEY` | —         | Use this Amazon S3 key to access private prepared packages
+`HALCYON_S3_BUCKET`             | —         | Use this Amazon S3 bucket to keep prepared packages
+`HALCYON_S3_ACL`                | `private` | Use this Amazon S3 ACL to control access to prepared packages
+`HALCYON_PURGE_CACHE`           | `0`       | When `1`, delete all prepared packages from cache before compiling
+`HALCYON_SILENT`                | `0`       | When `1`, hide all expected external command output
+`HALCYON_FORCE_GHC_VERSION`     | —         | Use this GHC version instead of inferring it
+`HALCYON_NO_CUT_GHC`            | `0`       | When `1`, use GHC prepared without deleting extraneous files
+`HALCYON_FORCE_CABAL_VERSION`   | —         | Use this Cabal version instead of inferring the version
+`HALCYON_FORCE_CABAL_UPDATE`    | `0`       | When `1`, update Cabal instead of using a recently updated prepared package
 
 
 ###  I still have questions.  Can I ask you a question?
