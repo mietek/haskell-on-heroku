@@ -46,17 +46,17 @@ function echo_build_archive () {
 
 
 
-function echo_build_tmp_dir () {
+function echo_tmp_build_dir () {
 	mktemp -du "/tmp/halcyon-build.XXXXXXXXXX"
 }
 
 
-function echo_old_build_tmp_dir () {
+function echo_tmp_old_build_dir () {
 	mktemp -du "/tmp/halcyon-build.old.XXXXXXXXXX"
 }
 
 
-function echo_build_dist_tmp_dir () {
+function echo_tmp_build_dist_dir () {
 	mktemp -du "/tmp/halcyon-build.dist.XXXXXXXXXX"
 }
 
@@ -68,7 +68,7 @@ function fake_build_dir () {
 	expect_args app_label -- "$@"
 
 	local build_dir
-	build_dir=$( echo_build_tmp_dir ) || die
+	build_dir=$( echo_tmp_build_dir ) || die
 
 	mkdir -p "${build_dir}" || die
 	echo_fake_package "${app_label}" >"${build_dir}/${app_label}.cabal" || die
@@ -162,8 +162,8 @@ function restore_build () {
 	log 'Restoring build'
 
 	local tmp_old_dir tmp_dist_dir
-	tmp_old_dir=$( echo_old_build_tmp_dir ) || die
-	tmp_dist_dir=$( echo_build_dist_tmp_dir ) || die
+	tmp_old_dir=$( echo_tmp_old_build_dir ) || die
+	tmp_dist_dir=$( echo_tmp_build_dist_dir ) || die
 
 	tar_extract "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" || die
 	mv "${tmp_old_dir}/dist" "${tmp_dist_dir}" || die

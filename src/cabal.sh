@@ -141,7 +141,7 @@ function echo_cabal_description () {
 
 
 
-function echo_cabal_tmp_dir () {
+function echo_tmp_cabal_dir () {
 	mktemp -du "/tmp/halcyon-cabal.XXXXXXXXXX"
 }
 
@@ -245,7 +245,7 @@ function sandboxed_cabal_do () {
 	saved_config=''
 	if [ -f "${work_dir}/cabal.config" ]; then
 		if [ -f "${HALCYON_DIR}/sandbox/cabal.config" ]; then
-			saved_config=$( echo_sandbox_tmp_config ) || die
+			saved_config=$( echo_tmp_sandbox_config ) || die
 			mv "${HALCYON_DIR}/sandbox/cabal.config" "${saved_config}" || die
 		fi
 		cp "${work_dir}/cabal.config" "${HALCYON_DIR}/sandbox/cabal.config" || die
@@ -351,7 +351,7 @@ function build_cabal () {
 	local original_url original_archive tmp_dir
 	original_url=$( echo_cabal_original_url "${cabal_version}" ) || die
 	original_archive=$( basename "${original_url}" ) || die
-	tmp_dir=$( echo_cabal_tmp_dir ) || die
+	tmp_dir=$( echo_tmp_cabal_dir ) || die
 
 	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
 		die "Cabal ${cabal_version} is not available"

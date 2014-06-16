@@ -148,7 +148,7 @@ function echo_ghc_description () {
 
 
 
-function echo_ghc_tmp_dir () {
+function echo_tmp_ghc_dir () {
 	mktemp -du "/tmp/halcyon-ghc.XXXXXXXXXX"
 }
 
@@ -258,7 +258,7 @@ function build_ghc () {
 
 	local original_archive tmp_dir
 	original_archive=$( basename "${original_url}" ) || die
-	tmp_dir=$( echo_ghc_tmp_dir ) || die
+	tmp_dir=$( echo_tmp_ghc_dir ) || die
 
 	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
 		die "GHC ${ghc_version} is not available"

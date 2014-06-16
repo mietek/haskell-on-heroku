@@ -135,7 +135,7 @@ function echo_sandbox_description () {
 
 
 
-function echo_sandbox_tmp_config () {
+function echo_tmp_sandbox_config () {
 	mktemp -u "/tmp/halcyon-sandbox.cabal.config.XXXXXXXXXX"
 }
 

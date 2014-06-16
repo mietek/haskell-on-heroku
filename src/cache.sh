@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 
-function echo_cache_tmp_dir () {
+function echo_tmp_cache_dir () {
 	mktemp -du "/tmp/halcyon-cache.XXXXXXXXXX"
 }
 
 
-function echo_old_cache_tmp_dir () {
+function echo_tmp_old_cache_dir () {
 	mktemp -du "/tmp/halcyon-cache.old.XXXXXXXXXX"
 }
 
@@ -22,7 +22,7 @@ function prepare_cache () {
 		rm -rf "${HALCYON_CACHE_DIR}"
 	fi
 
-	export HALCYON_OLD_CACHE_TMP_DIR=$( echo_old_cache_tmp_dir ) || die
+	export HALCYON_OLD_CACHE_TMP_DIR=$( echo_tmp_old_cache_dir ) || die
 	rm -rf "${HALCYON_OLD_CACHE_TMP_DIR}" || die
 
 	local has_old_cache
@@ -55,7 +55,7 @@ function clean_cache () {
 	log_begin 'Cleaning cache...'
 
 	local tmp_dir
-	tmp_dir=$( echo_cache_tmp_dir ) || die
+	tmp_dir=$( echo_tmp_cache_dir ) || die
 
 	mkdir -p "${tmp_dir}" || die
 
