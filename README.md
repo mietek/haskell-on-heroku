@@ -130,6 +130,7 @@ Variable                        | Default   | Description
 `HALCYON_S3_BUCKET`             | —         | Use this Amazon S3 bucket to keep prepared packages
 `HALCYON_S3_ACL`                | `private` | Use this Amazon S3 ACL to control access to prepared packages
 `HALCYON_PURGE_CACHE`           | `0`       | When `1`, delete all prepared packages from cache before compiling
+`HALCYON_FORCE_FAIL_INSTALL`    | `0`       | When `1`, deploy an app-less slug without installing anything
 `HALCYON_SILENT`                | `0`       | When `1`, hide all expected external command output
 `HALCYON_FORCE_GHC_VERSION`     | —         | Use this GHC version instead of inferring it
 `HALCYON_NO_CUT_GHC`            | `0`       | When `1`, use GHC prepared without deleting extraneous files
