@@ -197,11 +197,13 @@ function halcyon_install () {
 	if (( ${HALCYON_FAKE_BUILD:-0} )); then
 		rm -rf "${build_dir}" || die
 	elif ! (( ${HALCYON_DEPENDENCIES_ONLY} )); then
-		if ! restore_build "${build_dir}"; then
+		local build_tag
+		build_tag=$( infer_build_tag "${build_dir}" ) || die
+		if ! restore_build "${build_dir}" "${build_tag}"; then
 			configure_build "${build_dir}" || die
 		fi
-		build "${build_dir}" || die
-		cache_build "${build_dir}" || die
+		build "${build_dir}" "${build_tag}" || die
+		cache_build "${build_dir}" "${build_tag}" || die
 		log
 	fi
 
