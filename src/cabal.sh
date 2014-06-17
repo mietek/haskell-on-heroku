@@ -117,6 +117,17 @@ function echo_updated_cabal_archive_pattern () {
 }
 
 
+function echo_updated_cabal_archive_timestamp () {
+	local cabal_archive
+	expect_args cabal_archive -- "$@"
+
+	local timestamp_extension
+	timestamp_extension="${cabal_archive##*-}"
+
+	echo "${timestamp_extension%.tar.xz}"
+}
+
+
 
 
 function echo_cabal_description () {
@@ -162,6 +173,19 @@ function validate_cabal_tag () {
 }
 
 
+function validate_updated_cabal_timestamp () {
+	local candidate_timestamp
+	expect_args candidate_timestamp -- "$@"
+
+	local yesterday_timestamp
+	yesterday_timestamp=$( check_timestamp -d yesterday ) || die
+
+	if [[ "${candidate_timestamp}" < "${yesterday_timestamp}" ]]; then
+		return 1
+	fi
+}
+
+
 function validate_updated_cabal_tag () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
@@ -177,13 +201,32 @@ function validate_updated_cabal_tag () {
 		return 1
 	fi
 
-	local candidate_timestamp yesterday_timestamp
+	local candidate_timestamp
 	candidate_timestamp=$( echo_cabal_tag_timestamp "${candidate_tag}" ) || die
-	yesterday_timestamp=$( check_timestamp -d yesterday ) || die
 
-	if [[ "${candidate_timestamp}" < "${yesterday_timestamp}" ]]; then
+	validate_updated_cabal_timestamp "${candidate_timestamp}"
+}
+
+
+function validate_updated_cabal_archive () {
+	local cabal_version
+	expect_args cabal_version -- "$@"
+
+	local updated_pattern
+	updated_pattern=$( echo_updated_cabal_archive_pattern "${cabal_version}" ) || die
+
+	local candidate_archive
+	if ! candidate_archive=$(
+		filter_matching "^${updated_pattern}$" |
+		match_exactly_one
+	); then
 		return 1
 	fi
+
+	local candidate_timestamp
+	candidate_timestamp=$( echo_updated_cabal_archive_timestamp "${candidate_archive}" ) || die
+
+	validate_updated_cabal_timestamp "${candidate_timestamp}"
 }
 
 
@@ -203,6 +246,10 @@ function match_updated_cabal_archive () {
 		filter_last |
 		match_exactly_one
 	); then
+		return 1
+	fi
+
+	if ! validate_updated_cabal_archive "${cabal_version}" <<<"${updated_archive}"; then
 		return 1
 	fi
 
@@ -503,6 +550,7 @@ function restore_cached_updated_cabal () {
 	local cabal_archive
 	if ! cabal_archive=$(
 		find_spaceless "${HALCYON_CACHE_DIR}" |
+		sed "s:^${HALCYON_CACHE_DIR}/::" |
 		match_updated_cabal_archive "${cabal_version}"
 	); then
 		return 1
