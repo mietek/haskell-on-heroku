@@ -148,7 +148,7 @@ function echo_ghc_description () {
 
 
 
-function echo_ghc_tmp_dir () {
+function echo_tmp_ghc_dir () {
 	mktemp -du "/tmp/halcyon-ghc.XXXXXXXXXX"
 }
 
@@ -258,13 +258,22 @@ function build_ghc () {
 
 	local original_archive tmp_dir
 	original_archive=$( basename "${original_url}" ) || die
-	tmp_dir=$( echo_ghc_tmp_dir ) || die
+	tmp_dir=$( echo_tmp_ghc_dir ) || die
 
-	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
-		die "GHC ${ghc_version} is not available"
+	if ! [ -f "${HALCYON_CACHE_DIR}/${original_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}"
+	then
+		rm -rf "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
+
+		if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
+			die "GHC ${ghc_version} is not available"
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}"; then
+			rm -rf "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
+			die "Restoring ${original_archive} failed"
+		fi
 	fi
-
-	tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
 
 	log "Installing GHC ${ghc_version}"
 
@@ -273,7 +282,8 @@ function build_ghc () {
 		silently ./configure --prefix="${HALCYON_DIR}/ghc" &&
 		silently make install
 	); then
-		die 'Installing GHC failed'
+		rm -rf "${tmp_dir}" || die
+		die "Installing GHC ${ghc_version} failed"
 	fi
 
 	rm -rf "${HALCYON_DIR}/ghc/share" "${tmp_dir}" || die
@@ -451,19 +461,26 @@ function restore_ghc () {
 	os=$( detect_os ) || die
 	ghc_archive=$( echo_ghc_archive "${ghc_tag}" ) || die
 
-	if ! download_prepared "${os}" "${ghc_archive}" "${HALCYON_CACHE_DIR}"; then
-		log_warning "${ghc_description} is not prepared"
-		return 1
-	fi
-
-	tar_extract "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" || die
-
-	if ! [ -f "${HALCYON_DIR}/ghc/tag" ] ||
+	if ! [ -f "${HALCYON_CACHE_DIR}/${ghc_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" ||
+		! [ -f "${HALCYON_DIR}/ghc/tag" ] ||
 		! validate_ghc_tag "${ghc_tag}" <"${HALCYON_DIR}/ghc/tag"
 	then
-		log_warning "Restoring ${ghc_archive} failed"
-		rm -rf "${HALCYON_DIR}/ghc" || die
-		return 1
+		rm -rf "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" || die
+
+		if ! download_prepared "${os}" "${ghc_archive}" "${HALCYON_CACHE_DIR}"; then
+			log_warning "${ghc_description} is not prepared"
+			return 1
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" ||
+			! [ -f "${HALCYON_DIR}/ghc/tag" ] ||
+			! validate_ghc_tag "${ghc_tag}" <"${HALCYON_DIR}/ghc/tag"
+		then
+			rm -rf "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" || die
+			log_warning "Restoring ${ghc_archive} failed"
+			return 1
+		fi
 	fi
 }
 
@@ -518,10 +535,6 @@ function activate_ghc () {
 
 	log_begin "Activating ${ghc_description}..."
 
-	if [ -e "${HOME}/.ghc" ]; then
-		die "Expected no custom ${HOME}/.ghc"
-	fi
-
 	log_end 'done'
 }
 
@@ -536,21 +549,17 @@ function deactivate_ghc () {
 
 	log_begin "Dectivating ${ghc_description}..."
 
-	if [ -e "${HOME}/.ghc" ]; then
-		die "Expected no custom ${HOME}/.ghc"
-	fi
-
 	log_end 'done'
 }
 
 
 
 
-function prepare_ghc () {
-	expect_vars HALCYON_NO_CUT_GHC
+function install_ghc () {
+	expect_vars HALCYON_PREPARED_ONLY HALCYON_NO_CUT_GHC
 
-	local has_time build_dir
-	expect_args has_time build_dir -- "$@"
+	local build_dir
+	expect_args build_dir -- "$@"
 
 	local ghc_variant
 	if (( ${HALCYON_NO_CUT_GHC} )); then
@@ -568,7 +577,7 @@ function prepare_ghc () {
 		return 0
 	fi
 
-	(( ${has_time} )) || return 1
+	! (( ${HALCYON_PREPARED_ONLY} )) || return 1
 
 	build_ghc "${ghc_version}" || die
 	if ! (( ${HALCYON_NO_CUT_GHC} )); then

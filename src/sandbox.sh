@@ -115,7 +115,7 @@ function echo_sandbox_config_pattern () {
 	local ghc_version
 	expect_args ghc_version -- "$@"
 
-	echo "halcyon-sandbox-ghc-${ghc_version}.*\.cabal\.config"
+	echo "halcyon-sandbox-ghc-${ghc_version//./\.}.*\.cabal\.config"
 }
 
 
@@ -135,7 +135,7 @@ function echo_sandbox_description () {
 
 
 
-function echo_sandbox_tmp_config () {
+function echo_tmp_sandbox_config () {
 	mktemp -u "/tmp/halcyon-sandbox.cabal.config.XXXXXXXXXX"
 }
 
@@ -320,19 +320,26 @@ function restore_sandbox () {
 	os=$( detect_os ) || die
 	sandbox_archive=$( echo_sandbox_archive "${sandbox_tag}" ) || die
 
-	if ! download_prepared "${os}" "${sandbox_archive}" "${HALCYON_CACHE_DIR}"; then
-		log_warning "${sandbox_description} is not prepared"
-		return 1
-	fi
-
-	tar_extract "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" || die
-
-	if ! [ -f "${HALCYON_DIR}/sandbox/tag" ] ||
+	if ! [ -f "${HALCYON_CACHE_DIR}/${sandbox_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" ||
+		! [ -f "${HALCYON_DIR}/sandbox/tag" ] ||
 		! validate_sandbox_tag "${sandbox_tag}" <"${HALCYON_DIR}/sandbox/tag"
 	then
-		log_warning "Restoring ${sandbox_archive} failed"
-		rm -rf "${HALCYON_DIR}/sandbox" || die
-		return 1
+		rm -rf "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" || die
+
+		if ! download_prepared "${os}" "${sandbox_archive}" "${HALCYON_CACHE_DIR}"; then
+			log_warning "${sandbox_description} is not prepared"
+			return 1
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" ||
+			! [ -f "${HALCYON_DIR}/sandbox/tag" ] ||
+			! validate_sandbox_tag "${sandbox_tag}" <"${HALCYON_DIR}/sandbox/tag"
+		then
+			rm -rf "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" || die
+			log_warning "Restoring ${sandbox_archive} failed"
+			return 1
+		fi
 	fi
 }
 
@@ -500,7 +507,7 @@ function deactivate_sandbox () {
 
 
 
-function prepare_extended_sandbox () {
+function install_extended_sandbox () {
 	expect_vars HALCYON_DIR
 
 	local build_dir sandbox_constraints unhappy_workaround sandbox_tag matched_tag
@@ -540,12 +547,12 @@ function prepare_extended_sandbox () {
 }
 
 
-function prepare_sandbox () {
-	expect_vars HALCYON_DIR
+function install_sandbox () {
+	expect_vars HALCYON_DIR HALCYON_PREPARED_ONLY
 	expect "${HALCYON_DIR}/ghc/tag"
 
-	local has_time build_dir
-	expect_args has_time build_dir -- "$@"
+	local build_dir
+	expect_args build_dir -- "$@"
 
 	local ghc_tag
 	ghc_tag=$( <"${HALCYON_DIR}/ghc/tag" ) || die
@@ -572,11 +579,11 @@ function prepare_sandbox () {
 		return 0
 	fi
 
-	(( ${has_time} )) || return 1
+	! (( ${HALCYON_PREPARED_ONLY} )) || return 1
 
 	local matched_tag
 	if matched_tag=$( locate_matched_sandbox_tag "${sandbox_constraints}" ) &&
-		prepare_extended_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
+		install_extended_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" "${matched_tag}"
 	then
 		return 0
 	fi

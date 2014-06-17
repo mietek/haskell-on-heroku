@@ -4,7 +4,8 @@
 set -o nounset
 set -o pipefail
 
-self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+declare self_dir
+self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 source "${self_dir}/lib/curl.sh"
 source "${self_dir}/lib/expect.sh"
 source "${self_dir}/lib/log.sh"
@@ -23,35 +24,37 @@ source "${self_dir}/transfer.sh"
 
 
 
-function set_defaults () {
+function set_default_vars () {
 	! (( ${HALCYON_DEFAULTS_SET:-0} )) || return 0
 	export HALCYON_DEFAULTS_SET=1
 
 	export HALCYON_DIR="${HALCYON_DIR:-/app/.halcyon}"
-	export HALCYON_INSTALL_DIR="${HALCYON_INSTALL_DIR:-/app/.halcyon/install}"
-	export HALCYON_CACHE_DIR="${HALCYON_CACHE_DIR:-/var/tmp/halcyon-cache}"
+	export HALCYON_CONFIG_DIR="${HALCYON_CONFIG_DIR:-${HALCYON_DIR}/config}"
+	export HALCYON_INSTALL_DIR="${HALCYON_INSTALL_DIR:-${HALCYON_DIR}/install}"
+	export HALCYON_CACHE_DIR="${HALCYON_CACHE_DIR:-/var/tmp/halcyon/cache}"
+
 	export HALCYON_PURGE_CACHE="${HALCYON_PURGE_CACHE:-0}"
+	export HALCYON_FORCE_FAIL_INSTALL="${HALCYON_FORCE_FAIL_INSTALL:-0}"
 	export HALCYON_DEPENDENCIES_ONLY="${HALCYON_DEPENDENCIES_ONLY:-0}"
 	export HALCYON_PREPARED_ONLY="${HALCYON_PREPARED_ONLY:-0}"
-	export HALCYON_ASSUME_GHC="${HALCYON_ASSUME_GHC:-0}"
 	export HALCYON_FORCE_GHC_VERSION="${HALCYON_FORCE_GHC_VERSION:-}"
 	export HALCYON_NO_CUT_GHC="${HALCYON_NO_CUT_GHC:-0}"
-	export HALCYON_ASSUME_CABAL="${HALCYON_ASSUME_CABAL:-0}"
 	export HALCYON_FORCE_CABAL_VERSION="${HALCYON_FORCE_CABAL_VERSION:-}"
 	export HALCYON_FORCE_CABAL_UPDATE="${HALCYON_FORCE_CABAL_UPDATE:-0}"
-	export HALCYON_ISOLATE_SANDBOX="${HALCYON_ISOLATE_SANDBOX:-0}"
+
 	export HALCYON_AWS_ACCESS_KEY_ID="${HALCYON_AWS_ACCESS_KEY_ID:-}"
 	export HALCYON_AWS_SECRET_ACCESS_KEY="${HALCYON_AWS_SECRET_ACCESS_KEY:-}"
 	export HALCYON_S3_BUCKET="${HALCYON_S3_BUCKET:-}"
 	export HALCYON_S3_ACL="${HALCYON_S3_ACL:-private}"
+
+	export HALCYON_ONE_SHOT="${HALCYON_ONE_SHOT:-0}"
 	export HALCYON_DRY_RUN="${HALCYON_DRY_RUN:-0}"
 	export HALCYON_SILENT="${HALCYON_SILENT:-0}"
 
-	export PATH="${HALCYON_DIR}/buildpack/bin:${PATH:-}"
 	export PATH="${HALCYON_DIR}/ghc/bin:${PATH}"
 	export PATH="${HALCYON_DIR}/cabal/bin:${PATH}"
 	export PATH="${HALCYON_DIR}/sandbox/bin:${PATH}"
-	export PATH="${HALCYON_DIR}/app/bin:${PATH}"
+	export PATH="${HALCYON_INSTALL_DIR}/bin:${PATH}"
 	export LIBRARY_PATH="${HALCYON_DIR}/ghc/lib:${LIBRARY_PATH:-}"
 	export LD_LIBRARY_PATH="${HALCYON_DIR}/ghc/lib:${LD_LIBRARY_PATH:-}"
 
@@ -59,18 +62,13 @@ function set_defaults () {
 }
 
 
-set_defaults
+set_default_vars
 
 
 
 
 function set_config_vars () {
-	local env_dir
-	expect_args env_dir -- "$@"
-
-	if ! [ -d "${env_dir}" ]; then
-		return 0
-	fi
+	expect_vars HALCYON_CONFIG_DIR
 
 	log 'Setting config vars'
 
@@ -80,13 +78,13 @@ function set_config_vars () {
 
 	local var
 	for var in $(
-		find_spaceless "${env_dir}" -maxdepth 1 |
-		sed "s:^${env_dir}/::" |
+		find_spaceless "${HALCYON_CONFIG_DIR}" -maxdepth 1 |
+		sed "s:^${HALCYON_CONFIG_DIR}/::" |
 		sort_naturally |
 		filter_not_matching "^(${ignored_pattern})$"
 	); do
 		local value
-		value=$( match_exactly_one <"${env_dir}/${var}" ) || die
+		value=$( match_exactly_one <"${HALCYON_CONFIG_DIR}/${var}" ) || die
 		if filter_matching "^(${secret_pattern})$" <<<"${var}" |
 			match_exactly_one >'/dev/null'
 		then
@@ -101,65 +99,125 @@ function set_config_vars () {
 
 
 
-function halcyon_prepare () {
-	local has_time app
-	has_time=1
-	app=''
-	if [ -n "${2:-}" ]; then
-		has_time="$1"
-		app="$2"
-	elif [ -n "${1:-}" ]; then
-		app="$1"
-	fi
+function halcyon_install () {
+	expect_vars HALCYON_CONFIG_DIR HALCYON_FORCE_FAIL_INSTALL HALCYON_DEPENDENCIES_ONLY
 
-	local build_dir app_label app_description
-	build_dir=''
-	app_label=''
-	if [ -z "${app}" ]; then
-		export HALCYON_FAKE_BUILD=1
-		app_description='base sandbox'
-	elif ! [ -d "${app}" ]; then
-		export HALCYON_FAKE_BUILD=1
-		app_label="${app}"
-		app_description="sandbox for ${app_label}"
+	while (( $# )); do
+		case "$1" in
+		'--halcyon-dir='*)
+			export HALCYON_DIR="${1#*=}";;
+		'--config-dir='*)
+			export HALCYON_CONFIG_DIR="${1#*=}";;
+		'--install-dir='*)
+			export HALCYON_INSTALL_DIR="${1#*=}";;
+		'--cache-dir='*)
+			export HALCYON_CACHE_DIR="${1#*=}";;
+
+		'--purge-cache')
+			export HALCYON_PURGE_CACHE=1;;
+		'--force-fail-install')
+			export HALCYON_FORCE_FAIL_INSTALL=1;;
+		'--dependencies-only');&
+		'--dep-only');&
+		'--only-dependencies');&
+		'--only-dep')
+			export HALCYON_DEPENDENCIES_ONLY=1;;
+		'--prepared-only');&
+		'--prep-only');&
+		'--only-prepared');&
+		'--only-prep')
+			export HALCYON_PREPARED_ONLY=1;;
+		'--force-ghc-version='*)
+			export HALCYON_FORCE_GHC_VERSION="${1#*=}";;
+		'--no-cut-ghc')
+			export HALCYON_NO_CUT_GHC=1;;
+		'--force-cabal-version='*)
+			export HALCYON_FORCE_CABAL_VERSION="${1#*=}";;
+		'--force-cabal-update')
+			export HALCYON_FORCE_CABAL_UPDATE=1;;
+
+		'--aws-access-key-id='*)
+			export HALCYON_AWS_ACCESS_KEY_ID="${1#*=}";;
+		'--aws-secret-access-key='*)
+			export HALCYON_AWS_SECRET_ACCESS_KEY="${1#*=}";;
+		'--s3-bucket='*)
+			export HALCYON_S3_BUCKET="${1#*=}";;
+		'--s3-acl='*)
+			export HALCYON_S3_ACL="${1#*=}";;
+
+		'--one-shot')
+			export HALCYON_ONE_SHOT=1;;
+		'--dry-run')
+			export HALCYON_DRY_RUN=1;;
+		'--silent')
+			export HALCYON_SILENT=1;;
+
+		'-'*)
+			die "Unexpected option: $1";;
+		*)
+			break
+		esac
+		shift
+	done
+
+	local build_dir app_label
+	if ! (( $# )); then
+		build_dir='.'
+		app_label=$( detect_app_label "${build_dir}" ) || die
+	elif [ -d "$1" ]; then
+		build_dir="$1"
+		app_label=$( detect_app_label "${build_dir}" ) || die
 	else
-		build_dir="${app}"
-		app_description=$( detect_app_label "${build_dir}" ) || die
+		export HALCYON_FAKE_BUILD=1
+		app_label="$1"
+		build_dir=''
 	fi
 
-	log
-	log "Preparing ${app_description}"
+	log "Installing ${app_label}"
 	log
 
-	prepare_ghc "${has_time}" "${build_dir}" || die
+	if [ -d "${HALCYON_CONFIG_DIR}" ]; then
+		set_config_vars || die
+		log
+	fi
+
+	if (( ${HALCYON_FORCE_FAIL_INSTALL} )); then
+		return 1
+	fi
+
+	prepare_cache || die
+	log
+
+	install_ghc "${build_dir}" || return 1
 	log
 
 	if (( ${HALCYON_FAKE_BUILD:-0} )); then
-		if [ -z "${app_label}" ]; then
-			base_version=$( detect_base_version ) || die
-			app_label="base-${base_version}"
-		fi
-
 		build_dir=$( fake_build_dir "${app_label}" ) || die
 	fi
 
-	prepare_cabal "${has_time}" || die
+	install_cabal || return 1
 	log
 
-	prepare_sandbox "${has_time}" "${build_dir}" || die
+	install_sandbox "${build_dir}" || return 1
 	log
 
 	if (( ${HALCYON_FAKE_BUILD:-0} )); then
 		rm -rf "${build_dir}" || die
-	else
-		configure_build "${build_dir}" || die
-		build "${build_dir}" || die
+	elif ! (( ${HALCYON_DEPENDENCIES_ONLY} )); then
+		local build_tag
+		build_tag=$( infer_build_tag "${build_dir}" ) || die
+		if ! restore_build "${build_dir}" "${build_tag}"; then
+			configure_build "${build_dir}" || die
+		fi
+		build "${build_dir}" "${build_tag}" || die
+		cache_build "${build_dir}" "${build_tag}" || die
 		log
 	fi
 
+	clean_cache "${build_dir}" || die
 	log
-	log "Prepared ${app_description}"
-	log
+
+	log "Installed ${app_label}"
 }
 
 

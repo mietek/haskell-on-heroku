@@ -1,40 +1,18 @@
 #!/usr/bin/env bash
 
 
-declare self_dir
-self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "${self_dir}/../haskell-on-heroku.sh"
+declare buildpack_dir
+buildpack_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
+source "${buildpack_dir}/haskell-on-heroku.sh"
 
 
 function heroku_restore () {
-	local build_dir
-	build_dir='/app'
-	expect "${build_dir}"
+	expect '/app'
 
-	local app_label
-	app_label=$( detect_app_label "${build_dir}" ) || die
+	halcyon_install --prepared-only '/app' || die
 
 	log
-	log "Preparing ${app_label}"
-	log
-
-	prepare_ghc 1 "${build_dir}" || die
-	log
-
-	prepare_cabal 1 || die
-	log
-
-	prepare_sandbox 1 "${build_dir}" || die
-	log
-
-	configure_build "${build_dir}" || die
-	build "${build_dir}" || die
-	log
-
-	log
-	log "Prepared ${app_label}"
 	log_restore_succeeded_help
-	log
 }
 
 

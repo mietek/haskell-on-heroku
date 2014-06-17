@@ -5,9 +5,21 @@ function echo_fake_package () {
 	local app_label
 	expect_args app_label -- "$@"
 
-	local app_name app_version
-	app_name="${app_label%-*}"
-	app_version="${app_label##*-}"
+	local app_name app_version build_depends
+	case "${app_label}" in
+	'base')
+		app_name='base'
+		app_version=$( detect_base_version ) || die
+		build_depends='base'
+		;;
+	*'-'*)
+		app_name="${app_label%-*}"
+		app_version="${app_label##*-}"
+		build_depends="base, ${app_name} == ${app_version}"
+		;;
+	*)
+		die "Unexpected app label: ${app_label}"
+	esac
 
 	cat <<-EOF
 		name:           halcyon-fake-${app_name}
@@ -16,13 +28,8 @@ function echo_fake_package () {
 		cabal-version:  >= 1.2
 
 		executable halcyon-fake-${app_name}
+		  build-depends:  ${build_depends}
 EOF
-
-	if [ "${app_name}" = 'base' ]; then
-		echo "  build-depends:  base"
-	else
-		echo "  build-depends:  base, ${app_name} == ${app_version}"
-	fi
 }
 
 

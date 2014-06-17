@@ -3,61 +3,61 @@
 
 export HALCYON_DIR='/app/.halcyon'
 
-declare self_dir
-self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "${self_dir}/src/halcyon.sh"
+declare buildpack_dir
+buildpack_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
+source "${buildpack_dir}/src/halcyon.sh"
 
 
 
 
-function slug_buildpack () {
-	expect_vars HALCYON_DIR
-
-	local buildpack_dir build_dir
-	expect_args buildpack_dir build_dir -- "$@"
-	expect "${buildpack_dir}" "${build_dir}"
-	expect_no "${build_dir}/.profile.d/halcyon.sh"
-
-	local slugged_halcyon_dir
-	slugged_halcyon_dir="${build_dir}/.halcyon"
-	expect_no "${slugged_halcyon_dir}"
-
-	mkdir -p "${slugged_halcyon_dir}/buildpack" || die
-	cp -R "${buildpack_dir}/"* "${slugged_halcyon_dir}/buildpack" || die
-
-	mkdir -p "${build_dir}/.profile.d" || die
-	echo "source \"${HALCYON_DIR}/buildpack/haskell-on-heroku.sh\"" >"${build_dir}/.profile.d/haskell-on-heroku.sh" || die
-}
-
-
-function slug_app () {
-	expect_vars HALCYON_DIR
-	expect "${HALCYON_DIR}/app"
+function package_buildpack () {
+	expect_vars buildpack_dir
+	expect "${buildpack_dir}"
 
 	local build_dir
 	expect_args build_dir -- "$@"
-	expect_no "${build_dir}/.cabal" "${build_dir}/.ghc" "${build_dir}/dist"
 
-	local slugged_halcyon_dir
-	slugged_halcyon_dir="${build_dir}/.halcyon"
-	expect "${slugged_halcyon_dir}"
-	expect_no "${slugged_halcyon_dir}/app"
+	expect_no "${build_dir}/.haskell-on-heroku"
+	mkdir -p "${build_dir}/.haskell-on-heroku" || die
+	cp -R "${buildpack_dir}/"* "${build_dir}/.haskell-on-heroku" || die
 
-	cp -R "${HALCYON_DIR}/app" "${slugged_halcyon_dir}/app" || die
+	mkdir -p "${build_dir}/.profile.d" || die
+	(
+		cat >"${build_dir}/.profile.d/haskell-on-heroku.sh" <<-EOF
+			source '/app/.haskell-on-heroku/haskell-on-heroku.sh'
+			export PATH="/app/.haskell-on-heroku/bin:\${PATH}"
+EOF
+	) || die
+}
+
+
+function package_app () {
+	expect '/app/.halcyon/install'
+
+	local build_dir
+	expect_args build_dir -- "$@"
+
+	expect_no "${build_dir}/.halcyon/install"
+	mkdir -p "${build_dir}/.halcyon/install" || die
+	cp -R '/app/.halcyon/install/'* "${build_dir}/.halcyon/install" || die
 
 	if ! [ -f "${build_dir}/Procfile" ]; then
 		local app_executable
 		app_executable=$( detect_app_executable "${build_dir}" ) || die
-		expect "${slugged_halcyon_dir}/app/bin/${app_executable}"
+		expect "${build_dir}/.halcyon/install/bin/${app_executable}"
 
-		echo "web: ${HALCYON_DIR}/app/bin/${app_executable}" >"${build_dir}/Procfile" || die
+		echo "web: /app/.halcyon/install/bin/${app_executable}" \
+			>"${build_dir}/Procfile" || die
 	fi
+
+	expect_no "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
+	rm -rf "${build_dir}/cabal.sandbox.config" "${build_dir}/dist"
 }
 
 
 
 
-function log_compile_succeeded_help () {
+function log_install_succeeded_help () {
 	log_file_indent <<-EOF
 		To see it, use at least one web dyno:
 		$ heroku ps:scale web=1
@@ -71,9 +71,9 @@ EOF
 }
 
 
-function log_compile_failed_help () {
+function log_install_failed_help () {
 	log_file_indent <<-EOF
-		To prepare, use a one-off PX dyno:
+		To prepare dependencies, use a one-off PX dyno:
 		$ heroku run --size=PX prepare
 EOF
 }
@@ -81,7 +81,7 @@ EOF
 
 function log_prepare_succeeded_help () {
 	log_file_indent <<-EOF
-		To compile again, commit a change and push, or rebuild:
+		To install again, commit a change and push, or rebuild:
 		$ heroku plugins:install https://github.com/heroku/heroku-repo.git
 		$ heroku repo:rebuild
 EOF

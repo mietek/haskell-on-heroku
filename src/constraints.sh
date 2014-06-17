@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-function echo_constraints_tmp_config () {
+function echo_tmp_constraints_config () {
 	mktemp -u "/tmp/halcyon-constraints.cabal.config.XXXXXXXXXX"
 }
 
@@ -28,8 +28,8 @@ function echo_constraints_difference () {
 	new_digest=$( echo_constraints_digest <<<"${new_constraints}" ) || die
 
 	local tmp_old_config tmp_new_config
-	tmp_old_config=$( echo_constraints_tmp_config ) || die
-	tmp_new_config=$( echo_constraints_tmp_config ) || die
+	tmp_old_config=$( echo_tmp_constraints_config ) || die
+	tmp_new_config=$( echo_tmp_constraints_config ) || die
 
 	echo_constraints <<<"${old_constraints}" >"${tmp_old_config}" || die
 	echo_constraints <<<"${new_constraints}" >"${tmp_new_config}" || die
