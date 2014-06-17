@@ -50,26 +50,8 @@ function package_app () {
 			>"${build_dir}/Procfile" || die
 	fi
 
-	if [ -e "${build_dir}/.ghc" ]; then
-		log_debug "Deleting ${build_dir}/.ghc"
-		rm -rf "${build_dir}/.ghc"
-	fi
-	if [ -e "${build_dir}/.cabal" ]; then
-		log_debug "Deleting ${build_dir}/.cabal"
-		rm -rf "${build_dir}/.cabal"
-	fi
-	if [ -e "${build_dir}/.cabal-sandbox" ]; then
-		log_debug "Deleting ${build_dir}/.cabal-sandbox"
-		rm -rf "${build_dir}/.cabal-sandbox"
-	fi
-	if [ -e "${build_dir}/cabal.sandbox.config" ]; then
-		log_debug "Deleting ${build_dir}/cabal.sandbox.config"
-		rm -rf "${build_dir}/cabal.sandbox.config"
-	fi
-	if [ -e "${build_dir}/dist" ]; then
-		log_debug "Deleting ${build_dir}/dist"
-		rm -rf "${build_dir}/dist"
-	fi
+	expect_no "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
+	rm -rf "${build_dir}/cabal.sandbox.config" "${build_dir}/dist"
 }
 
 

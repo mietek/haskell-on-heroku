@@ -356,7 +356,6 @@ function cabal_install_deps () {
 
 	if (( ${unhappy_workaround} )); then
 		log_warning "Installing implicit versions of alex and happy"
-
 		silently sandboxed_cabal_do "${build_dir}" install alex happy || die
 	fi
 

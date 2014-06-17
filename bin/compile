@@ -19,7 +19,7 @@ function heroku_compile () {
 		--prepared-only            \
 		"${build_dir}"
 	then
-		log_error "Installing failed"
+		log_error 'Installing failed'
 		log
 		log_install_failed_help
 		log
@@ -28,6 +28,7 @@ function heroku_compile () {
 
 	log
 	log_install_succeeded_help
+	log
 
 	package_app "${build_dir}" || die
 }
