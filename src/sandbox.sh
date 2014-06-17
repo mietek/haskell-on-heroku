@@ -115,7 +115,7 @@ function echo_sandbox_config_pattern () {
 	local ghc_version
 	expect_args ghc_version -- "$@"
 
-	echo "halcyon-sandbox-ghc-${ghc_version}.*\.cabal\.config"
+	echo "halcyon-sandbox-ghc-${ghc_version//./\.}.*\.cabal\.config"
 }
 
 

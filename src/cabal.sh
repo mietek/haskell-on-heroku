@@ -97,7 +97,7 @@ function echo_updated_cabal_tag_pattern () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
 
-	echo_cabal_tag "${cabal_version}" '.*'
+	echo_cabal_tag "${cabal_version//./\.}" '.*'
 }
 
 
@@ -113,7 +113,7 @@ function echo_updated_cabal_archive_pattern () {
 	local cabal_version
 	expect_args cabal_version -- "$@"
 
-	echo "halcyon-cabal-${cabal_version}-.*\.tar\.xz"
+	echo "halcyon-cabal-${cabal_version//./\.}-.*\.tar\.xz"
 }
 
 
