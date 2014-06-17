@@ -400,11 +400,20 @@ function build_cabal () {
 	original_archive=$( basename "${original_url}" ) || die
 	tmp_dir=$( echo_tmp_cabal_dir ) || die
 
-	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
-		die "Cabal ${cabal_version} is not available"
-	fi
+	if ! [ -f "${HALCYON_CACHE_DIR}/${original_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}"
+	then
+		rm -rf "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
 
-	tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
+		if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
+			die "Cabal ${cabal_version} is not available"
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}"; then
+			rm -rf "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
+			die "Restoring ${original_archive} failed"
+		fi
+	fi
 
 	log "Bootstrapping Cabal ${cabal_version}"
 
@@ -428,6 +437,7 @@ EOF
 		) || die
 		;;
 	*)
+		rm -rf "${tmp_dir}" || die
 		die "Bootstrapping Cabal ${cabal_version} with GHC ${ghc_version} is not implemented yet"
 	esac
 
@@ -437,7 +447,8 @@ EOF
 		cd "${tmp_dir}/cabal-install-${cabal_version}" &&
 		silently ./bootstrap.sh --no-doc
 	); then
-		die 'Bootstrapping Cabal failed'
+		rm -rf "${tmp_dir}" || die
+		die "Bootstrapping Cabal ${cabal_version} failed"
 	fi
 
 	mkdir -p "${HALCYON_DIR}/cabal/bin" || die
@@ -517,19 +528,26 @@ function restore_cabal () {
 	cabal_tag=$( echo_cabal_tag "${cabal_version}" '' ) || die
 	cabal_archive=$( echo_cabal_archive "${cabal_tag}" ) || die
 
-	if ! download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE_DIR}"; then
-		log_warning "Cabal ${cabal_version} is not prepared"
-		return 1
-	fi
-
-	tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
-
-	if ! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+	if ! [ -f "${HALCYON_CACHE_DIR}/${cabal_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" ||
+		! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
 		! validate_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
-		log_warning "Restoring ${cabal_archive} failed"
-		rm -rf "${HALCYON_DIR}/cabal" || die
-		return 1
+		rm -rf "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
+
+		if ! download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE_DIR}"; then
+			log_warning "Cabal ${cabal_version} is not prepared"
+			return 1
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" ||
+			! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+			! validate_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
+		then
+			rm -rf "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
+			log_warning "Restoring ${cabal_archive} failed"
+			return 1
+		fi
 	fi
 }
 
@@ -556,13 +574,11 @@ function restore_cached_updated_cabal () {
 		return 1
 	fi
 
-	tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
-
-	if ! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+	if ! tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" ||
+		! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
 		! validate_updated_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
-		log_warning "Restoring cached ${cabal_archive} failed"
-		rm -rf "${HALCYON_DIR}/cabal" || die
+		rm -rf "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
 		return 1
 	fi
 }
@@ -596,14 +612,15 @@ function restore_updated_cabal () {
 		return 1
 	fi
 
+	expect_no "${HALCYON_CACHE_DIR}/${cabal_archive}"
 	download_prepared "${os}" "${cabal_archive}" "${HALCYON_CACHE_DIR}" || die
-	tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
 
-	if ! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
+	if ! tar_extract "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" ||
+		! [ -f "${HALCYON_DIR}/cabal/tag" ] ||
 		! validate_updated_cabal_tag "${cabal_version}" <"${HALCYON_DIR}/cabal/tag"
 	then
+		rm -rf "${HALCYON_CACHE_DIR}/${cabal_archive}" "${HALCYON_DIR}/cabal" || die
 		log_warning "Restoring ${cabal_archive} failed"
-		rm -rf "${HALCYON_DIR}/cabal" || die
 		return 1
 	fi
 }

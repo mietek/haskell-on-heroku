@@ -153,27 +153,32 @@ function restore_build () {
 
 	log 'Restoring build'
 
-	local os build_archive
+	local os build_archive tmp_old_dir tmp_dist_dir
 	os=$( detect_os ) || die
 	build_archive=$( echo_build_archive "${build_tag}" ) || die
-
-	if ! download_prepared "${os}" "${build_archive}" "${HALCYON_CACHE_DIR}"; then
-		log_warning 'Build is not prepared'
-		return 1
-	fi
-
-	local tmp_old_dir tmp_dist_dir
 	tmp_old_dir=$( echo_tmp_old_build_dir ) || die
 	tmp_dist_dir=$( echo_tmp_build_dist_dir ) || die
 
-	tar_extract "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" || die
-
-	if ! [ -f "${tmp_old_dir}/tag" ] ||
+	if ! [ -f "${HALCYON_CACHE_DIR}/${build_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" ||
+		! [ -f "${tmp_old_dir}/tag" ] ||
 		! validate_build_tag "${build_tag}" <"${tmp_old_dir}/tag"
 	then
-		log_warning 'Restoring build failed'
-		rm -rf "${tmp_old_dir}" || die
-		return 1
+		rm -rf "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" || die
+
+		if ! download_prepared "${os}" "${build_archive}" "${HALCYON_CACHE_DIR}"; then
+			log_warning 'Build is not prepared'
+			return 1
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" ||
+			! [ -f "${tmp_old_dir}/tag" ] ||
+			! validate_build_tag "${build_tag}" <"${tmp_old_dir}/tag"
+		then
+			rm -rf "${HALCYON_CACHE_DIR}/${build_archive}" "${tmp_old_dir}" || die
+			log_warning 'Restoring build failed'
+			return 1
+		fi
 	fi
 
 	log 'Examining build changes'

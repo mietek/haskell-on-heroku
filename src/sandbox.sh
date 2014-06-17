@@ -287,19 +287,26 @@ function restore_sandbox () {
 	os=$( detect_os ) || die
 	sandbox_archive=$( echo_sandbox_archive "${sandbox_tag}" ) || die
 
-	if ! download_prepared "${os}" "${sandbox_archive}" "${HALCYON_CACHE_DIR}"; then
-		log_warning "${sandbox_description} is not prepared"
-		return 1
-	fi
-
-	tar_extract "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" || die
-
-	if ! [ -f "${HALCYON_DIR}/sandbox/tag" ] ||
+	if ! [ -f "${HALCYON_CACHE_DIR}/${sandbox_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" ||
+		! [ -f "${HALCYON_DIR}/sandbox/tag" ] ||
 		! validate_sandbox_tag "${sandbox_tag}" <"${HALCYON_DIR}/sandbox/tag"
 	then
-		log_warning "Restoring ${sandbox_archive} failed"
-		rm -rf "${HALCYON_DIR}/sandbox" || die
-		return 1
+		rm -rf "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" || die
+
+		if ! download_prepared "${os}" "${sandbox_archive}" "${HALCYON_CACHE_DIR}"; then
+			log_warning "${sandbox_description} is not prepared"
+			return 1
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" ||
+			! [ -f "${HALCYON_DIR}/sandbox/tag" ] ||
+			! validate_sandbox_tag "${sandbox_tag}" <"${HALCYON_DIR}/sandbox/tag"
+		then
+			rm -rf "${HALCYON_CACHE_DIR}/${sandbox_archive}" "${HALCYON_DIR}/sandbox" || die
+			log_warning "Restoring ${sandbox_archive} failed"
+			return 1
+		fi
 	fi
 }
 

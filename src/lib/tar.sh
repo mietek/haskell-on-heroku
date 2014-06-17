@@ -38,7 +38,10 @@ function tar_archive () {
 	log_indent_begin "Archiving ${archive_name}..."
 
 	mkdir -p "${dst_dir}" || die
-	tar -c "${format_flag}" -f "${archive_file}" -C "${src_dir}" '.' "$@" || die
+	if ! tar -c "${format_flag}" -f "${archive_file}" -C "${src_dir}" '.' "$@" &> '/dev/null'; then
+		rm -f "${archive_file}" || die
+		return 1
+	fi
 
 	local archive_size
 	archive_size=$( measure_recursively "${archive_file}" ) || die
@@ -60,7 +63,10 @@ function tar_extract () {
 	log_indent_begin "Extracting ${archive_name}..."
 
 	mkdir -p "${dst_dir}" || die
-	tar -x "${format_flag}" -f "${archive_file}" -C "${dst_dir}" "$@" || die
+	if ! tar -x "${format_flag}" -f "${archive_file}" -C "${dst_dir}" "$@" &> '/dev/null'; then
+		rm -rf "${dst_dir}" || die
+		return 1
+	fi
 
 	log_end 'done'
 }

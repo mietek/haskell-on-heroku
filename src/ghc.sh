@@ -260,11 +260,20 @@ function build_ghc () {
 	original_archive=$( basename "${original_url}" ) || die
 	tmp_dir=$( echo_tmp_ghc_dir ) || die
 
-	if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
-		die "GHC ${ghc_version} is not available"
-	fi
+	if ! [ -f "${HALCYON_CACHE_DIR}/${original_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}"
+	then
+		rm -rf "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
 
-	tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
+		if ! download_original "${original_archive}" "${original_url}" "${HALCYON_CACHE_DIR}"; then
+			die "GHC ${ghc_version} is not available"
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}"; then
+			rm -rf "${HALCYON_CACHE_DIR}/${original_archive}" "${tmp_dir}" || die
+			die "Restoring ${original_archive} failed"
+		fi
+	fi
 
 	log "Installing GHC ${ghc_version}"
 
@@ -273,7 +282,8 @@ function build_ghc () {
 		silently ./configure --prefix="${HALCYON_DIR}/ghc" &&
 		silently make install
 	); then
-		die 'Installing GHC failed'
+		rm -rf "${tmp_dir}" || die
+		die "Installing GHC ${ghc_version} failed"
 	fi
 
 	rm -rf "${HALCYON_DIR}/ghc/share" "${tmp_dir}" || die
@@ -451,19 +461,26 @@ function restore_ghc () {
 	os=$( detect_os ) || die
 	ghc_archive=$( echo_ghc_archive "${ghc_tag}" ) || die
 
-	if ! download_prepared "${os}" "${ghc_archive}" "${HALCYON_CACHE_DIR}"; then
-		log_warning "${ghc_description} is not prepared"
-		return 1
-	fi
-
-	tar_extract "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" || die
-
-	if ! [ -f "${HALCYON_DIR}/ghc/tag" ] ||
+	if ! [ -f "${HALCYON_CACHE_DIR}/${ghc_archive}" ] ||
+		! tar_extract "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" ||
+		! [ -f "${HALCYON_DIR}/ghc/tag" ] ||
 		! validate_ghc_tag "${ghc_tag}" <"${HALCYON_DIR}/ghc/tag"
 	then
-		log_warning "Restoring ${ghc_archive} failed"
-		rm -rf "${HALCYON_DIR}/ghc" || die
-		return 1
+		rm -rf "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" || die
+
+		if ! download_prepared "${os}" "${ghc_archive}" "${HALCYON_CACHE_DIR}"; then
+			log_warning "${ghc_description} is not prepared"
+			return 1
+		fi
+
+		if ! tar_extract "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" ||
+			! [ -f "${HALCYON_DIR}/ghc/tag" ] ||
+			! validate_ghc_tag "${ghc_tag}" <"${HALCYON_DIR}/ghc/tag"
+		then
+			rm -rf "${HALCYON_CACHE_DIR}/${ghc_archive}" "${HALCYON_DIR}/ghc" || die
+			log_warning "Restoring ${ghc_archive} failed"
+			return 1
+		fi
 	fi
 }
 
