@@ -191,10 +191,7 @@ function create_sandbox () {
 	sandbox_description=$( echo_sandbox_description "${sandbox_tag}" ) || die
 
 	log "Creating ${sandbox_description}"
-
-	if ! [ -d "${HALCYON_DIR}/sandbox" ]; then
-		cabal_create_sandbox "${HALCYON_DIR}/sandbox" || die
-	fi
+	cabal_create_sandbox "${HALCYON_DIR}/sandbox" || die
 }
 
 
@@ -531,8 +528,6 @@ function prepare_extended_sandbox () {
 
 	rm -f "${HALCYON_DIR}/sandbox/tag" "${HALCYON_DIR}/sandbox/cabal.config" || die
 
-	create_sandbox "${build_dir}" || die
-	customize_sandbox "${build_dir}" || die
 	build_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" || die
 	strip_sandbox || die
 	cache_sandbox || die
