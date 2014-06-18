@@ -89,9 +89,9 @@ function clean_cache () {
 		fi
 	fi
 
-	if [ -d "${build_dir}" ]; then
-		local build_tag
-		build_tag=$( infer_build_tag "${build_dir}" ) || die
+	if [ -f "${build_dir}/tag" ]; then
+		local build_tag build_archive
+		build_tag=$( <"${build_dir}/tag" ) || die
 		build_archive=$( echo_build_archive "${build_tag}" ) || die
 
 		if [ -f "${HALCYON_CACHE_DIR}/${build_archive}" ]; then
