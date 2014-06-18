@@ -171,9 +171,6 @@ function validate_ghc_tag () {
 
 
 function detect_base_version () {
-	expect_vars HALCYON_DIR
-	expect "${HALCYON_DIR}/ghc"
-
 	ghc-pkg list --simple-output |
 		grep -oE '\bbase-[0-9\.]+\b' |
 		sed 's/^base-//' || die
@@ -501,7 +498,7 @@ function infer_ghc_version () {
 	elif [ -f "${build_dir}/cabal.config" ]; then
 		local base_version
 		base_version=$(
-			detect_constraints "${build_dir}" |
+			detect_lib_constraints "${build_dir}" |
 			filter_matching "^base " |
 			match_exactly_one |
 			sed 's/^.* //'

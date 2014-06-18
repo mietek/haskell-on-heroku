@@ -152,6 +152,11 @@ function echo_cabal_description () {
 
 
 
+function echo_tmp_cabal_config () {
+	mktemp -u "/tmp/halcyon-cabal.config.XXXXXXXXXX"
+}
+
+
 function echo_tmp_cabal_dir () {
 	mktemp -du "/tmp/halcyon-cabal.XXXXXXXXXX"
 }

@@ -4,22 +4,21 @@
 set -o nounset
 set -o pipefail
 
-declare self_dir
-self_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
-source "${self_dir}/lib/curl.sh"
-source "${self_dir}/lib/expect.sh"
-source "${self_dir}/lib/log.sh"
-source "${self_dir}/lib/s3.sh"
-source "${self_dir}/lib/tar.sh"
-source "${self_dir}/lib/tools.sh"
-source "${self_dir}/build.sh"
-source "${self_dir}/cabal.sh"
-source "${self_dir}/cache.sh"
-source "${self_dir}/constraints.sh"
-source "${self_dir}/ghc.sh"
-source "${self_dir}/package.sh"
-source "${self_dir}/sandbox.sh"
-source "${self_dir}/transfer.sh"
+export HALCYON_SRC_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
+source "${HALCYON_SRC_DIR}/lib/curl.sh"
+source "${HALCYON_SRC_DIR}/lib/expect.sh"
+source "${HALCYON_SRC_DIR}/lib/log.sh"
+source "${HALCYON_SRC_DIR}/lib/s3.sh"
+source "${HALCYON_SRC_DIR}/lib/tar.sh"
+source "${HALCYON_SRC_DIR}/lib/tools.sh"
+source "${HALCYON_SRC_DIR}/build.sh"
+source "${HALCYON_SRC_DIR}/cabal.sh"
+source "${HALCYON_SRC_DIR}/cache.sh"
+source "${HALCYON_SRC_DIR}/constraints.sh"
+source "${HALCYON_SRC_DIR}/ghc.sh"
+source "${HALCYON_SRC_DIR}/package.sh"
+source "${HALCYON_SRC_DIR}/sandbox.sh"
+source "${HALCYON_SRC_DIR}/transfer.sh"
 
 
 
@@ -231,6 +230,6 @@ function log_add_config_help () {
 		To use explicit constraints, add cabal.config:
 		$ cat >cabal.config <<EOF
 EOF
-	echo_constraints <<<"${sandbox_constraints}" >&2 || die
+	echo_constraints_config <<<"${sandbox_constraints}" >&2 || die
 	echo 'EOF' >&2
 }

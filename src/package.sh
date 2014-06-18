@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-function echo_fake_package () {
+function echo_fake_package_description () {
 	local app_label
 	expect_args app_label -- "$@"
 
@@ -35,7 +35,7 @@ EOF
 
 
 
-function detect_package () {
+function detect_package_description () {
 	local build_dir
 	expect_args build_dir -- "$@"
 	expect "${build_dir}"
@@ -58,7 +58,7 @@ function detect_app_name () {
 
 	local app_name
 	if ! app_name=$(
-		detect_package "${build_dir}" |
+		detect_package_description "${build_dir}" |
 		awk '/^ *[Nn]ame:/ { print $2 }' |
 		match_exactly_one
 	); then
@@ -75,7 +75,7 @@ function detect_app_version () {
 
 	local app_version
 	if ! app_version=$(
-		detect_package "${build_dir}" |
+		detect_package_description "${build_dir}" |
 		awk '/^ *[Vv]ersion:/ { print $2 }' |
 		match_exactly_one
 	); then
@@ -92,7 +92,7 @@ function detect_app_executable () {
 
 	local app_executable
 	if ! app_executable=$(
-		detect_package "${build_dir}" |
+		detect_package_description "${build_dir}" |
 		awk '/^ *[Ee]xecutable / { print $2 }' |
 		match_exactly_one
 	); then

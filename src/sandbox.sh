@@ -166,7 +166,7 @@ function validate_sandbox () {
 	# https://github.com/haskell/cabal/issues/1896
 
 	local actual_constraints actual_digest
-	actual_constraints=$( freeze_actual_constraints "${build_dir}" ) || die
+	actual_constraints=$( cabal_list_actual_lib_constraints "${build_dir}" ) || die
 	actual_digest=$( echo_constraints_digest <<<"${actual_constraints}" ) || die
 
 	if [ "${actual_digest}" = "${sandbox_digest}" ]; then
@@ -175,7 +175,7 @@ function validate_sandbox () {
 
 	log_warning "Actual sandbox digest is ${actual_digest:0:7}"
 	log_warning 'Unexpected constraints difference:'
-	echo_constraints_difference "${sandbox_constraints}" "${actual_constraints}" | log_file_indent
+	echo_constraints_config_difference "${sandbox_constraints}" "${actual_constraints}" | log_file_indent
 }
 
 
@@ -197,11 +197,12 @@ function build_sandbox () {
 	if ! [ -d "${HALCYON_DIR}/sandbox" ]; then
 		cabal_create_sandbox "${HALCYON_DIR}/sandbox" || die
 	fi
+
 	cabal_install_deps "${build_dir}" "${unhappy_workaround}" || die
 
 	rm -rf "${HALCYON_DIR}/sandbox/logs" "${HALCYON_DIR}/sandbox/share" || die
 
-	echo_constraints <<<"${sandbox_constraints}" >"${HALCYON_DIR}/sandbox/cabal.config" || die
+	echo_constraints_config <<<"${sandbox_constraints}" >"${HALCYON_DIR}/sandbox/cabal.config" || die
 	echo "${sandbox_tag}" >"${HALCYON_DIR}/sandbox/tag" || die
 
 	local sandbox_size
@@ -322,16 +323,16 @@ function infer_sandbox_constraints () {
 
 	local sandbox_constraints
 	if [ -f "${build_dir}/cabal.config" ]; then
-		sandbox_constraints=$( detect_constraints "${build_dir}" ) || die
+		sandbox_constraints=$( detect_lib_constraints "${build_dir}" ) || die
 	else
-		sandbox_constraints=$( freeze_implicit_constraints "${build_dir}" ) || die
+		sandbox_constraints=$( cabal_list_implicit_lib_constraints "${build_dir}" ) || die
 		if ! (( ${HALCYON_FAKE_BUILD:-0} )); then
 			log_warning 'Expected cabal.config with explicit constraints'
 			log
 			log_add_config_help "${sandbox_constraints}"
 			log
 		else
-			echo_constraints <<<"${sandbox_constraints}" >&2 || die
+			echo_constraints_config <<<"${sandbox_constraints}" >&2 || die
 		fi
 	fi
 
@@ -397,7 +398,7 @@ function locate_matched_sandbox_tag () {
 
 			local score
 			if ! score=$(
-				read_constraints <"${HALCYON_CACHE_DIR}/${config}" |
+				read_constraints_from_config <"${HALCYON_CACHE_DIR}/${config}" |
 				sort_naturally |
 				filter_valid_constraints |
 				score_constraints "${sandbox_constraints}" "${tag}"

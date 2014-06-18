@@ -86,7 +86,7 @@ function fake_build_dir () {
 	build_dir=$( echo_tmp_build_dir ) || die
 
 	mkdir -p "${build_dir}" || die
-	echo_fake_package "${app_label}" >"${build_dir}/${app_label}.cabal" || die
+	echo_fake_package_description "${app_label}" >"${build_dir}/${app_label}.cabal" || die
 
 	echo "${build_dir}"
 }
