@@ -290,11 +290,11 @@ function sandboxed_cabal_do () {
 
 	local saved_config
 	saved_config=''
+	if [ -f "${HALCYON_DIR}/sandbox/cabal.config" ]; then
+		saved_config=$( echo_tmp_sandbox_config ) || die
+		mv "${HALCYON_DIR}/sandbox/cabal.config" "${saved_config}" || die
+	fi
 	if [ -f "${work_dir}/cabal.config" ]; then
-		if [ -f "${HALCYON_DIR}/sandbox/cabal.config" ]; then
-			saved_config=$( echo_tmp_sandbox_config ) || die
-			mv "${HALCYON_DIR}/sandbox/cabal.config" "${saved_config}" || die
-		fi
 		cp "${work_dir}/cabal.config" "${HALCYON_DIR}/sandbox/cabal.config" || die
 	fi
 
