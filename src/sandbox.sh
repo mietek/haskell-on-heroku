@@ -529,7 +529,7 @@ function install_sandbox () {
 
 	local unhappy_workaround
 	unhappy_workaround=0
-	if filter_matching '^(language-javascript|haskell-src-exts|pandoc) ' <<<"${sandbox_constraints}" |
+	if filter_matching '^(language-javascript|haskell-src-exts|pandoc|bytestring-lexing) ' <<<"${sandbox_constraints}" |
 		match_at_least_one >'/dev/null'
 	then
 		unhappy_workaround=1
