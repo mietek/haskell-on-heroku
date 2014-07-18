@@ -179,24 +179,54 @@ function validate_sandbox () {
 }
 
 
+function create_sandbox () {
+	expect_vars HALCYON_DIR
+	expect "${HALCYON_DIR}/ghc/tag" "${HALCYON_DIR}/cabal/tag"
+
+	local build_dir
+	expect_args build_dir -- "$@"
+	expect "${build_dir}"
+
+	local sandbox_description
+	sandbox_description=$( echo_sandbox_description "${sandbox_tag}" ) || die
+
+	log "Creating ${sandbox_description}"
+	cabal_create_sandbox "${HALCYON_DIR}/sandbox" || die
+}
+
+
+function customize_sandbox () {
+	expect_vars HALCYON_DIR
+
+	local build_dir
+	expect_args build_dir -- "$@"
+	expect "${build_dir}"
+
+	if [ -f ${build_dir}/deploy/prepare.sh ]; then
+		log "Custom prepare script detected"
+
+		mkdir -p "${HALCYON_DIR}/custom" || die
+		cd "${HALCYON_DIR}/custom"
+		source "${build_dir}/deploy/prepare.sh"
+		# expect_func custom_prepare
+		custom_prepare "${HALCYON_DIR}/sandbox" || die
+		log
+		cd ${self_dir}
+	fi
+}
 
 
 function build_sandbox () {
 	expect_vars HALCYON_DIR
-	expect "${HALCYON_DIR}/ghc/tag" "${HALCYON_DIR}/cabal/tag"
 
 	local build_dir sandbox_constraints unhappy_workaround sandbox_tag
 	expect_args build_dir sandbox_constraints unhappy_workaround sandbox_tag -- "$@"
-	expect "${build_dir}"
 
 	local sandbox_description
 	sandbox_description=$( echo_sandbox_description "${sandbox_tag}" ) || die
 
 	log "Building ${sandbox_description}"
 
-	if ! [ -d "${HALCYON_DIR}/sandbox" ]; then
-		cabal_create_sandbox "${HALCYON_DIR}/sandbox" || die
-	fi
 	cabal_install_deps "${build_dir}" "${unhappy_workaround}" || die
 
 	rm -rf "${HALCYON_DIR}/sandbox/logs" "${HALCYON_DIR}/sandbox/share" || die
@@ -553,6 +583,8 @@ function install_sandbox () {
 		return 0
 	fi
 
+	create_sandbox "${build_dir}" || die
+	customize_sandbox "${build_dir}" || die
 	build_sandbox "${build_dir}" "${sandbox_constraints}" "${unhappy_workaround}" "${sandbox_tag}" || die
 	strip_sandbox || die
 	cache_sandbox || die
