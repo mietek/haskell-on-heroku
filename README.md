@@ -67,7 +67,7 @@ Yes.  All Haskell web frameworks should work with Haskell on Heroku.  Prepared p
 
 ###  Does this have the latest GHC?
 
-Yes.  Prepared packages are available for [GHC 7.8.2][].  Most other GHC versions should also work with Haskell on Heroku.
+Yes.  Prepared packages are available for [GHC 7.8.3][].  Most other GHC versions should also work with Haskell on Heroku.
 
 
 ###  Can I use GHCi with this?
@@ -183,7 +183,7 @@ Available under the MIT License.
 [Hello Spock]:                  https://github.com/mietek/haskell-on-heroku-examples/tree/master/hello-spock
 [Hello Yesod]:                  https://github.com/mietek/haskell-on-heroku-examples/tree/master/hello-yesod
 [Hello Yesod Platform]:         https://github.com/mietek/haskell-on-heroku-examples/tree/master/hello-yesod-platform
-[GHC 7.8.2]:                    http://www.haskell.org/ghc/download_ghc_7_8_2
+[GHC 7.8.3]:                    http://www.haskell.org/ghc/download_ghc_7_8_3
 [one-off dyno]:                 https://devcenter.heroku.com/articles/one-off-dynos
 [provided `PORT`]:              https://devcenter.heroku.com/articles/runtime-principles#web-servers
 [log output]:                   https://devcenter.heroku.com/articles/logging#writing-to-your-log
