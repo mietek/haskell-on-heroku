@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o nounset
+set -o pipefail
 
-declare buildpack_dir
-buildpack_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
-source "${buildpack_dir}/haskell-on-heroku.sh"
+declare BUILDPACK_TOP_DIR
+BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
+source "${BUILDPACK_TOP_DIR}/haskell-on-heroku.sh"
 
-
-function heroku_restore () {
-	expect '/app'
-
-	halcyon_install --prepared-only '/app' || die
-
-	log
-	log_restore_succeeded_help
-}
-
-
-heroku_restore
+heroku_restore "$@"
