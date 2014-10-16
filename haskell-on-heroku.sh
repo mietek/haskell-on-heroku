@@ -81,8 +81,9 @@ function slug_app () {
 	expect_args build_dir -- "$@"
 
 	expect_no_existing "${build_dir}/.halcyon/app"
-	mkdir -p "${build_dir}/.halcyon/app" || die
-	cp -R '/app/.halcyon/app/'* "${build_dir}/.halcyon/app" || die
+
+	mkdir -p "${build_dir}/.halcyon" || die
+	cp -R "/app/.halcyon/app" "${build_dir}/.halcyon" || die
 
 	if ! [ -f "${build_dir}/Procfile" ]; then
 		local app_executable
