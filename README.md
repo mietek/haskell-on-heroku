@@ -3,6 +3,8 @@
 
 _Haskell on Heroku_ is a system for fast and reliable deployment of Haskell web applications to [Heroku](http://heroku.com/).
 
+**This page describes version 1.0, which is currently undergoing testing.  Check back soon, or follow [@mietek](http://twitter.com/mietek).**
+
 
 Examples
 --------
