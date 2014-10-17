@@ -1,3 +1,5 @@
+export HALCYON_DIR='/app/.halcyon'
+
 export BUILDPACK_TOP_DIR
 BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
@@ -54,7 +56,7 @@ function set_config_vars () {
 
 
 function slug_buildpack () {
-	expect_vars BUILDPACK_TOP_DIR
+	expect_vars HALCYON_DIR BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
 	local build_dir
@@ -68,30 +70,32 @@ function slug_buildpack () {
 	(
 		cat >"${build_dir}/.profile.d/haskell-on-heroku.sh" <<-EOF
 			source '/app/.haskell-on-heroku/haskell-on-heroku.sh'
-			export PATH="/app/.haskell-on-heroku/bin:\${PATH}"
+			export PATH="${HALCYON_DIR}/app/bin:/app/.haskell-on-heroku/bin:\${PATH}"
 EOF
 	) || die
 }
 
 
 function slug_app () {
-	expect_existing '/app/.halcyon/app'
+	expect_vars HALCYON_DIR
+	expect_existing "${HALCYON_DIR}/app"
 
 	local build_dir
 	expect_args build_dir -- "$@"
 
+	# NOTE: ${build_dir}/.halcyon will become the HALCYON_DIR (/app/.halcyon) on a dyno.
+
 	expect_no_existing "${build_dir}/.halcyon/app"
 
 	mkdir -p "${build_dir}/.halcyon" || die
-	cp -R "/app/.halcyon/app" "${build_dir}/.halcyon" || die
+	cp -R "${HALCYON_DIR}/app" "${build_dir}/.halcyon" || die
 
 	if ! [ -f "${build_dir}/Procfile" ]; then
 		local app_executable
 		app_executable=$( detect_app_executable "${build_dir}" ) || die
 		expect_existing "${build_dir}/.halcyon/app/bin/${app_executable}"
 
-		echo "web: /app/.halcyon/app/bin/${app_executable}" \
-			>"${build_dir}/Procfile" || die
+		echo "web: ${HALCYON_DIR}/app/bin/${app_executable}" >"${build_dir}/Procfile" || die
 	fi
 
 	expect_no_existing "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
@@ -106,7 +110,6 @@ function heroku_compile () {
 
 	slug_buildpack "${build_dir}" || die
 
-	export HALCYON_DIR='/app/.halcyon'
 	export HALCYON_CACHE_DIR="${cache_dir}"
 	export HALCYON_NO_BUILD=1
 	set_default_vars
@@ -130,7 +133,6 @@ function heroku_compile () {
 function heroku_build () {
 	expect_existing '/app'
 
-	export HALCYON_DIR='/app/.halcyon'
 	set_default_vars
 
 	if ! has_private_storage; then
@@ -150,7 +152,6 @@ function heroku_build () {
 function heroku_restore () {
 	expect_existing '/app'
 
-	export HALCYON_DIR='/app/.halcyon'
 	export HALCYON_NO_BUILD=1
 	set_default_vars
 
