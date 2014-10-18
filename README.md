@@ -20,15 +20,6 @@ To learn more, see the [full list of examples](http://haskellonheroku.com/exampl
 Interested in deploying other types of Haskell applications?  Try [Halcyon](http://halcyon.sh/).
 
 
-### Internals
-
-For an in-depth discussion of _Haskell on Heroku_ internals, see the [programmer’s reference](http://haskellonheroku.com/reference/).
-
-_Haskell on Heroku_ is built with [Halcyon](http://halcyon.sh/), a system for deploying Haskell applications, and [_bashmenot_](http://bashmenot.mietek.io/), a library of functions for safer shell scripting in [GNU _bash_](http://gnu.org/software/bash/).
-
-Additional information is available in the [Halcyon user’s guide](http://halcyon.sh/guide/), the [Halcyon programmers’s reference](http://halcyon.sh/reference/), and the [_bashmenot_ programmer’s reference](http://bashmenot.mietek.io/reference/).
-
-
 ### Installation
 
 New applications:
@@ -51,6 +42,15 @@ Currently, _Haskell on Heroku_ supports:
 - Heroku _cedar_ and [_cedar-14_](https://blog.heroku.com/archives/2014/8/19/cedar-14-public-beta)
 - GHC [7.6.1](http://www.haskell.org/ghc/download_ghc_7_6_1), [7.6.3](http://www.haskell.org/ghc/download_ghc_7_6_3), [7.8.2](http://www.haskell.org/ghc/download_ghc_7_8_2), and [7.8.3](http://www.haskell.org/ghc/download_ghc_7_8_3)
 - _cabal-install_ [1.20.0.0](http://www.haskell.org/cabal/download.html) and newer
+
+
+### Internals
+
+For an in-depth discussion of _Haskell on Heroku_ internals, see the [programmer’s reference](http://haskellonheroku.com/reference/).
+
+_Haskell on Heroku_ is built with [Halcyon](http://halcyon.sh/), a system for deploying Haskell applications, and [_bashmenot_](http://bashmenot.mietek.io/), a library of functions for safer shell scripting in [GNU _bash_](http://gnu.org/software/bash/).
+
+Additional information is available in the [Halcyon user’s guide](http://halcyon.sh/guide/), the [Halcyon programmers’s reference](http://halcyon.sh/reference/), and the [_bashmenot_ programmer’s reference](http://bashmenot.mietek.io/reference/).
 
 
 ### Bugs
