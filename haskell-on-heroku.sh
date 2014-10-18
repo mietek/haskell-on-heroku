@@ -69,11 +69,21 @@ function slug_buildpack () {
 	mkdir -p "${build_dir}/.profile.d" || die
 	(
 		cat >"${build_dir}/.profile.d/haskell-on-heroku.sh" <<-EOF
-			export PATH="${HALCYON_DIR}/ghc/bin:\${PATH}"
-			export PATH="${HALCYON_DIR}/cabal/bin:\${PATH}"
-			export PATH="${HALCYON_DIR}/sandbox/bin:\${PATH}"
-			export PATH="${HALCYON_DIR}/app/bin:\${PATH}"
-			export PATH="/app/.haskell-on-heroku/bin:\${PATH}"
+			if ! (( ${HALCYON_INTERNAL_NO_SET_ENV:-0} )); then
+				export HALCYON_INTERNAL_NO_SET_ENV=1
+
+				export PATH="${HALCYON_DIR}/ghc/bin:\${PATH}"
+				export PATH="${HALCYON_DIR}/cabal/bin:\${PATH}"
+				export PATH="${HALCYON_DIR}/sandbox/bin:\${PATH}"
+				export PATH="${HALCYON_DIR}/app/bin:\${PATH}"
+				export PATH="/app/.haskell-on-heroku/lib/halcyon/bin:\${PATH}"
+				export PATH="/app/.haskell-on-heroku/bin:\${PATH}"
+
+				export LIBRARY_PATH="${HALCYON_DIR}/ghc/lib:\${LIBRARY_PATH:-}"
+				export LD_LIBRARY_PATH="${HALCYON_DIR}/ghc/lib:\${LD_LIBRARY_PATH:-}"
+
+				export LANG="\${LANG:-en_US.UTF-8}"
+			fi
 EOF
 	) || die
 }
