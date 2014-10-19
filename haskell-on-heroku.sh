@@ -128,15 +128,15 @@ function heroku_compile () {
 	set_default_vars
 	set_config_vars "${env_dir}"
 
-	if ! halcyon_install "${build_dir}"; then
+	if ! halcyon_deploy "${build_dir}"; then
 		log
-		help_install_failed
+		help_deploy_failed
 		log
 		return 0
 	fi
 
 	log
-	help_install_succeeded
+	help_deploy_succeeded
 	log
 
 	slug_app "${build_dir}" || die
@@ -155,7 +155,7 @@ function heroku_build () {
 		die
 	fi
 
-	halcyon_install '/app' || die
+	halcyon_deploy '/app' || die
 
 	log
 	help_build_succeeded
@@ -168,7 +168,7 @@ function heroku_restore () {
 	export HALCYON_NO_BUILD=1
 	set_default_vars
 
-	halcyon_install '/app' || die
+	halcyon_deploy '/app' || die
 
 	log
 	help_restore_succeeded

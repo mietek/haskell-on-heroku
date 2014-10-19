@@ -18,7 +18,7 @@ EOF
 }
 
 
-function help_install_succeeded () {
+function help_deploy_succeeded () {
 	quote <<-EOF
 		To see the app, spin up at least one web dyno:
 		$ heroku ps:scale web=1
@@ -32,7 +32,7 @@ EOF
 }
 
 
-function help_install_failed () {
+function help_deploy_failed () {
 	quote <<-EOF
 		To build layers, use a one-off PX dyno:
 		$ heroku run --size=PX build
@@ -42,7 +42,7 @@ EOF
 
 function help_build_succeeded () {
 	quote <<-EOF
-		To install again, commit a change and push; for example:
+		To deploy again, commit a change and push; for example:
 		$ git commit --allow-empty --allow-empty-message -m ''
 		$ git push heroku master
 EOF
