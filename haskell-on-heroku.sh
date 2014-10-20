@@ -35,12 +35,18 @@ function set_config_vars () {
 	ignored_pattern='GIT_DIR|PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LD_PRELOAD'
 	secret_pattern='HALCYON_AWS_SECRET_ACCESS_KEY|DATABASE_URL|.*_POSTGRESQL_.*_URL'
 
-	local var
-	for var in $(
+	local vars
+	vars=$(
 		find_spaceless_recursively "${config_dir}" -maxdepth 1 |
 		sort_naturally |
 		filter_not_matching "^(${ignored_pattern})$"
-	); do
+	) || die
+	if [ -z "${vars}" ]; then
+		return 0
+	fi
+
+	local var
+	for var in ${vars}; do
 		local value
 		value=$( match_exactly_one <"${config_dir}/${var}" ) || die
 		if filter_matching "^(${secret_pattern})$" <<<"${var}" |
