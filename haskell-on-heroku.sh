@@ -134,6 +134,7 @@ function heroku_compile () {
 	set_default_vars
 	set_config_vars "${env_dir}"
 
+	log
 	if ! halcyon_deploy "${build_dir}"; then
 		log
 		help_deploy_failed
