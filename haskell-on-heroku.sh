@@ -74,7 +74,7 @@ function slug_buildpack () {
 				export BUILDPACK_INTERNAL_PATHS=1
 
 				export PATH="/app/.haskell-on-heroku/bin:\${PATH}"
-				export PATH="/app/.halcyon/app/bin:\${PATH}"
+				export PATH="/app/.halcyon/slug/bin:\${PATH}"
 			fi
 
 			source '/app/.haskell-on-heroku/lib/halcyon/src/paths.sh'
@@ -88,22 +88,22 @@ EOF
 # NOTE: "${build_dir}/.halcyon" will become '/app/.halcyon' on a dyno.
 
 function slug_app () {
-	expect_existing '/app/.halcyon/app'
+	expect_existing '/app/.halcyon/slug'
 
 	local build_dir
 	expect_args build_dir -- "$@"
-	expect_no_existing "${build_dir}/.halcyon/app" "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
+	expect_no_existing "${build_dir}/.halcyon/slug" "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
 
 	rm -rf "${build_dir}/cabal.sandbox.config" "${build_dir}/dist" || die
-	copy_entire_contents '/app/.halcyon/app' "${build_dir}/.halcyon/app" || die
+	copy_entire_contents '/app/.halcyon/slug' "${build_dir}/.halcyon/slug" || die
 
 	if ! [ -f "${build_dir}/Procfile" ]; then
 		local app_executable
 		app_executable=$( detect_app_executable "${build_dir}" ) || die
 
-		expect_existing "${build_dir}/.halcyon/app/bin/${app_executable}"
+		expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
 
-		echo "web: /app/.halcyon/app/bin/${app_executable}" >"${build_dir}/Procfile" || die
+		echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
 	fi
 }
 
