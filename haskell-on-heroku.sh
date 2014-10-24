@@ -57,7 +57,7 @@ function set_config_vars () {
 }
 
 
-function slug_buildpack () {
+function copy_buildpack () {
 	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
@@ -84,10 +84,9 @@ EOF
 }
 
 
-
 # NOTE: "${build_dir}/.halcyon" will become '/app/.halcyon' on a dyno.
 
-function slug_app () {
+function copy_slug () {
 	expect_existing '/app/.halcyon/slug'
 
 	local build_dir
@@ -100,7 +99,6 @@ function slug_app () {
 	if ! [ -f "${build_dir}/Procfile" ]; then
 		local app_executable
 		app_executable=$( detect_app_executable "${build_dir}" ) || die
-
 		expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
 
 		echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
@@ -113,7 +111,7 @@ function heroku_compile () {
 	expect_args build_dir cache_dir env_dir -- "$@"
 	expect_existing "${build_dir}"
 
-	slug_buildpack "${build_dir}" || die
+	copy_buildpack "${build_dir}" || die
 
 	set_halcyon_vars
 	set_config_vars "${env_dir}" || die
@@ -129,7 +127,7 @@ function heroku_compile () {
 	help_deploy_succeeded
 	log
 
-	slug_app "${build_dir}" || die
+	copy_slug "${build_dir}" || die
 }
 
 
@@ -139,7 +137,7 @@ function heroku_build () {
 	expect_existing '/app'
 
 	set_halcyon_vars
-	if ! has_private_storage; then
+	if ! validate_private_storage; then
 		log_error 'Expected private storage'
 		log
 		help_configure_private_storage

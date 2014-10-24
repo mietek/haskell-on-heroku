@@ -65,7 +65,7 @@ function help_add_explicit_constraints () {
 		To use explicit constraints, add a cabal.config and push again:
 		$ cat >cabal.config <<EOF
 EOF
-	echo_sandbox_constraints <<<"${constraints}" >&2 || die
+	format_constraints <<<"${constraints}" >&2 || die
 	echo 'EOF' >&2
 	quote <<-EOF
 		$ git add cabal.config
