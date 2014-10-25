@@ -65,7 +65,8 @@ function copy_buildpack () {
 	expect_args build_dir -- "$@"
 	expect_no_existing "${build_dir}/.haskell-on-heroku"
 
-	copy_dotless_contents "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" || die
+	tar_copy "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" \
+		--exclude '.git' || die
 
 	mkdir -p "${build_dir}/.profile.d" || die
 	(
@@ -94,7 +95,7 @@ function copy_slug () {
 	expect_no_existing "${build_dir}/.halcyon/slug" "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
 
 	rm -rf "${build_dir}/cabal.sandbox.config" "${build_dir}/dist" || die
-	copy_entire_contents '/app/.halcyon/slug' "${build_dir}/.halcyon/slug" || die
+	tar_copy '/app/.halcyon/slug' "${build_dir}/.halcyon/slug" || die
 
 	if ! [ -f "${build_dir}/Procfile" ]; then
 		local app_executable
