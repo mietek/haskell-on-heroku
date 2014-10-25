@@ -118,7 +118,7 @@ function heroku_compile () {
 	set_config_vars "${env_dir}" || die
 
 	log
-	if ! halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir="${cache_dir}" --no-build "${build_dir}"; then
+	if ! halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir="${cache_dir}" --only-build-app "${build_dir}"; then
 		log
 		help_deploy_failed
 		log
@@ -158,7 +158,7 @@ function heroku_restore () {
 
 	set_halcyon_vars
 
-	halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir='/var/tmp/cache/halcyon' --no-build '/app' || die
+	halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir='/var/tmp/cache/halcyon' --only-build-app '/app' || die
 	log
 	help_restore_succeeded
 }
