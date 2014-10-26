@@ -33,7 +33,8 @@ function set_config_vars () {
 
 	local vars
 	if ! vars=$(
-		find_spaceless_recursively "${config_dir}" -maxdepth 1 |
+		find "${config_dir}" -maxdepth 1 -type f 2>'/dev/null' |
+		sed "s:^${config_dir}/::" |
 		sort_naturally |
 		filter_not_matching "^(${ignored_pattern})$" |
 		match_at_least_one
