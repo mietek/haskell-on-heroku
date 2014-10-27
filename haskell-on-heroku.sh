@@ -33,8 +33,8 @@ function set_config_vars () {
 
 	local vars
 	if ! vars=$(
-		find "${config_dir}" -maxdepth 1 -type f 2>'/dev/null' |
-		sed "s:^${config_dir}/::" |
+		find_tree "${config_dir}" -maxdepth 1 -type f 2>'/dev/null' |
+		sed "s:\./::" |
 		sort_naturally |
 		filter_not_matching "^(${ignored_pattern})$" |
 		match_at_least_one
@@ -93,9 +93,8 @@ function copy_slug () {
 
 	local build_dir
 	expect_args build_dir -- "$@"
-	expect_no_existing "${build_dir}/.halcyon/slug" "${build_dir}/.ghc" "${build_dir}/.cabal" "${build_dir}/.cabal-sandbox"
+	expect_no_existing "${build_dir}/.halcyon"
 
-	rm -rf "${build_dir}/cabal.sandbox.config" "${build_dir}/dist" || die
 	tar_copy '/app/.halcyon/slug' "${build_dir}/.halcyon/slug" || die
 
 	if ! [ -f "${build_dir}/Procfile" ]; then
