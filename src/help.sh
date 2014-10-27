@@ -27,6 +27,7 @@ function help_deploy_succeeded () {
 		To run GHCi, restore layers on a one-off dyno:
 		$ heroku run bash
 		$ restore
+		$ cd .halcyon/app
 		$ cabal repl
 EOF
 }
@@ -52,6 +53,7 @@ EOF
 function help_restore_succeeded () {
 	quote <<-EOF
 		To run GHCi:
+		$ cd .halcyon/app
 		$ cabal repl
 EOF
 }
