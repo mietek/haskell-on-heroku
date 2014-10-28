@@ -127,7 +127,7 @@ function heroku_compile () {
 		return 0
 	fi
 
-	# NOTE:  build_dir/.halcyon will become /app/.halcyon on a dyno.
+	# NOTE: build_dir/.halcyon will become /app/.halcyon on a dyno.
 
 	tar_copy "${install_dir}/app" "${build_dir}" |& quote || die
 	copy_procfile "${build_dir}" || die
@@ -147,7 +147,7 @@ function heroku_build () {
 		die
 	fi
 
-	# NOTE:  Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
+	# NOTE: Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
 	# heroku_compile.  There is no access to the compile cache from a one-off dyno.
 
 	halcyon_deploy                               \
@@ -165,7 +165,7 @@ function heroku_build () {
 function heroku_restore () {
 	expect_existing '/app'
 
-	# NOTE:  Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
+	# NOTE: Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
 	# heroku_compile.  There is no access to the compile cache from a one-off dyno.
 
 	set_halcyon_vars
