@@ -25,7 +25,7 @@ function set_config_vars () {
 	local config_dir
 	expect_args config_dir -- "$@"
 
-	log 'Setting config vars:'
+	log 'Setting config vars'
 
 	local ignored_pattern secret_pattern
 	ignored_pattern='BUILDPACK_INTERNAL_.*|HALCYON_INTERNAL_.*|GIT_DIR|PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LD_PRELOAD'
@@ -47,10 +47,11 @@ function set_config_vars () {
 	while read -r var; do
 		local value
 		value=$( match_exactly_one <"${config_dir}/${var}" ) || die
+
 		if filter_matching "^(${secret_pattern})$" <<<"${var}" | match_exactly_one >'/dev/null'; then
-			log_indent "${var} (secret)"
+			log_indent_pad "${var}:" "(secret)"
 		else
-			log_indent "${var}=${value}"
+			log_indent_pad "${var}:" "${value}"
 		fi
 
 		export "${var}=${value}"
