@@ -153,6 +153,9 @@ function heroku_build () {
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
+		--no-announce-slug                   \
+		--no-prepare-cache                   \
+		--no-clean-cache                     \
 		'/app' || die
 
 	help_build_succeeded
@@ -171,6 +174,9 @@ function heroku_restore () {
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
 		--no-build-dependencies              \
+		--no-announce-slug                   \
+		--no-prepare-cache                   \
+		--no-clean-cache                     \
 		'/app' || die
 
 	tar_copy '/app/.halcyon/app' '/app' || die
