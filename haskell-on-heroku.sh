@@ -53,7 +53,7 @@ function set_config_vars () {
 			log_indent "${var}=${value}"
 		fi
 
-		export "${var}"="${value}"
+		export "${var}=${value}"
 	done <<<"${vars}"
 }
 
