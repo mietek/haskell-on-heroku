@@ -29,7 +29,7 @@ function set_config_vars () {
 
 	local ignored_pattern secret_pattern
 	ignored_pattern='BUILDPACK_INTERNAL_.*|HALCYON_INTERNAL_.*|GIT_DIR|PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LD_PRELOAD'
-	secret_pattern='HALCYON_AWS_SECRET_ACCESS_KEY|DATABASE_URL|.*_POSTGRESQL_.*_URL'
+	secret_pattern='.*SECRET.*|.*PASSWORD.*|DATABASE_URL|.*_POSTGRESQL_.*_URL'
 
 	local vars
 	if ! vars=$(
