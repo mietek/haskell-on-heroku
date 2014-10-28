@@ -123,9 +123,7 @@ function heroku_compile () {
 		--no-build-dependencies        \
 		"${build_dir}"
 	then
-		log
 		help_deploy_failed
-		log
 		return 0
 	fi
 
@@ -134,9 +132,7 @@ function heroku_compile () {
 	tar_copy "${install_dir}/app" "${build_dir}" |& quote || die
 	copy_procfile "${build_dir}" || die
 
-	log
 	help_deploy_succeeded
-	log
 }
 
 
@@ -147,7 +143,6 @@ function heroku_build () {
 
 	if ! validate_private_storage; then
 		log_error 'Expected private storage'
-		log
 		help_configure_private_storage
 		die
 	fi
@@ -159,7 +154,7 @@ function heroku_build () {
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
 		'/app' || die
-	log
+
 	help_build_succeeded
 }
 
@@ -180,6 +175,5 @@ function heroku_restore () {
 
 	tar_copy '/app/.halcyon/app' '/app' || die
 
-	log
 	help_restore_succeeded
 }

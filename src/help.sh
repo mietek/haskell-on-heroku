@@ -1,61 +1,53 @@
-function help_configure_private_storage () {
-	quote <<-EOF
-		To configure private storage:
-		$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...
-		$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...
-		$ heroku config:set HALCYON_S3_BUCKET=...
-EOF
-}
-
-
-function help_configure_storage () {
-	help_configure_private_storage
-	quote <<-EOF
-
-		To configure public storage:
-		$ heroku config:set HALCYON_PUBLIC=1
-EOF
-}
-
-
 function help_deploy_succeeded () {
-	quote <<-EOF
-		To see the app, spin up at least one web dyno:
-		$ heroku ps:scale web=1
-		$ heroku open
-
-		To run GHCi, restore layers on a one-off dyno:
-		$ heroku run bash
-		$ restore
-		$ cd .halcyon/app
-		$ cabal repl
-EOF
+	log
+	log
+	log 'To see the app, spin up at least one web dyno:'
+	log_indent '$ heroku ps:scale web=1'
+	log_indent '$ heroku open'
+	log
+	log 'To run GHCi, restore layers on a one-off dyno:'
+	log_indent '$ heroku run bash'
+	log_indent '$ restore'
+	log_indent '$ cabal repl'
+	log
+	log
 }
 
 
 function help_deploy_failed () {
-	quote <<-EOF
-		To build layers, use a one-off PX dyno:
-		$ heroku run --size=PX build
-EOF
+	log
+	log
+	log 'To build layers, use a one-off PX dyno:'
+	log_indent '$ heroku run --size=PX build'
+	log
+	log
+}
+
+
+function help_configure_private_storage () {
+	log
+	log
+	log 'To configure private storage:'
+	log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
+	log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'
+	log_indent '$ heroku config:set HALCYON_S3_BUCKET=...'
 }
 
 
 function help_build_succeeded () {
-	quote <<-EOF
-		To deploy again, commit a change and push; for example:
-		$ git commit --allow-empty --allow-empty-message -m ''
-		$ git push heroku master
-EOF
+	log
+	log
+	log 'To deploy again, commit a change and push; for example:'
+	log_indent '$ git commit --allow-empty --allow-empty-message -m ""'
+	log_indent '$ git push heroku master'
 }
 
 
 function help_restore_succeeded () {
-	quote <<-EOF
-		To run GHCi:
-		$ cd .halcyon/app
-		$ cabal repl
-EOF
+	log
+	log
+	log 'To run GHCi:'
+	log_indent '$ cabal repl'
 }
 
 
@@ -63,15 +55,13 @@ function help_add_explicit_constraints () {
 	local constraints
 	expect_args constraints -- "$@"
 
-	quote <<-EOF
-		To use explicit constraints, add a cabal.config and push again:
-		$ cat >cabal.config <<EOF
-EOF
+	log
+	log
+	log 'To use explicit constraints, add a cabal.config and push again:'
+	log_indent '$ cat >cabal.config <<EOF'
 	format_constraints <<<"${constraints}" >&2 || die
 	echo 'EOF' >&2
-	quote <<-EOF
-		$ git add cabal.config
-		$ git commit -m 'Use explicit constraints' cabal.config
-		$ git push heroku master
-EOF
+	log_indent '$ git add cabal.config'
+	log_indent '$ git commit -m "Use explicit constraints" cabal.config'
+	log_indent '$ git push heroku master'
 }
