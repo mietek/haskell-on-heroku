@@ -174,6 +174,8 @@ function heroku_restore () {
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
 		--no-build-dependencies              \
+		--no-archive                         \
+		--force-build-slug                   \
 		--no-announce-slug                   \
 		--no-prepare-cache                   \
 		--no-clean-cache                     \
