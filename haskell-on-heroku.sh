@@ -86,24 +86,19 @@ EOF
 }
 
 
-# NOTE: "${build_dir}/.halcyon" will become '/app/.halcyon' on a dyno.
-
-function copy_slug () {
-	expect_existing '/app/.halcyon/slug'
-
+function copy_procfile () {
 	local build_dir
 	expect_args build_dir -- "$@"
-	expect_no_existing "${build_dir}/.halcyon"
 
-	tar_copy '/app/.halcyon/slug' "${build_dir}/.halcyon/slug" || die
-
-	if ! [ -f "${build_dir}/Procfile" ]; then
-		local app_executable
-		app_executable=$( detect_app_executable "${build_dir}" ) || die
-		expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
-
-		echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
+	if [ -f "${build_dir}/Procfile" ]; then
+		return 0
 	fi
+
+	local app_executable
+	app_executable=$( detect_app_executable "${build_dir}" ) || die
+	expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
+
+	echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
 }
 
 
@@ -117,27 +112,39 @@ function heroku_compile () {
 	set_halcyon_vars
 	set_config_vars "${env_dir}" || die
 
+	local install_dir
+	install_dir=$( get_tmp_dir 'haskell-on-heroku-install' ) || die
+
 	log
-	if ! halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir="${cache_dir}" --no-build-dependencies "${build_dir}"; then
+	if ! halcyon_deploy                    \
+		--halcyon-dir='/app/.halcyon'  \
+		--cache-dir="${cache_dir}"     \
+		--install-dir="${install_dir}" \
+		--no-build-dependencies        \
+		"${build_dir}"
+	then
 		log
 		help_deploy_failed
 		log
 		return 0
 	fi
+
+	# NOTE:  build_dir/.halcyon will become /app/.halcyon on a dyno.
+
+	tar_copy "${install_dir}/app" "${build_dir}" |& quote || die
+	copy_procfile "${build_dir}" || die
+
 	log
 	help_deploy_succeeded
 	log
-
-	copy_slug "${build_dir}" || die
 }
 
-
-# NOTE: Intended to run on a one-off dyno.
 
 function heroku_build () {
 	expect_existing '/app'
 
 	set_halcyon_vars
+
 	if ! validate_private_storage; then
 		log_error 'Expected private storage'
 		log
@@ -145,20 +152,34 @@ function heroku_build () {
 		die
 	fi
 
-	halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir='/var/tmp/halcyon-cache' '/app' || die
+	# NOTE:  Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
+	# heroku_compile.  There is no access to the compile cache from a one-off dyno.
+
+	halcyon_deploy                               \
+		--halcyon-dir='/app/.halcyon'        \
+		--cache-dir='/var/tmp/halcyon-cache' \
+		'/app' || die
 	log
 	help_build_succeeded
 }
 
 
-# NOTE: Intended to run on a one-off dyno.
-
 function heroku_restore () {
 	expect_existing '/app'
 
+	# NOTE:  Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
+	# heroku_compile.  There is no access to the compile cache from a one-off dyno.
+
 	set_halcyon_vars
 
-	halcyon_deploy --halcyon-dir='/app/.halcyon' --cache-dir='/var/tmp/halcyon-cache' --no-build-dependencies '/app' || die
+	halcyon_deploy                               \
+		--halcyon-dir='/app/.halcyon'        \
+		--cache-dir='/var/tmp/halcyon-cache' \
+		--no-build-dependencies              \
+		'/app' || die
+
+	tar_copy '/app/.halcyon/app' '/app' || die
+
 	log
 	help_restore_succeeded
 }
