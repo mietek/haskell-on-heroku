@@ -90,6 +90,7 @@ EOF
 function copy_procfile () {
 	local build_dir
 	expect_args build_dir -- "$@"
+	expect_existing "${build_dir}/.haskell-on-heroku"
 
 	if [ -f "${build_dir}/Procfile" ]; then
 		return 0
@@ -99,7 +100,22 @@ function copy_procfile () {
 	app_executable=$( detect_app_executable "${build_dir}" ) || die
 	expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
 
-	echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
+	echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/.haskell-on-heroku/Procfile" || die
+	ln -s "${build_dir}/.haskell-on-heroku/Procfile" "${build_dir}/Procfile" || die
+}
+
+
+function delete_procfile () {
+	local build_dir
+	expect_args build_dir -- "$@"
+
+	if ! [ -e "${build_dir}/Procfile" ] || ! [ -h "${build_dir}/Procfile" ] ||
+		! [ -e "${build_dir}/.haskell-on-heroku/Procfile" ]
+	then
+		return 0
+	fi
+
+	rm -f "${build_dir}/Procfile" "${build_dir}/.haskell-on-heroku/Procfile" || die
 }
 
 
@@ -141,6 +157,7 @@ function heroku_build () {
 	expect_existing '/app'
 
 	set_halcyon_vars
+	delete_procfile '/app'
 
 	if ! use_private_storage; then
 		log_error 'Expected private storage'
@@ -148,8 +165,8 @@ function heroku_build () {
 		die
 	fi
 
-	# NOTE: Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
-	# heroku_compile.  There is no access to the compile cache from a one-off dyno.
+	# NOTE: On a one-off dyno, /app is the equivalent of heroku_compile build_dir. There is no
+	# access to the compile cache from a one-off dyno.
 
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
@@ -165,10 +182,11 @@ function heroku_build () {
 function heroku_restore () {
 	expect_existing '/app'
 
-	# NOTE: Intended to run on a one-off dyno, where /app is the equivalent of build_dir from
-	# heroku_compile.  There is no access to the compile cache from a one-off dyno.
-
 	set_halcyon_vars
+	delete_procfile '/app'
+
+	# NOTE: On a one-off dyno, /app is the equivalent of heroku_compile build_dir. There is no
+	# access to the compile cache from a one-off dyno.
 
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
