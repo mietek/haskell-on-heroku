@@ -59,146 +59,139 @@ function set_config_vars () {
 }
 
 
-function copy_buildpack () {
+function heroku_compile () {
 	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
-	local build_dir
-	expect_args build_dir -- "$@"
-	expect_no_existing "${build_dir}/.haskell-on-heroku"
+	set_halcyon_vars
 
-	tar_copy "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" \
-		--exclude '.git' || die
+	# NOTE: Files copied into build_dir will be present in /app on a dyno.
 
-	mkdir -p "${build_dir}/.profile.d" || die
-	(
-		cat >"${build_dir}/.profile.d/haskell-on-heroku.sh" <<-EOF
-			if ! (( ${BUILDPACK_INTERNAL_PATHS:-0} )); then
-				export BUILDPACK_INTERNAL_PATHS=1
-
-				export PATH="/app/.haskell-on-heroku/bin:\${PATH}"
-				export PATH="/app/.halcyon/slug/bin:\${PATH}"
-			fi
-
-			source '/app/.haskell-on-heroku/lib/halcyon/src/paths.sh'
-			set_halcyon_paths
-EOF
-	) || die
-}
-
-
-function copy_procfile () {
-	local build_dir
-	expect_args build_dir -- "$@"
-	expect_existing "${build_dir}/.haskell-on-heroku"
-
-	if [ -f "${build_dir}/Procfile" ]; then
-		return 0
-	fi
-
-	local app_executable
-	app_executable=$( detect_app_executable "${build_dir}" ) || die
-	expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
-
-	echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/.haskell-on-heroku/Procfile" || die
-	ln -s "${build_dir}/.haskell-on-heroku/Procfile" "${build_dir}/Procfile" || die
-}
-
-
-function delete_procfile () {
-	local build_dir
-	expect_args build_dir -- "$@"
-
-	if ! [ -e "${build_dir}/Procfile" ] || ! [ -h "${build_dir}/Procfile" ] ||
-		! [ -e "${build_dir}/.haskell-on-heroku/Procfile" ]
-	then
-		return 0
-	fi
-
-	rm -f "${build_dir}/Procfile" "${build_dir}/.haskell-on-heroku/Procfile" || die
-}
-
-
-function heroku_compile () {
 	local build_dir cache_dir env_dir
 	expect_args build_dir cache_dir env_dir -- "$@"
 	expect_existing "${build_dir}"
+	expect_no_existing "${build_dir}/.haskell-on-heroku"
 
-	copy_buildpack "${build_dir}" || die
-
-	set_halcyon_vars
+	log 'Archiving app source'
+	tar_create "${build_dir}" '/tmp/haskell-on-heroku-app-source.tar.gz' || die
 	set_config_vars "${env_dir}" || die
-
-	local install_dir
-	install_dir=$( get_tmp_dir 'haskell-on-heroku-install' ) || die
-
 	log
-	if ! halcyon_deploy                    \
+	log
+
+	local install_dir success
+	install_dir=$( get_tmp_dir 'haskell-on-heroku-install' ) || die
+	success=0
+
+	if halcyon_deploy                      \
 		--halcyon-dir='/app/.halcyon'  \
 		--cache-dir="${cache_dir}"     \
 		--install-dir="${install_dir}" \
+		--no-copy-local-source         \
 		--no-build-dependencies        \
 		"${build_dir}"
 	then
-		help_deploy_failed
-		return 0
+		success=1
 	fi
 
-	# NOTE: build_dir/.halcyon will become /app/.halcyon on a dyno.
+	tar_copy "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" --exclude '.git' || die
+	cp -p '/tmp/haskell-on-heroku-app-source.tar.gz' "${build_dir}/.haskell-on-heroku" || die
+	mkdir -p "${build_dir}/.profile.d" || die
+	cp -p "${BUILDPACK_TOP_DIR}/profile.d/haskell-on-heroku.sh" "${build_dir}/.profile.d" || die
 
-	tar_copy "${install_dir}/app" "${build_dir}" |& quote || die
-	copy_procfile "${build_dir}" || die
+	if (( success )); then
+		tar_copy "${install_dir}/app" "${build_dir}" || die
 
-	help_deploy_succeeded
+		if ! [ -f "${build_dir}/Procfile" ]; then
+			local app_executable
+			app_executable=$( detect_app_executable "${build_dir}" ) || die
+			expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
+
+			echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
+		fi
+
+		help_deploy_succeeded
+	else
+		help_deploy_failed
+	fi
+
+	rm -rf "${install_dir}" || die
 }
 
 
 function heroku_build () {
-	expect_existing '/app'
+	expect_existing '/app/.haskell-on-heroku'
 
 	set_halcyon_vars
-	delete_procfile '/app'
-
 	if ! use_private_storage; then
 		log_error 'Expected private storage'
 		help_configure_private_storage
 		die
 	fi
 
-	# NOTE: On a one-off dyno, /app is the equivalent of heroku_compile build_dir. There is no
-	# access to the compile cache from a one-off dyno.
+	# NOTE: Files copied into build_dir in heroku_compile are present in /app on a
+	# one-off dyno. This includes files which should not contribute to source_hash.
+
+	local source_dir
+	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
+
+	log 'Restoring app source'
+	tar_extract '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
+	log
+	log
+
+	# NOTE: There is no access to the cache used in heroku_compile from a one-off dyno.
 
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
+		--no-copy-local-source               \
 		--no-cache                           \
 		--no-announce-deploy                 \
-		'/app' || die
+		"${source_dir}" || die
 
 	help_build_succeeded
+
+	rm -rf "${source_dir}" || die
 }
 
 
 function heroku_restore () {
-	expect_existing '/app'
+	expect_existing '/app/.haskell-on-heroku'
 
 	set_halcyon_vars
-	delete_procfile '/app'
 
-	# NOTE: On a one-off dyno, /app is the equivalent of heroku_compile build_dir. There is no
-	# access to the compile cache from a one-off dyno.
+	# NOTE: Files copied into build_dir in heroku_compile are present in /app on a
+	# one-off dyno. This includes files which should not contribute to source_hash.
+
+	local source_dir
+	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
+
+	log 'Restoring app source'
+	tar_extract '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
+	log
+	log
+
+	# NOTE: There is no access to the cache used in heroku_compile from a one-off dyno.
 
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
+		--no-copy-local-source               \
 		--no-build-dependencies              \
 		--no-archive                         \
 		--no-cache                           \
 		--force-build-slug                   \
 		--no-announce-deploy                 \
-		'/app' || die
+		"${source_dir}" || die
 
-	tar_copy '/app/.halcyon/app' '/app' || die
+	# NOTE: All build products are normally kept in HALCYON_DIR/app.  Forcing the slug to
+	# build and copying the build products is intended to help the user interact with the app.
+
+	if [ -d '/app/.halcyon/app' ]; then
+		tar_copy '/app/.halcyon/app' '/app' || die
+	fi
 
 	help_restore_succeeded
+
+	rm -rf "${source_dir}" || die
 }
