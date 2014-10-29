@@ -35,7 +35,7 @@ function set_config_vars () {
 	if ! vars=$(
 		find_tree "${config_dir}" -maxdepth 1 -type f 2>'/dev/null' |
 		sed "s:\./::" |
-		sort_naturally |
+		sort_natural |
 		filter_not_matching "^(${ignored_pattern})$" |
 		match_at_least_one
 	); then
