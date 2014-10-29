@@ -55,7 +55,6 @@ function help_build_succeeded () {
 
 function help_configure_private_storage () {
 	log
-	log
 	log 'To configure private storage:'
 	log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
 	log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'

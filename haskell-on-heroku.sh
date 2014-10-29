@@ -142,7 +142,7 @@ function heroku_build () {
 
 	set_halcyon_vars
 
-	if ! validate_private_storage; then
+	if ! use_private_storage; then
 		log_error 'Expected private storage'
 		help_configure_private_storage
 		die
