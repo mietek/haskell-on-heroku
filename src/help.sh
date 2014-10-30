@@ -3,11 +3,11 @@ function help_deploy_succeeded () {
 	log
 	log 'Finished deploying app'
 	log
-	log 'To see the app, spin up at least one web dyno:'
+	log 'To see the deployed app, spin up at least one web dyno:'
 	log_indent '$ heroku ps:scale web=1'
 	log_indent '$ heroku open'
 	log
-	log 'To run GHCi, restore layers on a one-off dyno:'
+	log 'To run GHCi, use a one-off dyno to restore the app environment:'
 	log_indent '$ heroku run bash'
 	log_indent '$ restore'
 	log_indent '$ cabal repl'
@@ -31,10 +31,10 @@ function help_deploy_failed () {
 	log
 	log 'Buildpack deployed'
 	log
-	log 'To continue deploying the app, build layers on a one-off PX dyno:'
+	log 'Use a one-off PX dyno to build the app:'
 	log_indent '$ heroku run --size=PX build'
 	log
-	log_indent 'Next, commit a change and push:'
+	log_indent 'Next, push a commit to deploy the app:'
 	log_indent '$ git commit --allow-empty --allow-empty-message -m ""'
 	log_indent '$ git push heroku master'
 	log
@@ -45,9 +45,7 @@ function help_deploy_failed () {
 function help_build_succeeded () {
 	log
 	log
-	log 'Finished building layers'
-	log
-	log 'To continue deploying the app, commit a change and push:'
+	log 'Push a commit to deploy the app:'
 	log_indent '$ git commit --allow-empty --allow-empty-message -m ""'
 	log_indent '$ git push heroku master'
 }
