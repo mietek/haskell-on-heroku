@@ -180,7 +180,7 @@ function heroku_restore () {
 		--no-build-dependencies              \
 		--no-archive                         \
 		--no-cache                           \
-		--force-build-slug                   \
+		--force-restore-all                  \
 		--no-announce-deploy                 \
 		"${source_dir}" || die
 
