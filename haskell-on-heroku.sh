@@ -103,10 +103,13 @@ function heroku_compile () {
 
 		if ! [ -f "${build_dir}/Procfile" ]; then
 			local app_executable
-			app_executable=$( detect_app_executable "${build_dir}" ) || die
-			expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
+			if app_executable=$( detect_app_executable "${build_dir}" ); then
+				expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
 
-			echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
+				echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || die
+			else
+				log_warning 'No app executable detected'
+			fi
 		fi
 
 		help_deploy_succeeded
