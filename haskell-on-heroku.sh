@@ -124,7 +124,7 @@ function heroku_build () {
 	expect_existing '/app/.haskell-on-heroku'
 
 	set_halcyon_vars
-	if ! use_private_storage; then
+	if ! private_storage; then
 		log_error 'Expected private storage'
 		help_configure_private_storage
 		die
