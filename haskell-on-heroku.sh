@@ -73,7 +73,7 @@ function heroku_compile () {
 	expect_no_existing "${build_dir}/.haskell-on-heroku"
 
 	log 'Archiving app source'
-	tar_create "${build_dir}" '/tmp/haskell-on-heroku-app-source.tar.gz' || die
+	create_archive "${build_dir}" '/tmp/haskell-on-heroku-app-source.tar.gz' || die
 	set_config_vars "${env_dir}" || die
 	log
 	log
@@ -93,13 +93,12 @@ function heroku_compile () {
 		success=1
 	fi
 
-	tar_copy "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" --exclude '.git' || die
-	cp -p '/tmp/haskell-on-heroku-app-source.tar.gz' "${build_dir}/.haskell-on-heroku" || die
-	mkdir -p "${build_dir}/.profile.d" || die
-	cp -p "${BUILDPACK_TOP_DIR}/profile.d/haskell-on-heroku.sh" "${build_dir}/.profile.d" || die
+	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" --exclude '.git' || die
+	copy_file '/tmp/haskell-on-heroku-app-source.tar.gz' "${build_dir}/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz" || die
+	copy_file "${BUILDPACK_TOP_DIR}/profile.d/haskell-on-heroku.sh" "${build_dir}/.profile.d/haskell-on-heroku.sh" || die
 
 	if (( success )); then
-		tar_copy "${install_dir}/app" "${build_dir}" || die
+		copy_dir_into "${install_dir}/app" "${build_dir}" || die
 
 		if ! [ -f "${build_dir}/Procfile" ]; then
 			local app_executable
@@ -138,7 +137,7 @@ function heroku_build () {
 	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
 
 	log 'Restoring app source'
-	tar_extract '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
@@ -170,7 +169,7 @@ function heroku_restore () {
 	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
 
 	log 'Restoring app source'
-	tar_extract '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
@@ -191,7 +190,7 @@ function heroku_restore () {
 	# build and copying the build products is intended to help the user interact with the app.
 
 	if [ -d '/app/.halcyon/app' ]; then
-		tar_copy '/app/.halcyon/app' '/app' || die
+		copy_dir_into '/app/.halcyon/app' '/app' || die
 	fi
 
 	help_restore_succeeded
