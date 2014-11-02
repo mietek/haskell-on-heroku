@@ -70,7 +70,7 @@ heroku_compile () {
 		success=1
 	fi
 
-	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" --exclude '.git' || die
+	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" || die
 	copy_file '/tmp/app-source.tar.gz' "${build_dir}/.buildpack/app-source.tar.gz" || die
 	copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || die
 
