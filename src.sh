@@ -62,8 +62,6 @@ buildpack_autoupdate () {
 		branch='master'
 	fi
 
-	log 'Auto-updating buildpack'
-
 	local git_url must_update
 	must_update=0
 	git_url=$( cd "${BUILDPACK_TOP_DIR}" && git config --get 'remote.origin.url' ) || return 1
@@ -80,6 +78,8 @@ buildpack_autoupdate () {
 			return 0
 		fi
 	fi
+
+	log 'Auto-updating buildpack'
 
 	( cd "${BUILDPACK_TOP_DIR}" && git fetch 'origin' |& quote ) || return 1
 	( cd "${BUILDPACK_TOP_DIR}" && git reset --hard "origin/${branch}" |& quote ) || return 1
