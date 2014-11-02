@@ -1,24 +1,3 @@
-export BUILDPACK_TOP_DIR
-BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
-
-if [[ ! -d "${BUILDPACK_TOP_DIR}/lib/halcyon" ]]; then
-	if ! git clone --depth=1 --quiet 'https://github.com/mietek/halcyon.git' "${BUILDPACK_TOP_DIR}/lib/halcyon"; then
-		echo '   *** ERROR: Cannot clone Halcyon' >&2
-		exit 1
-	fi
-fi
-
-if [[ ! -d "${BUILDPACK_TOP_DIR}/lib/halcyon/lib/bashmenot" ]]; then
-	if ! git clone --depth=1 --quiet 'https://github.com/mietek/bashmenot.git' "${BUILDPACK_TOP_DIR}/lib/halcyon/lib/bashmenot"; then
-		echo '   *** ERROR: Cannot clone bashmenot' >&2
-		exit 1
-	fi
-fi
-
-source "${BUILDPACK_TOP_DIR}/lib/halcyon/halcyon.sh"
-source "${BUILDPACK_TOP_DIR}/src/help.sh"
-
-
 set_config_vars () {
 	local config_dir
 	expect_args config_dir -- "$@"
@@ -68,7 +47,7 @@ heroku_compile () {
 	local build_dir cache_dir env_dir
 	expect_args build_dir cache_dir env_dir -- "$@"
 	expect_existing "${build_dir}"
-	expect_no_existing "${build_dir}/.haskell-on-heroku"
+	expect_no_existing "${build_dir}/.buildpack"
 
 	log 'Archiving app source'
 	create_archive "${build_dir}" '/tmp/app-source.tar.gz' || die
@@ -77,7 +56,7 @@ heroku_compile () {
 	log
 
 	local install_dir success
-	install_dir=$( get_tmp_dir 'haskell-on-heroku-install' ) || die
+	install_dir=$( get_tmp_dir 'buildpack-install' ) || die
 	success=0
 
 	if halcyon_deploy                      \
@@ -91,9 +70,9 @@ heroku_compile () {
 		success=1
 	fi
 
-	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" --exclude '.git' || die
-	copy_file '/tmp/app-source.tar.gz' "${build_dir}/.haskell-on-heroku/app-source.tar.gz" || die
-	copy_file "${BUILDPACK_TOP_DIR}/profile.d/haskell-on-heroku.sh" "${build_dir}/.profile.d/haskell-on-heroku.sh" || die
+	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" --exclude '.git' || die
+	copy_file '/tmp/app-source.tar.gz' "${build_dir}/.buildpack/app-source.tar.gz" || die
+	copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || die
 
 	if (( success )); then
 		copy_dir_into "${install_dir}/app" "${build_dir}" || die
@@ -119,7 +98,7 @@ heroku_compile () {
 
 
 heroku_build () {
-	expect_existing '/app/.haskell-on-heroku'
+	expect_existing '/app/.buildpack'
 
 	set_halcyon_vars
 	if ! private_storage; then
@@ -132,10 +111,10 @@ heroku_build () {
 	# one-off dyno. This includes files which should not contribute to source_hash.
 
 	local source_dir
-	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
+	source_dir=$( get_tmp_dir 'buildpack-source' ) || die
 
 	log 'Restoring app source'
-	extract_archive_over '/app/.haskell-on-heroku/app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.buildpack/app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
@@ -156,7 +135,7 @@ heroku_build () {
 
 
 heroku_restore () {
-	expect_existing '/app/.haskell-on-heroku'
+	expect_existing '/app/.buildpack'
 
 	set_halcyon_vars
 
@@ -164,10 +143,10 @@ heroku_restore () {
 	# one-off dyno. This includes files which should not contribute to source_hash.
 
 	local source_dir
-	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
+	source_dir=$( get_tmp_dir 'buildpack-source' ) || die
 
 	log 'Restoring app source'
-	extract_archive_over '/app/.haskell-on-heroku/app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.buildpack/app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
