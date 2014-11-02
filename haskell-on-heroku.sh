@@ -71,7 +71,7 @@ heroku_compile () {
 	expect_no_existing "${build_dir}/.haskell-on-heroku"
 
 	log 'Archiving app source'
-	create_archive "${build_dir}" '/tmp/haskell-on-heroku-app-source.tar.gz' || die
+	create_archive "${build_dir}" '/tmp/app-source.tar.gz' || die
 	set_config_vars "${env_dir}" || die
 	log
 	log
@@ -92,7 +92,7 @@ heroku_compile () {
 	fi
 
 	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.haskell-on-heroku" --exclude '.git' || die
-	copy_file '/tmp/haskell-on-heroku-app-source.tar.gz' "${build_dir}/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz" || die
+	copy_file '/tmp/app-source.tar.gz' "${build_dir}/.haskell-on-heroku/app-source.tar.gz" || die
 	copy_file "${BUILDPACK_TOP_DIR}/profile.d/haskell-on-heroku.sh" "${build_dir}/.profile.d/haskell-on-heroku.sh" || die
 
 	if (( success )); then
@@ -135,7 +135,7 @@ heroku_build () {
 	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
 
 	log 'Restoring app source'
-	extract_archive_over '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.haskell-on-heroku/app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
@@ -167,7 +167,7 @@ heroku_restore () {
 	source_dir=$( get_tmp_dir 'haskell-on-heroku-source' ) || die
 
 	log 'Restoring app source'
-	extract_archive_over '/app/.haskell-on-heroku/haskell-on-heroku-app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.haskell-on-heroku/app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
