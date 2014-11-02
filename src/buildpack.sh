@@ -36,7 +36,7 @@ set_config_vars () {
 }
 
 
-heroku_compile () {
+buildpack_compile () {
 	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
@@ -97,7 +97,7 @@ heroku_compile () {
 }
 
 
-heroku_build () {
+buildpack_build () {
 	expect_existing '/app/.buildpack'
 
 	set_halcyon_vars
@@ -107,7 +107,7 @@ heroku_build () {
 		die
 	fi
 
-	# NOTE: Files copied into build_dir in heroku_compile are present in /app on a
+	# NOTE: Files copied into build_dir in buildpack_compile are present in /app on a
 	# one-off dyno. This includes files which should not contribute to source_hash.
 
 	local source_dir
@@ -118,7 +118,7 @@ heroku_build () {
 	log
 	log
 
-	# NOTE: There is no access to the cache used in heroku_compile from a one-off dyno.
+	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
@@ -134,12 +134,12 @@ heroku_build () {
 }
 
 
-heroku_restore () {
+buildpack_restore () {
 	expect_existing '/app/.buildpack'
 
 	set_halcyon_vars
 
-	# NOTE: Files copied into build_dir in heroku_compile are present in /app on a
+	# NOTE: Files copied into build_dir in buildpack_compile are present in /app on a
 	# one-off dyno. This includes files which should not contribute to source_hash.
 
 	local source_dir
@@ -150,7 +150,7 @@ heroku_restore () {
 	log
 	log
 
-	# NOTE: There is no access to the cache used in heroku_compile from a one-off dyno.
+	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
 	halcyon_deploy                               \
 		--halcyon-dir='/app/.halcyon'        \
