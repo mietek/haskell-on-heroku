@@ -1,4 +1,4 @@
-function help_deploy_succeeded () {
+help_deploy_succeeded () {
 	log
 	log
 	log 'Deploy finished'
@@ -16,7 +16,7 @@ function help_deploy_succeeded () {
 }
 
 
-function help_restore_succeeded () {
+help_restore_succeeded () {
 	log
 	log
 	log 'Restore finished'
@@ -26,7 +26,7 @@ function help_restore_succeeded () {
 }
 
 
-function help_deploy_failed () {
+help_deploy_failed () {
 	log
 	log
 	log 'Buildpack deployed'
@@ -42,7 +42,7 @@ function help_deploy_failed () {
 }
 
 
-function help_build_succeeded () {
+help_build_succeeded () {
 	log
 	log
 	log 'Build finished'
@@ -53,7 +53,7 @@ function help_build_succeeded () {
 }
 
 
-function help_configure_private_storage () {
+help_configure_private_storage () {
 	log
 	log 'To configure private storage:'
 	log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'

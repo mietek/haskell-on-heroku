@@ -1,16 +1,14 @@
 export BUILDPACK_TOP_DIR
 BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
-if ! [ -d "${BUILDPACK_TOP_DIR}/lib/halcyon" ]; then
-	mkdir -p "${BUILDPACK_TOP_DIR}/lib" || exit 1
+if [[ ! -d "${BUILDPACK_TOP_DIR}/lib/halcyon" ]]; then
 	if ! git clone --depth=1 --quiet 'https://github.com/mietek/halcyon.git' "${BUILDPACK_TOP_DIR}/lib/halcyon"; then
 		echo '   *** ERROR: Cannot clone Halcyon' >&2
 		exit 1
 	fi
 fi
 
-if ! [ -d "${BUILDPACK_TOP_DIR}/lib/halcyon/lib/bashmenot" ]; then
-	mkdir -p "${BUILDPACK_TOP_DIR}/lib/halcyon/lib" || exit 1
+if [[ ! -d "${BUILDPACK_TOP_DIR}/lib/halcyon/lib/bashmenot" ]]; then
 	if ! git clone --depth=1 --quiet 'https://github.com/mietek/bashmenot.git' "${BUILDPACK_TOP_DIR}/lib/halcyon/lib/bashmenot"; then
 		echo '   *** ERROR: Cannot clone bashmenot' >&2
 		exit 1
@@ -21,7 +19,7 @@ source "${BUILDPACK_TOP_DIR}/lib/halcyon/halcyon.sh"
 source "${BUILDPACK_TOP_DIR}/src/help.sh"
 
 
-function set_config_vars () {
+set_config_vars () {
 	local config_dir
 	expect_args config_dir -- "$@"
 
@@ -59,7 +57,7 @@ function set_config_vars () {
 }
 
 
-function heroku_compile () {
+heroku_compile () {
 	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
@@ -100,7 +98,7 @@ function heroku_compile () {
 	if (( success )); then
 		copy_dir_into "${install_dir}/app" "${build_dir}" || die
 
-		if ! [ -f "${build_dir}/Procfile" ]; then
+		if [[ ! -f "${build_dir}/Procfile" ]]; then
 			local app_executable
 			if app_executable=$( detect_app_executable "${build_dir}" ); then
 				expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
@@ -120,7 +118,7 @@ function heroku_compile () {
 }
 
 
-function heroku_build () {
+heroku_build () {
 	expect_existing '/app/.haskell-on-heroku'
 
 	set_halcyon_vars
@@ -157,7 +155,7 @@ function heroku_build () {
 }
 
 
-function heroku_restore () {
+heroku_restore () {
 	expect_existing '/app/.haskell-on-heroku'
 
 	set_halcyon_vars
@@ -189,7 +187,7 @@ function heroku_restore () {
 	# NOTE: All build products are normally kept in HALCYON_DIR/app.  Forcing the slug to
 	# build and copying the build products is intended to help the user interact with the app.
 
-	if [ -d '/app/.halcyon/app' ]; then
+	if [[ -d '/app/.halcyon/app' ]]; then
 		copy_dir_into '/app/.halcyon/app' '/app' || die
 	fi
 
