@@ -3,8 +3,6 @@ set -o pipefail
 export BUILDPACK_TOP_DIR
 BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
-unset GIT_DIR
-
 
 buildpack_source_halcyon () {
 	if [[ -d "${BUILDPACK_TOP_DIR}/lib/halcyon" ]]; then

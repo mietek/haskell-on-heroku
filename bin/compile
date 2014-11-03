@@ -5,6 +5,8 @@ set -eu
 export BUILDPACK_TOP_DIR
 BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
 
+unset GIT_DIR
+
 
 log_indent_pad () {
 	local thing
