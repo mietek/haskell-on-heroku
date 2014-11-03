@@ -93,4 +93,8 @@ set_config_vars "$3" || exit 1
 BUILDPACK_NO_AUTOUPDATE=1 \
 	source "${BUILDPACK_TOP_DIR}/src.sh"
 
+export PATH="${BUILDPACK_TOP_DIR}/lib/halcyon:${PATH:-}"
+
+source <( HALCYON_NO_AUTOUPDATE=1 halcyon show-paths )
+
 buildpack_compile "$1" "$2" "$3" || die

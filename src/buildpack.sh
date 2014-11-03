@@ -17,7 +17,7 @@ buildpack_compile () {
 	success=0
 
 	set_halcyon_vars
-	if halcyon_deploy                      \
+	if halcyon_main deploy                 \
 		--halcyon-dir='/app/.halcyon'  \
 		--cache-dir="${cache_dir}"     \
 		--install-dir="${install_dir}" \
@@ -77,7 +77,7 @@ buildpack_build () {
 		help_configure_private_storage
 		die
 	fi
-	halcyon_deploy "$@"                          \
+	halcyon_main deploy "$@"                     \
 		--halcyon-dir='/app/.halcyon'        \
 		--no-copy-local-source               \
 		--no-cache                           \
@@ -107,7 +107,7 @@ buildpack_restore () {
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
 	set_halcyon_vars
-	halcyon_deploy "$@"                          \
+	halcyon_main deploy "$@"                     \
 		--halcyon-dir='/app/.halcyon'        \
 		--no-copy-local-source               \
 		--no-build-dependencies              \
