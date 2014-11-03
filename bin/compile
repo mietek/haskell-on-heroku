@@ -60,7 +60,7 @@ set_config_vars () {
 
 	local var
 	while read -r var; do
-		if grep -E "(${ignored_pattern})" <<<"${var}"; then
+		if grep -qE "(${ignored_pattern})" <<<"${var}"; then
 			continue
 		fi
 
@@ -68,7 +68,7 @@ set_config_vars () {
 		value=$( <"$1/${var}" ) || return 1
 		export "${var}"="${value}"
 
-		if grep -E "(${secret_pattern})" <<<"${var}"; then
+		if grep -qE "(${secret_pattern})" <<<"${var}"; then
 			log_indent_pad "${var}:" "(secret)"
 		else
 			log_indent_pad "${var}:" "${value}"
