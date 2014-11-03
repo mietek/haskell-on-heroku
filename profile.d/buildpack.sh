@@ -3,5 +3,5 @@ if ! (( ${BUILDPACK_INTERNAL_PATHS:-0} )); then
 
 	export PATH="/app/.buildpack/bin:/app/.buildpack/lib/halcyon:${PATH:-}"
 
-	source <( HALCYON_NO_AUTOUPDATE=1 halcyon show-paths )
+	HALCYON_NO_AUTOUPDATE=1 source <( halcyon show-paths )
 fi
