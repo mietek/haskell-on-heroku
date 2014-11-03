@@ -81,7 +81,6 @@ buildpack_build () {
 
 	halcyon_deploy "$@"                          \
 		--halcyon-dir='/app/.halcyon'        \
-		--cache-dir='/var/tmp/halcyon-cache' \
 		--no-copy-local-source               \
 		--no-cache                           \
 		--no-announce-deploy                 \
@@ -113,7 +112,6 @@ buildpack_restore () {
 
 	halcyon_deploy "$@"                          \
 		--halcyon-dir='/app/.halcyon'        \
-		--cache-dir='/var/tmp/halcyon-cache' \
 		--no-copy-local-source               \
 		--no-build-dependencies              \
 		--no-archive                         \
