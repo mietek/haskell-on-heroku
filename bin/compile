@@ -74,6 +74,8 @@ set_config_vars () {
 			log_indent_pad "${var}:" "${value}"
 		fi
 	done <<<"${vars}"
+
+	echo >&2
 }
 
 

@@ -13,8 +13,6 @@ buildpack_compile () {
 
 	log 'Archiving app source'
 	create_archive "${build_dir}" '/tmp/app-source.tar.gz' || die
-	log
-	log
 
 	local install_dir success
 	install_dir=$( get_tmp_dir 'buildpack-install' ) || die
