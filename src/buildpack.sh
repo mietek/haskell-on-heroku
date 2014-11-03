@@ -2,8 +2,6 @@ buildpack_compile () {
 	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
-	set_halcyon_vars
-
 	# NOTE: Files copied into build_dir will be present in /app on a dyno.
 
 	local build_dir cache_dir env_dir
@@ -18,6 +16,7 @@ buildpack_compile () {
 	install_dir=$( get_tmp_dir 'buildpack-install' ) || die
 	success=0
 
+	set_halcyon_vars
 	if halcyon_deploy                      \
 		--halcyon-dir='/app/.halcyon'  \
 		--cache-dir="${cache_dir}"     \
@@ -59,13 +58,6 @@ buildpack_compile () {
 buildpack_build () {
 	expect_existing '/app/.buildpack'
 
-	set_halcyon_vars
-	if ! private_storage; then
-		log_error 'Expected private storage'
-		help_configure_private_storage
-		die
-	fi
-
 	# NOTE: Files copied into build_dir in buildpack_compile are present in /app on a
 	# one-off dyno. This includes files which should not contribute to source_hash.
 
@@ -79,6 +71,12 @@ buildpack_build () {
 
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
+	set_halcyon_vars
+	if ! private_storage; then
+		log_error 'Expected private storage'
+		help_configure_private_storage
+		die
+	fi
 	halcyon_deploy "$@"                          \
 		--halcyon-dir='/app/.halcyon'        \
 		--no-copy-local-source               \
@@ -95,8 +93,6 @@ buildpack_build () {
 buildpack_restore () {
 	expect_existing '/app/.buildpack'
 
-	set_halcyon_vars
-
 	# NOTE: Files copied into build_dir in buildpack_compile are present in /app on a
 	# one-off dyno. This includes files which should not contribute to source_hash.
 
@@ -110,6 +106,7 @@ buildpack_restore () {
 
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
+	set_halcyon_vars
 	halcyon_deploy "$@"                          \
 		--halcyon-dir='/app/.halcyon'        \
 		--no-copy-local-source               \
