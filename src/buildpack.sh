@@ -81,7 +81,7 @@ buildpack_build () {
 
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
-	halcyon_deploy                               \
+	halcyon_deploy "$@"                          \
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
 		--no-copy-local-source               \
@@ -113,7 +113,7 @@ buildpack_restore () {
 
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
-	halcyon_deploy                               \
+	halcyon_deploy "$@"                          \
 		--halcyon-dir='/app/.halcyon'        \
 		--cache-dir='/var/tmp/halcyon-cache' \
 		--no-copy-local-source               \
