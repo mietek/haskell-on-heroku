@@ -25,9 +25,9 @@ buildpack_source_halcyon () {
 
 	local commit_hash
 	commit_hash=$(
-		git clone -q "${url}" "${BUILDPACK_TOP_DIR}/lib/halcyon" &&
+		git clone -q "${url}" "${BUILDPACK_TOP_DIR}/lib/halcyon" &>'/dev/null' &&
 		cd "${BUILDPACK_TOP_DIR}/lib/halcyon" &&
-		git checkout -q "${branch}" &&
+		git checkout -q "${branch}" &>'/dev/null' &&
 		git log -n 1 --pretty='format:%h'
 	) || return 1
 	echo " done (${commit_hash})" >&2
@@ -91,8 +91,8 @@ buildpack_autoupdate () {
 	local commit_hash
 	commit_hash=$(
 		cd "${BUILDPACK_TOP_DIR}" &&
-		git fetch -q 'origin' &&
-		git reset -q --hard "origin/${branch}" &&
+		git fetch -q 'origin' &>'/dev/null' &&
+		git reset -q --hard "origin/${branch}" &>'/dev/null' &&
 		git log -n 1 --pretty='format:%h'
 	) || return 1
 	log_end "done (${commit_hash})"
