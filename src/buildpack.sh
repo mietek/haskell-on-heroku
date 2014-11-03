@@ -12,7 +12,7 @@ buildpack_compile () {
 	expect_no_existing "${build_dir}/.buildpack"
 
 	log 'Archiving app source'
-	create_archive "${build_dir}" '/tmp/app-source.tar.gz' || die
+	create_archive "${build_dir}" '/tmp/buildpack-app-source.tar.gz' || die
 
 	local install_dir success
 	install_dir=$( get_tmp_dir 'buildpack-install' ) || die
@@ -30,7 +30,7 @@ buildpack_compile () {
 	fi
 
 	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" || die
-	copy_file '/tmp/app-source.tar.gz' "${build_dir}/.buildpack/app-source.tar.gz" || die
+	copy_file '/tmp/buildpack-app-source.tar.gz' "${build_dir}/.buildpack/buildpack-app-source.tar.gz" || die
 	copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || die
 
 	if (( success )); then
@@ -73,7 +73,7 @@ buildpack_build () {
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || die
 
 	log 'Restoring app source'
-	extract_archive_over '/app/.buildpack/app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.buildpack/buildpack-app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
@@ -105,7 +105,7 @@ buildpack_restore () {
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || die
 
 	log 'Restoring app source'
-	extract_archive_over '/app/.buildpack/app-source.tar.gz' "${source_dir}" || die
+	extract_archive_over '/app/.buildpack/buildpack-app-source.tar.gz' "${source_dir}" || die
 	log
 	log
 
