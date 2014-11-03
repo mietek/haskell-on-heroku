@@ -75,12 +75,20 @@ set_config_vars () {
 		fi
 	done <<<"${vars}"
 
+	local commit_hash
+	commit_hash=$(
+		cd "${BUILDPACK_TOP_DIR}" &&
+		git log -n 1 --pretty='format:%h'
+	) || return 1
+
 	echo >&2
+	echo "-----> Installing buildpack... done ${commit_hash}" >&2
 }
 
 
 set_config_vars "$3" || exit 1
 
-source "${BUILDPACK_TOP_DIR}/src.sh"
+BUILDPACK_NO_AUTOUPDATE=1 \
+	source "${BUILDPACK_TOP_DIR}/src.sh"
 
 buildpack_compile "$1" "$2" "$3" || exit 1

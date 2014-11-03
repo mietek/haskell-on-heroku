@@ -63,30 +63,13 @@ buildpack_autoupdate () {
 		branch='master'
 	fi
 
-	local git_url must_update
-	must_update=0
+	local git_url
 	git_url=$( cd "${BUILDPACK_TOP_DIR}" && git config --get 'remote.origin.url' ) || return 1
 	if [[ "${git_url}" != "${url}" ]]; then
 		( cd "${HALCYON_TOP_DIR}" && git remote set-url 'origin' "${url}" ) || return 1
-		must_update=1
 	fi
 
 	log_begin 'Auto-updating buildpack...'
-
-	if ! (( must_update )); then
-		local mark_time current_time
-		mark_time=$( get_modification_time "${BUILDPACK_TOP_DIR}" ) || return 1
-		current_time=$( date +'%s' ) || return 1
-		if (( mark_time > current_time - 7 )); then
-			local commit_hash
-			commit_hash=$(
-				cd "${BUILDPACK_TOP_DIR}" &&
-				git log -n 1 --pretty='format:%h'
-			) || return 1
-			log_end "done, ${commit_hash}"
-			return 0
-		fi
-	fi
 
 	local commit_hash
 	commit_hash=$(
