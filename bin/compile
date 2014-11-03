@@ -84,7 +84,7 @@ set_config_vars () {
 	) || return 1
 
 	echo >&2
-	echo "-----> Installing buildpack... done ${commit_hash}" >&2
+	echo "-----> Installing buildpack... done, ${commit_hash}" >&2
 }
 
 

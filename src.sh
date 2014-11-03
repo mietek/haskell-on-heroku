@@ -76,7 +76,7 @@ buildpack_autoupdate () {
 		git reset -q --hard "origin/${branch}" &>'/dev/null' &&
 		git log -n 1 --pretty='format:%h'
 	) || return 1
-	log_end "done (${commit_hash})"
+	log_end "done, ${commit_hash}"
 
 	BUILDPACK_NO_AUTOUPDATE=1 \
 		source "${BUILDPACK_TOP_DIR}/src.sh" || return 1
