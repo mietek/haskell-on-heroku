@@ -5,6 +5,80 @@ set -eu
 export BUILDPACK_TOP_DIR
 BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
 
+
+log_indent_pad () {
+	local thing
+	thing="$1$( printf ' %.0s' {0..41} )"
+	shift
+
+	echo "       ${thing:0:41}" "$@" >&2
+}
+
+
+set_url_config_var () {
+	if [[ ! -f "$1/$2" ]]; then
+		return 0
+	fi
+
+	local urloid
+	urloid=$( <"$1/$2" ) || return 1
+	export "$2"="${urloid}"
+
+	local url branch
+	url="${urloid%#*}"
+	branch="${urloid#*#}"
+	if [[ "${branch}" == "${url}" ]]; then
+		branch=''
+	fi
+	log_indent_pad "$2:" "${url%.git}${branch:+#${branch}}"
+}
+
+
+set_config_vars () {
+	echo >&2
+	echo '-----> Deploying with Haskell on Heroku' >&2
+
+	if [[ ! -d "$1" ]]; then
+		echo >&2
+		return 0
+	fi
+
+	set_url_config_var "$1" 'BUILDPACK_URL' || return 1
+	set_url_config_var "$1" 'HALCYON_URL' || return 1
+	set_url_config_var "$1" 'BASHMENOT_URL' || return 1
+
+	local ignored_pattern secret_pattern
+	ignored_pattern='BUILDPACK_INTERNAL|BUILDPACK_URL|HALCYON_INTERNAL|HALCYON_URL|HALCYON_DIR|HALCYON_CACHE_DIR|BASHMENOT_URL|GIT_DIR|PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LD_PRELOAD'
+	secret_pattern='SECRET|PASSWORD|PASSPHRASE|DATABASE|POSTGRESQL'
+
+	local vars
+	vars=$(
+		find "$1" -maxdepth 1 -type f |
+		sed "s:$1/::" |
+		sort
+	) || return 1
+
+	local var
+	while read -r var; do
+		if grep -E "(${ignored_pattern})" <<<"${var}"; then
+			continue
+		fi
+
+		local value
+		value=$( <"$1/${var}" ) || return 1
+		export "${var}"="${value}"
+
+		if grep -E "(${secret_pattern})" <<<"${var}"; then
+			log_indent_pad "${var}:" "(secret)"
+		else
+			log_indent_pad "${var}:" "${value}"
+		fi
+	done <<<"${vars}"
+}
+
+
+set_config_vars "$3" || exit 1
+
 source "${BUILDPACK_TOP_DIR}/src.sh"
 
 buildpack_compile "$1" "$2" "$3" || exit 1

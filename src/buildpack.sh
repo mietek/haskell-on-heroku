@@ -1,41 +1,3 @@
-set_config_vars () {
-	local config_dir
-	expect_args config_dir -- "$@"
-
-	log 'Setting config vars'
-
-	local ignored_pattern secret_pattern
-	ignored_pattern='BUILDPACK_INTERNAL_.*|HALCYON_INTERNAL_.*|GIT_DIR|PATH|LIBRARY_PATH|LD_LIBRARY_PATH|LD_PRELOAD'
-	secret_pattern='.*SECRET.*|.*PASSWORD.*|DATABASE_URL|.*_POSTGRESQL_.*_URL'
-
-	local vars
-	if ! vars=$(
-		find_tree "${config_dir}" -maxdepth 1 -type f 2>'/dev/null' |
-		sed "s:\./::" |
-		sort_natural |
-		filter_not_matching "^(${ignored_pattern})$" |
-		match_at_least_one
-	); then
-		echo '(none)'
-		return 0
-	fi
-
-	local var
-	while read -r var; do
-		local value
-		value=$( match_exactly_one <"${config_dir}/${var}" ) || die
-
-		if filter_matching "^(${secret_pattern})$" <<<"${var}" | match_exactly_one >'/dev/null'; then
-			log_indent_pad "${var}:" "(secret)"
-		else
-			log_indent_pad "${var}:" "${value}"
-		fi
-
-		export "${var}=${value}"
-	done <<<"${vars}"
-}
-
-
 buildpack_compile () {
 	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
@@ -51,7 +13,6 @@ buildpack_compile () {
 
 	log 'Archiving app source'
 	create_archive "${build_dir}" '/tmp/app-source.tar.gz' || die
-	set_config_vars "${env_dir}" || die
 	log
 	log
 
