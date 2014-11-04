@@ -2,8 +2,7 @@
 
 set -eu
 
-export BUILDPACK_TOP_DIR
-BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
+export BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
 
 source "${BUILDPACK_TOP_DIR}/src.sh"
 
