@@ -87,8 +87,6 @@ set_config_vars () {
 
 unset GIT_DIR
 
-export PATH="${BUILDPACK_TOP_DIR}/lib/halcyon:${PATH:-}"
-
 set_config_vars "$3" || exit 1
 
 BUILDPACK_NO_AUTOUPDATE=1 \
