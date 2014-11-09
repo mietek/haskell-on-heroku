@@ -11,7 +11,7 @@ buildpack_source_halcyon () {
 	fi
 
 	local urloid url branch
-	urloid="${HALCYON_URL:-https://github.com/mietek/halcyon.git}"
+	urloid="${HALCYON_URL:-https://github.com/mietek/halcyon}"
 	url="${urloid%#*}"
 	branch="${urloid#*#}"
 	if [[ "${branch}" == "${url}" ]]; then
@@ -53,7 +53,7 @@ buildpack_autoupdate () {
 	fi
 
 	local urloid
-	urloid="${BUILDPACK_URL:-https://github.com/mietek/haskell-on-heroku.git}"
+	urloid="${BUILDPACK_URL:-https://github.com/mietek/haskell-on-heroku}"
 
 	log_begin 'Auto-updating buildpack...'
 

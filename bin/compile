@@ -92,4 +92,4 @@ set_config_vars "$3" || exit 1
 BUILDPACK_NO_AUTOUPDATE=1 \
 	source "${BUILDPACK_TOP_DIR}/src.sh"
 
-buildpack_compile "$1" "$2" "$3" || die
+buildpack_compile "$1" "$2" "$3"

@@ -6,4 +6,4 @@ export BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
 
 source "${BUILDPACK_TOP_DIR}/src.sh"
 
-buildpack_restore "$@" || die
+buildpack_restore "$@"
