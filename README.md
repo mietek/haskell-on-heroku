@@ -1,7 +1,7 @@
-[_Haskell on Heroku_](http://haskellonheroku.com/)
+[Haskell on Heroku](http://haskellonheroku.com/)
 ==================================================
 
-_Haskell on Heroku_ is a system for fast and reliable deployment of Haskell web applications to [Heroku](http://heroku.com/).
+Haskell on Heroku is a system for fast and reliable deployment of Haskell web applications to [Heroku](http://heroku.com/).
 
 **This page describes version 1.0, which is currently undergoing testing.  Check back soon, or follow [@mietek](http://twitter.com/mietek).**
 
@@ -9,53 +9,65 @@ _Haskell on Heroku_ is a system for fast and reliable deployment of Haskell we
 Examples
 --------
 
-_Coming soon._
+### “Hello, world!”
+
+- [hello-happstack](https://github.com/mietek/hello-happstack/) ([Live](http://mietek-hello-happstack.herokuapp.com/))
+- [hello-mflow](https://github.com/mietek/hello-mflow/) ([Live](http://mietek-hello-mflow.herokuapp.com/))
+- [hello-miku](https://github.com/mietek/hello-miku/) ([Live](http://mietek-hello-miku.herokuapp.com/))
+- [hello-scotty](https://github.com/mietek/hello-scotty/) ([Live](http://mietek-hello-scotty.herokuapp.com/))
+- [hello-simple](https://github.com/mietek/hello-simple/) ([Live](http://mietek-hello-simple.herokuapp.com/))
+- [hello-snap](https://github.com/mietek/hello-snap/) ([Live](http://mietek-hello-snap.herokuapp.com/))
+- [hello-spock](https://github.com/mietek/hello-spock/) ([Live](http://mietek-hello-spock.herokuapp.com/))
+- [hello-wai-warp](https://github.com/mietek/hello-wai-warp/) ([Live](http://mietek-hello-wai-warp.herokuapp.com/))
+- [hello-wheb](https://github.com/mietek/hello-wheb/) ([Live](http://mietek-hello-wheb.herokuapp.com/))
+- [hello-yesod](https://github.com/mietek/hello-yesod/) ([Live](http://mietek-hello-yesod.herokuapp.com/))
+
+
+### Real-world
+
+- [gitit](https://github.com/mietek/gitit/) ([Live](http://mietek-gitit.herokuapp.com/))
+- [hl](https://github.com/mietek/hl/) ([Live](http://mietek-hl.herokuapp.com/))
+- [howistart.org](https://github.com/mietek/howistart.org/) ([Live](http://mietek-howistart.herokuapp.com/))
+- [tryhaskell](https://github.com/mietek/tryhaskell/) ([Live](http://mietek-tryhaskell.herokuapp.com/))
+- [tryhplay](https://github.com/mietek/tryhplay/) ([Live](http://mietek-tryhplay.herokuapp.com/))
+- [tryidris](https://github.com/mietek/tryidris/) ([Live](http://mietek-tryidris.herokuapp.com/))
+- [trypurescript](https://github.com/mietek/trypurescript/) ([Live](http://mietek-trypurescript.herokuapp.com/))
 
 
 Usage
 -----
 
-To learn more, see the [full list of examples](http://haskellonheroku.com/examples/), and continue with the [user’s guide](http://haskellonheroku.com/guide/).
-
-Interested in deploying other types of Haskell applications?  Try [Halcyon](http://halcyon.sh/).
-
-
-### Installation
-
 New applications:
 
 ```
-$ heroku create -b https://github.com/mietek/haskell-on-heroku.git
+$ heroku create -b https://github.com/mietek/haskell-on-heroku -s cedar-14
 ```
 
 Existing applications:
 
 ```
-$ heroku config:set BUILDPACK_URL=https://github.com/mietek/haskell-on-heroku.git
+$ heroku config:set BUILDPACK_URL=https://github.com/mietek/haskell-on-heroku
 ```
 
+Haskell on Heroku supports:
 
-### Dependencies
+- Heroku _cedar_ and [_cedar-14_](https://blog.heroku.com/archives/2014/8/19/cedar-14-public-beta).
+- GHC [7.0.4](http://www.haskell.org/ghc/download_ghc_7_0_4), [7.2.2](http://www.haskell.org/ghc/download_ghc_7_2_2), [7.4.2](http://www.haskell.org/ghc/download_ghc_7_4_2), [7.6.1](http://www.haskell.org/ghc/download_ghc_7_6_1), [7.6.3](http://www.haskell.org/ghc/download_ghc_7_6_3), [7.8.2](http://www.haskell.org/ghc/download_ghc_7_8_2), and [7.8.3](http://www.haskell.org/ghc/download_ghc_7_8_3).
+- _cabal-install_ [1.20.0.0](http://www.haskell.org/cabal/download.html) and newer.
 
-Currently, _Haskell on Heroku_ supports:
-
-- Heroku _cedar_ and [_cedar-14_](https://blog.heroku.com/archives/2014/8/19/cedar-14-public-beta)
-- GHC [7.6.1](http://www.haskell.org/ghc/download_ghc_7_6_1), [7.6.3](http://www.haskell.org/ghc/download_ghc_7_6_3), [7.8.2](http://www.haskell.org/ghc/download_ghc_7_8_2), and [7.8.3](http://www.haskell.org/ghc/download_ghc_7_8_3)
-- _cabal-install_ [1.20.0.0](http://www.haskell.org/cabal/download.html) and newer
+To learn more, check back soon.
 
 
 ### Internals
 
-For an in-depth discussion of _Haskell on Heroku_ internals, see the [programmer’s reference](http://haskellonheroku.com/reference/).
+Haskell on Heroku is built with [Halcyon](http://halcyon.sh/), a system for deploying Haskell applications, and [_bashmenot_](http://bashmenot.mietek.io/), a library of functions for safer shell scripting in [GNU _bash_](http://gnu.org/software/bash/).
 
-_Haskell on Heroku_ is built with [Halcyon](http://halcyon.sh/), a system for deploying Haskell applications, and [_bashmenot_](http://bashmenot.mietek.io/), a library of functions for safer shell scripting in [GNU _bash_](http://gnu.org/software/bash/).
-
-Additional information is available in the [Halcyon user’s guide](http://halcyon.sh/guide/), the [Halcyon programmers’s reference](http://halcyon.sh/reference/), and the [_bashmenot_ programmer’s reference](http://bashmenot.mietek.io/reference/).
+Additional information is available in the [_bashmenot_ programmer’s reference](http://bashmenot.mietek.io/reference/).
 
 
 ### Bugs
 
-Please report any problems with _Haskell on Heroku_ on the [issue tracker](https://github.com/mietek/haskell-on-heroku/issues/).
+Please report any problems with Haskell on Heroku on the [issue tracker](https://github.com/mietek/haskell-on-heroku/issues/).
 
 There is a [separate issue tracker](https://github.com/mietek/haskell-on-heroku-website/issues/) for problems with the documentation.
 
@@ -63,17 +75,15 @@ There is a [separate issue tracker](https://github.com/mietek/haskell-on-heroku-
 About
 -----
 
-My name is [Miëtek Bak](http://mietek.io/).  I make software, and _Haskell on Heroku_ is one of [my projects](http://mietek.io/projects/).
+My name is [Miëtek Bak](http://mietek.io/).  I make software, and Haskell on Heroku is one of [my projects](http://mietek.io/projects/).
 
 This work is published under the [MIT X11 license](http://haskellonheroku.com/license/), and supported by my company, [Least Fixed](http://leastfixed.com/).
 
-Would you like to work with me?  Say [hello](http://mietek.io/).
+Like my work?  I am available for consulting on software projects.  Say [hello](http://mietek.io/), or follow [@mietek](http://twitter.com/mietek).
 
 
 ### Acknowledgments
 
-Thanks to [Joe Nelson](http://begriffs.com/), [Brian McKenna](http://brianmckenna.org/), and [Neuman Vong](https://github.com/luciferous/) for initial work on Haskell buildpacks.
-
-Thanks to [CircuitHub](https://circuithub.com/), [Tweag I/O](http://www.tweag.io/), and [Purely Agile](http://purelyagile.com/) for advice and assistance.
+Thanks to [Joe Nelson](http://begriffs.com/), [Brian McKenna](http://brianmckenna.org/), and [Neuman Vong](https://github.com/luciferous/) for initial work on Haskell buildpacks.  Thanks to [CircuitHub](https://circuithub.com/), [Tweag I/O](http://www.tweag.io/), and [Purely Agile](http://purelyagile.com/) for advice and assistance.
 
 [Heroku](http://heroku.com/) is a registered trademark of [Salesforce](http://salesforce.com/).  This project is not affiliated with Heroku.
