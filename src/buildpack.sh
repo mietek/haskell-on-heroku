@@ -1,5 +1,5 @@
 buildpack_compile () {
-	expect_vars BUILDPACK_TOP_DIR BUILDPACK_KEEP_ENV
+	expect_vars BUILDPACK_TOP_DIR BUILDPACK_KEEP_ALL
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
 	# NOTE: Files copied into build_dir will be present in /app on a dyno.
@@ -17,7 +17,7 @@ buildpack_compile () {
 	success=0
 
 	set_halcyon_vars
-	if	HALCYON_INTERNAL_FORCE_RESTORE_ALL="${BUILDPACK_KEEP_ENV}" \
+	if	HALCYON_INTERNAL_FORCE_RESTORE_ALL="${BUILDPACK_KEEP_ALL}" \
 		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 			halcyon_main deploy \
 				--halcyon-dir='/app/.halcyon' \
@@ -36,7 +36,7 @@ buildpack_compile () {
 	if (( success )); then
 		copy_dir_into "${install_dir}/app" "${build_dir}" || return 1
 
-		if (( BUILDPACK_KEEP_ENV )); then
+		if (( BUILDPACK_KEEP_ALL )); then
 			copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/buildpack-cache" || return 1
 		fi
 

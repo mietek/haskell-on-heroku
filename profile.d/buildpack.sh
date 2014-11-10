@@ -12,6 +12,6 @@ if ! (( ${BUILDPACK_INTERNAL_PATHS:-0} )); then
 	source <( /app/.buildpack/lib/halcyon/halcyon paths )
 fi
 
-if [[ "${DYNO%.*}" != 'run' ]] && (( ${BUILDPACK_KEEP_ENV:-0} )); then
+if [[ "${DYNO%.*}" != 'run' ]] && (( ${BUILDPACK_KEEP_ALL:-0} )); then
 	restore
 fi

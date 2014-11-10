@@ -74,7 +74,7 @@ set_config_vars () {
 		fi
 	done <<<"${vars}"
 
-	export BUILDPACK_KEEP_ENV="${BUILDPACK_KEEP_ENV:-0}"
+	export BUILDPACK_KEEP_ALL="${BUILDPACK_KEEP_ALL:-0}"
 
 	local commit_hash
 	commit_hash=$(
