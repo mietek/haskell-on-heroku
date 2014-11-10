@@ -1,5 +1,5 @@
 buildpack_compile () {
-	expect_vars BUILDPACK_TOP_DIR
+	expect_vars BUILDPACK_TOP_DIR BUILDPACK_KEEP_ENV
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
 	# NOTE: Files copied into build_dir will be present in /app on a dyno.
@@ -17,13 +17,14 @@ buildpack_compile () {
 	success=0
 
 	set_halcyon_vars
-	if HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-		halcyon_main deploy \
-			--halcyon-dir='/app/.halcyon' \
-			--cache-dir="${cache_dir}" \
-			--install-dir="${install_dir}" \
-			--no-build-dependencies \
-			"${build_dir}"
+	if	HALCYON_INTERNAL_FORCE_RESTORE_ALL="${BUILDPACK_KEEP_ENV}" \
+		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+			halcyon_main deploy \
+				--halcyon-dir='/app/.halcyon' \
+				--cache-dir="${cache_dir}" \
+				--install-dir="${install_dir}" \
+				--no-build-dependencies \
+				"${build_dir}"
 	then
 		success=1
 	fi
@@ -115,6 +116,7 @@ buildpack_restore () {
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
 	set_halcyon_vars
+	HALCYON_INTERNAL_FORCE_RESTORE_ALL=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 	HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
 		halcyon_main deploy "$@" \
@@ -122,7 +124,6 @@ buildpack_restore () {
 			--cache-dir='/app/.buildpack/buildpack-cache' \
 			--no-build-dependencies \
 			--no-archive \
-			--force-restore-all \
 			"${source_dir}" || return 1
 
 	# NOTE: All build byproducts are normally kept in HALCYON_DIR/app.  Copying the build
