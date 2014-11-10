@@ -17,13 +17,13 @@ buildpack_compile () {
 	success=0
 
 	set_halcyon_vars
-	if halcyon_main deploy                 \
-		--halcyon-dir='/app/.halcyon'  \
-		--cache-dir="${cache_dir}"     \
-		--install-dir="${install_dir}" \
-		--no-copy-local-source         \
-		--no-build-dependencies        \
-		"${build_dir}"
+	if HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1     \
+		halcyon_main deploy                    \
+			--halcyon-dir='/app/.halcyon'  \
+			--cache-dir="${cache_dir}"     \
+			--install-dir="${install_dir}" \
+			--no-build-dependencies        \
+			"${build_dir}"
 	then
 		success=1
 	fi
@@ -78,12 +78,12 @@ buildpack_build () {
 		help_configure_private_storage
 		return 1
 	fi
-	halcyon_main deploy "$@"              \
-		--halcyon-dir='/app/.halcyon' \
-		--no-copy-local-source        \
-		--no-cache                    \
-		--no-announce-deploy          \
-		"${source_dir}" || return 1
+	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1       \
+		HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
+		halcyon_main deploy "$@"              \
+			--halcyon-dir='/app/.halcyon' \
+			--no-cache                    \
+			"${source_dir}" || return 1
 
 	help_build_succeeded
 
@@ -109,15 +109,15 @@ buildpack_restore () {
 	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
 
 	set_halcyon_vars
-	halcyon_main deploy "$@"              \
-		--halcyon-dir='/app/.halcyon' \
-		--no-copy-local-source        \
-		--no-build-dependencies       \
-		--no-archive                  \
-		--no-cache                    \
-		--force-restore-all           \
-		--no-announce-deploy          \
-		"${source_dir}" || return 1
+	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1       \
+		HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
+		halcyon_main deploy "$@"              \
+			--halcyon-dir='/app/.halcyon' \
+			--no-build-dependencies       \
+			--no-archive                  \
+			--no-cache                    \
+			--force-restore-all           \
+			"${source_dir}" || return 1
 
 	# NOTE: All build byproducts are normally kept in HALCYON_DIR/app.  Copying the build
 	# byproducts to /app is intended to help the user interact with the app.
