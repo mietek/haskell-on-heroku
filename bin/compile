@@ -74,6 +74,8 @@ set_config_vars () {
 		fi
 	done <<<"${vars}"
 
+	export BUILDPACK_KEEP_ENV="${BUILDPACK_KEEP_ENV:-0}"
+
 	local commit_hash
 	commit_hash=$(
 		cd "${BUILDPACK_TOP_DIR}" &&

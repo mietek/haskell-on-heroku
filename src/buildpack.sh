@@ -35,6 +35,10 @@ buildpack_compile () {
 	if (( success )); then
 		copy_dir_into "${install_dir}/app" "${build_dir}" || return 1
 
+		if (( BUILDPACK_KEEP_ENV )); then
+			copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/buildpack-cache" || return 1
+		fi
+
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
 			local app_executable
 			if app_executable=$( detect_app_executable "${build_dir}" ); then
@@ -48,6 +52,8 @@ buildpack_compile () {
 
 		help_deploy_succeeded
 	else
+		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/buildpack-cache" || return 1
+
 		help_deploy_failed
 	fi
 
@@ -82,7 +88,7 @@ buildpack_build () {
 	HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
 		halcyon_main deploy "$@" \
 			--halcyon-dir='/app/.halcyon' \
-			--no-cache \
+			--cache-dir='/app/.buildpack/buildpack-cache' \
 			"${source_dir}" || return 1
 
 	help_build_succeeded
@@ -113,9 +119,9 @@ buildpack_restore () {
 	HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
 		halcyon_main deploy "$@" \
 			--halcyon-dir='/app/.halcyon' \
+			--cache-dir='/app/.buildpack/buildpack-cache' \
 			--no-build-dependencies \
 			--no-archive \
-			--no-cache \
 			--force-restore-all \
 			"${source_dir}" || return 1
 
