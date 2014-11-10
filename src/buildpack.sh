@@ -37,7 +37,7 @@ buildpack_compile () {
 		copy_dir_into "${install_dir}/app" "${build_dir}" || return 1
 
 		if (( BUILDPACK_KEEP_ALL )); then
-			copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/buildpack-cache" || return 1
+			copy_dir_over '/app/.halcyon' "${build_dir}/.buildpack/buildpack-halcyon" || return 1
 		fi
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then

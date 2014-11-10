@@ -12,6 +12,7 @@ if ! (( ${BUILDPACK_INTERNAL_PATHS:-0} )); then
 	source <( /app/.buildpack/lib/halcyon/halcyon paths )
 fi
 
-if [[ "${DYNO%.*}" != 'run' ]] && (( ${BUILDPACK_KEEP_ALL:-0} )); then
-	restore
+if [[ -d '/app/.buildpack/buildpack-halcyon' ]]; then
+	mkdir -p '/app/.halcyon'
+	cp -Rp '/app/.buildpack/buildpack-halcyon/.' '/app/.halcyon'
 fi
