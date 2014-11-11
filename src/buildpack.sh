@@ -34,11 +34,10 @@ buildpack_compile () {
 	copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
 
 	if (( success )); then
-		copy_dir_into "${install_dir}/app" "${build_dir}" || return 1
-
 		if (( BUILDPACK_KEEP_ALL )); then
-			copy_dir_over '/app/.halcyon' "${build_dir}/.buildpack/buildpack-halcyon" || return 1
+			copy_dir_over '/app/.halcyon' "${build_dir}/.halcyon" || return 1
 		fi
+		copy_dir_into "${install_dir}/app" "${build_dir}" || return 1
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
 			local app_executable
