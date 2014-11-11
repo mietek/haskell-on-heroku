@@ -19,17 +19,17 @@ set_url_config_var () {
 		return 0
 	fi
 
-	local urloid
-	urloid=$( <"$1/$2" ) || return 1
-	export "$2"="${urloid}"
+	local url
+	url=$( <"$1/$2" ) || return 1
+	export "$2"="${url}"
 
-	local url branch
-	url="${urloid%#*}"
-	branch="${urloid#*#}"
-	if [[ "${branch}" == "${url}" ]]; then
+	local bare_url branch
+	bare_url="${url%#*}"
+	branch="${url#*#}"
+	if [[ "${branch}" == "${bare_url}" ]]; then
 		branch=''
 	fi
-	log_indent_pad "$2:" "${url%.git}${branch:+#${branch}}"
+	log_indent_pad "$2:" "${bare_url%.git}${branch:+#${branch}}"
 }
 
 

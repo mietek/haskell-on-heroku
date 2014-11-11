@@ -10,11 +10,11 @@ buildpack_source_halcyon () {
 		return 0
 	fi
 
-	local urloid url branch
-	urloid="${HALCYON_URL:-https://github.com/mietek/halcyon}"
-	url="${urloid%#*}"
-	branch="${urloid#*#}"
-	if [[ "${branch}" == "${url}" ]]; then
+	local url bare_url branch
+	url="${HALCYON_URL:-https://github.com/mietek/halcyon}"
+	bare_url="${url%#*}"
+	branch="${url#*#}"
+	if [[ "${branch}" == "${bare_url}" ]]; then
 		branch='master'
 	fi
 
@@ -22,7 +22,7 @@ buildpack_source_halcyon () {
 
 	local commit_hash
 	commit_hash=$(
-		git clone -q "${url}" "${BUILDPACK_TOP_DIR}/lib/halcyon" &>'/dev/null' &&
+		git clone -q "${bare_url}" "${BUILDPACK_TOP_DIR}/lib/halcyon" &>'/dev/null' &&
 		cd "${BUILDPACK_TOP_DIR}/lib/halcyon" &&
 		git checkout -q "${branch}" &>'/dev/null' &&
 		git log -n 1 --pretty='format:%h'
@@ -52,13 +52,13 @@ buildpack_autoupdate () {
 		return 1
 	fi
 
-	local urloid
-	urloid="${BUILDPACK_URL:-https://github.com/mietek/haskell-on-heroku}"
+	local url
+	url="${BUILDPACK_URL:-https://github.com/mietek/haskell-on-heroku}"
 
 	log_begin 'Auto-updating buildpack...'
 
 	local commit_hash
-	commit_hash=$( git_update_into "${urloid}" "${BUILDPACK_TOP_DIR}" ) || return 1
+	commit_hash=$( git_update_into "${url}" "${BUILDPACK_TOP_DIR}" ) || return 1
 	log_end "done, ${commit_hash:0:7}"
 
 	BUILDPACK_NO_AUTOUPDATE=1 \
