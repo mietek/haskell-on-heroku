@@ -9,11 +9,12 @@ if ! (( ${BUILDPACK_INTERNAL_PATHS:-0} )); then
 
 	export PATH="/app/.buildpack/bin:${PATH:-}"
 
-	source <( /app/.buildpack/lib/halcyon/halcyon paths )
+	source <( HALCYON_NO_AUTOUPDATE=1 /app/.buildpack/lib/halcyon/halcyon paths )
 fi
 
 if [[ -n "${BUILDPACK_SSH_PRIVATE_KEY}" ]]; then
 	mkdir -p '/app/.ssh'
 	echo "${BUILDPACK_SSH_PRIVATE_KEY}" >'/app/.ssh/id_rsa'
 	echo -e 'Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile=/dev/null' >'/app/.ssh/config'
+	unset BUILDPACK_SSH_PRIVATE_KEY
 fi
