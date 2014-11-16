@@ -7,7 +7,7 @@ help_deploy_succeeded () {
 	log_indent '$ heroku ps:scale web=1'
 	log_indent '$ heroku open'
 	log
-	log 'To run GHCi, use a one-off dyno to restore the app environment:'
+	log 'To run GHCi, use a one-off dyno:'
 	log_indent '$ heroku run bash'
 	log_indent '$ restore'
 	log_indent '$ cabal repl'

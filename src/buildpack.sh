@@ -1,94 +1,103 @@
 buildpack_compile () {
-	expect_vars BUILDPACK_TOP_DIR BUILDPACK_KEEP_ALL
+	expect_vars BUILDPACK_TOP_DIR
 	expect_existing "${BUILDPACK_TOP_DIR}"
 
-	# NOTE: Files copied into build_dir will be present in /app on a dyno.
+	# NOTE: Files copied into build_dir will be present in /app on a
+	# dyno.  This includes files which should not contribute to
+	# source_hash, hence the need to archive and restore the source dir.
 
 	local build_dir cache_dir env_dir
 	expect_args build_dir cache_dir env_dir -- "$@"
 	expect_existing "${build_dir}"
 	expect_no_existing "${build_dir}/.buildpack"
 
-	log 'Archiving app source'
-	create_archive "${build_dir}" '/tmp/buildpack-app-source.tar.gz' || return 1
+	local root_dir
+	root_dir=$( get_tmp_dir 'buildpack-root' ) || return 1
 
-	local install_dir success
-	install_dir=$( get_tmp_dir 'buildpack-install' ) || return 1
-	success=0
+	log 'Archiving source directory'
+
+	create_archive "${build_dir}" '/tmp/source.tar.gz' || return 1
 
 	set_halcyon_vars
-	if	HALCYON_INTERNAL_FORCE_RESTORE_ALL="${BUILDPACK_KEEP_ALL}" \
-		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+	if [[ "${HALCYON_TARGET}" == 'custom' ]]; then
+		log_error 'Unexpected target: custom'
+		return 1
+	fi
+
+	if 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+		HALCYON_INTERNAL_NO_PURGE_APP_DIR=1 \
 			halcyon_main deploy \
-				--halcyon-dir='/app/.halcyon' \
+				--app-dir='/app' \
+				--root-dir="${root_dir}" \
 				--cache-dir="${cache_dir}" \
-				--install-dir="${install_dir}" \
 				--no-build-dependencies \
 				"${build_dir}"
 	then
-		success=1
-	fi
+		# NOTE: This assumes nothing is installed into root_dir
+		# outside root_dir/app, which should hold as long as
+		# HALCYON_TARGET is not custom.
 
-	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" || return 1
-	copy_file '/tmp/buildpack-app-source.tar.gz' "${build_dir}/.buildpack/buildpack-app-source.tar.gz" || return 1
-	copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
-
-	if (( success )); then
-		if (( BUILDPACK_KEEP_ALL )); then
-			copy_dir_over '/app/.halcyon' "${build_dir}/.halcyon" || return 1
-		fi
-		copy_dir_into "${install_dir}/app" "${build_dir}" || return 1
+		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
+		copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
-			local app_executable
-			if app_executable=$( detect_app_executable "${build_dir}" ); then
-				expect_existing "${build_dir}/.halcyon/slug/bin/${app_executable}"
-
-				echo "web: /app/.halcyon/slug/bin/${app_executable}" >"${build_dir}/Procfile" || return 1
+			local executable
+			if ! executable=$( detect_executable "${build_dir}" ); then
+				log_warning 'No executable detected'
 			else
-				log_warning 'No app executable detected'
+				expect_existing "${build_dir}/bin/${executable}"
+
+				echo "web: /app/bin/${executable}" >"${build_dir}/Procfile" || return 1
 			fi
 		fi
 
 		help_deploy_succeeded
 	else
-		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/buildpack-cache" || return 1
+		# NOTE: There is no access to the Heroku cache from one-off
+		# dynos.  Hence, the cache is included in the slug, to speed
+		# up the next step--building the app on a one-off dyno.
+
+		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || return 1
 
 		help_deploy_failed
 	fi
 
-	rm -rf "${install_dir}" || return 1
+	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" || return 1
+	copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz" || return 1
+
+	rm -rf "${root_dir}" || return 1
 }
 
 
 buildpack_build () {
 	expect_existing '/app/.buildpack'
 
-	# NOTE: Files copied into build_dir in buildpack_compile are present in /app on a
-	# one-off dyno. This includes files which should not contribute to source_hash, hence
-	# the need to restore the app source.
-
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
 
-	log 'Restoring app source'
-	extract_archive_over '/app/.buildpack/buildpack-app-source.tar.gz' "${source_dir}" || return 1
-	log
-	log
+	log 'Restoring source directory'
 
-	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
+	extract_archive_over '/app/.buildpack/source.tar.gz' "${source_dir}" || return 1
 
 	set_halcyon_vars
+	if [[ "${HALCYON_TARGET}" == 'custom' ]]; then
+		log_error 'Unexpected target: custom'
+		return 1
+	fi
 	if ! private_storage; then
 		log_error 'Expected private storage'
 		help_configure_private_storage
 		return 1
 	fi
+
+	log
+	log
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+	HALCYON_INTERNAL_NO_PURGE_APP_DIR=1 \
 	HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
 		halcyon_main deploy "$@" \
-			--halcyon-dir='/app/.halcyon' \
-			--cache-dir='/app/.buildpack/buildpack-cache' \
+			--app-dir='/app' \
+			--cache-dir='/app/.buildpack/cache' \
 			"${source_dir}" || return 1
 
 	help_build_succeeded
@@ -100,37 +109,31 @@ buildpack_build () {
 buildpack_restore () {
 	expect_existing '/app/.buildpack'
 
-	# NOTE: Files copied into build_dir in buildpack_compile are present in /app on a
-	# one-off dyno. This includes files which should not contribute to source_hash, hence
-	# the need to restore the app source.
-
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
 
-	log 'Restoring app source'
-	extract_archive_over '/app/.buildpack/buildpack-app-source.tar.gz' "${source_dir}" || return 1
-	log
-	log
+	log 'Restoring source directory'
 
-	# NOTE: There is no access to the cache used in buildpack_compile from a one-off dyno.
+	extract_archive_over '/app/.buildpack/source.tar.gz' "${source_dir}" || return 1
 
 	set_halcyon_vars
+	if [[ "${HALCYON_TARGET}" == 'custom' ]]; then
+		log_error 'Unexpected target: custom'
+		return 1
+	fi
+
+	log
+	log
 	HALCYON_INTERNAL_FORCE_RESTORE_ALL=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+	HALCYON_INTERNAL_NO_PURGE_APP_DIR=1 \
 	HALCYON_INTERNAL_NO_ANNOUNCE_DEPLOY=1 \
 		halcyon_main deploy "$@" \
-			--halcyon-dir='/app/.halcyon' \
-			--cache-dir='/app/.buildpack/buildpack-cache' \
+			--app-dir='/app' \
+			--cache-dir='/app/.buildpack/cache' \
 			--no-build-dependencies \
 			--no-archive \
 			"${source_dir}" || return 1
-
-	# NOTE: All build byproducts are normally kept in HALCYON_DIR/app.  Copying the build
-	# byproducts to /app is intended to help the user interact with the app.
-
-	if [[ -d '/app/.halcyon/app' ]]; then
-		copy_dir_into '/app/.halcyon/app' '/app' || return 1
-	fi
 
 	help_restore_succeeded
 
