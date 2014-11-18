@@ -19,8 +19,9 @@ buildpack_compile () {
 	create_archive "${build_dir}" '/tmp/source.tar.gz' || return 1
 
 	set_halcyon_vars
-	if [[ "${HALCYON_TARGET}" == 'custom' ]]; then
-		log_error 'Unexpected target: custom'
+	if [[ "${HALCYON_PREFIX}" != "${HALCYON_APP_DIR}" ]]; then
+		log_error "Unexpected prefix: ${HALCYON_PREFIX}"
+		log_error "Expected default prefix: ${HALCYON_APP_DIR}"
 		return 1
 	fi
 
@@ -35,7 +36,7 @@ buildpack_compile () {
 	then
 		# NOTE: This assumes nothing is installed into root_dir
 		# outside root_dir/app, which should hold as long as
-		# HALCYON_TARGET is not custom.
+		# HALCYON_PREFIX is /app.
 
 		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
 		copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
@@ -80,8 +81,9 @@ buildpack_build () {
 	extract_archive_over '/app/.buildpack/source.tar.gz' "${source_dir}" || return 1
 
 	set_halcyon_vars
-	if [[ "${HALCYON_TARGET}" == 'custom' ]]; then
-		log_error 'Unexpected target: custom'
+	if [[ "${HALCYON_PREFIX}" != "${HALCYON_APP_DIR}" ]]; then
+		log_error "Unexpected prefix: ${HALCYON_PREFIX}"
+		log_error "Expected default prefix: ${HALCYON_APP_DIR}"
 		return 1
 	fi
 	if ! private_storage; then
@@ -117,8 +119,9 @@ buildpack_restore () {
 	extract_archive_over '/app/.buildpack/source.tar.gz' "${source_dir}" || return 1
 
 	set_halcyon_vars
-	if [[ "${HALCYON_TARGET}" == 'custom' ]]; then
-		log_error 'Unexpected target: custom'
+	if [[ "${HALCYON_PREFIX}" != "${HALCYON_APP_DIR}" ]]; then
+		log_error "Unexpected prefix: ${HALCYON_PREFIX}"
+		log_error "Expected default prefix: ${HALCYON_APP_DIR}"
 		return 1
 	fi
 
