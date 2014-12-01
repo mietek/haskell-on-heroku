@@ -51,12 +51,3 @@ help_build_succeeded () {
 	log_indent '$ git commit --amend -C HEAD'
 	log_indent '$ git push -f heroku HEAD:master'
 }
-
-
-help_configure_private_storage () {
-	log
-	log 'To configure private storage:'
-	log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
-	log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'
-	log_indent '$ heroku config:set HALCYON_S3_BUCKET=...'
-}
