@@ -89,7 +89,7 @@ unset GIT_DIR
 
 set_config_vars "$3" || exit 1
 
-BUILDPACK_NO_AUTOUPDATE=1 \
+BUILDPACK_NO_SELF_UPDATE=1 \
 	source "${BUILDPACK_DIR}/src.sh"
 
 buildpack_compile "$1" "$2" "$3"

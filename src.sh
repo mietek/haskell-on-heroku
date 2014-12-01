@@ -5,7 +5,7 @@ export BUILDPACK_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
 buildpack_source_halcyon () {
 	if [[ -d "${BUILDPACK_DIR}/lib/halcyon" ]]; then
-		HALCYON_NO_AUTOUPDATE="${BUILDPACK_NO_AUTOUPDATE:-0}" \
+		HALCYON_NO_SELF_UPDATE="${BUILDPACK_NO_SELF_UPDATE:-0}" \
 			source "${BUILDPACK_DIR}/lib/halcyon/src.sh" || return 1
 		return 0
 	fi
@@ -29,7 +29,7 @@ buildpack_source_halcyon () {
 	) || return 1
 	echo " done, ${commit_hash:0:7}" >&2
 
-	HALCYON_NO_AUTOUPDATE=1 \
+	HALCYON_NO_SELF_UPDATE=1 \
 		source "${BUILDPACK_DIR}/lib/halcyon/src.sh" || return 1
 }
 
@@ -43,8 +43,8 @@ source "${BUILDPACK_DIR}/src/buildpack.sh"
 source "${BUILDPACK_DIR}/src/help.sh"
 
 
-buildpack_autoupdate () {
-	if (( ${BUILDPACK_NO_AUTOUPDATE:-0} )); then
+buildpack_self_update () {
+	if (( ${BUILDPACK_NO_SELF_UPDATE:-0} )); then
 		return 0
 	fi
 
@@ -55,7 +55,7 @@ buildpack_autoupdate () {
 	local url
 	url="${BUILDPACK_URL:-https://github.com/mietek/haskell-on-heroku}"
 
-	log_begin 'Auto-updating buildpack...'
+	log_begin 'Self-updating buildpack...'
 
 	local commit_hash
 	if ! commit_hash=$( git_update_into "${url}" "${BUILDPACK_DIR}" ); then
@@ -64,11 +64,11 @@ buildpack_autoupdate () {
 	fi
 	log_end "done, ${commit_hash:0:7}"
 
-	BUILDPACK_NO_AUTOUPDATE=1 \
+	BUILDPACK_NO_SELF_UPDATE=1 \
 		source "${BUILDPACK_DIR}/src.sh" || return 1
 }
 
 
-if ! buildpack_autoupdate; then
-	log_warning 'Cannot auto-update buildpack'
+if ! buildpack_self_update; then
+	log_warning 'Cannot self-update buildpack'
 fi
