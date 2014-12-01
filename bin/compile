@@ -49,8 +49,10 @@ set_config_vars () {
 	set_url_config_var "$1" 'HALCYON_URL' || return 1
 	set_url_config_var "$1" 'BASHMENOT_URL' || return 1
 
-	local ignored_pattern secret_pattern
-	ignored_pattern='BASHMENOT_|BUILDPACK_INTERNAL_|BUILDPACK_URL|GIT_DIR|HALCYON_|LD_LIBRARY_PATH|LD_PRELOAD|LIBRARY_PATH|PATH'
+	local ignored_pattern halcyon_pattern bashmenot_pattern secret_pattern
+	ignored_pattern='BUILDPACK_INTERNAL_|BUILDPACK_URL|GIT_DIR|LD_LIBRARY_PATH|LD_PRELOAD|LIBRARY_PATH|PATH'
+	halcyon_pattern='HALCYON_INTERNAL_|HALCYON_DIR|HALCYON_BASE|HALCYON_PREFIX|HALCYON_ROOT|HALCYON_CACHE|HALCYON_URL'
+	bashmenot_pattern='BASHMENOT_INTERNAL_|BASHMENOT_DIR|BASHMENOT_URL'
 	secret_pattern='DATABASE|KEY|PASSPHRASE|PASSWORD|POSTGRESQL|PRIVATE|SECRET'
 
 	local vars
@@ -63,6 +65,12 @@ set_config_vars () {
 	local var
 	while read -r var; do
 		if grep -qE "(${ignored_pattern})" <<<"${var}"; then
+			continue
+		fi
+		if grep -E "^HALCYON_" <<<"${var}" | grep -qE "(${halcyon_pattern})"; then
+			continue
+		fi
+		if grep -E "^BASHMENOT_" <<<"${var}" | grep -qE "(${bashmenot_pattern})"; then
 			continue
 		fi
 
