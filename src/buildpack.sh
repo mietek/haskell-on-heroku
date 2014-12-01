@@ -12,7 +12,7 @@ buildpack_compile () {
 	expect_no_existing "${build_dir}/.buildpack"
 
 	local root_dir
-	root_dir=$( get_tmp_dir 'buildpack-root' ) || return 1
+	root_dir=$( get_tmp_dir 'root' ) || return 1
 
 	log 'Archiving source directory'
 
