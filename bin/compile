@@ -5,12 +5,12 @@ set -eu
 export BUILDPACK_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
 
 
-log_indent_pad () {
-	local thing
-	thing="$1$( printf ' %.0s' {0..41} )"
+log_indent_label () {
+	local label
+	label="$1$( printf ' %.0s' {0..41} )" || true
 	shift
 
-	echo "       ${thing:0:41}" "$@" >&2
+	echo "       ${label:0:41}" "$( echo -en '\033[1m' )${*}$( echo -en '\033[0m' )" >&2
 }
 
 
@@ -32,7 +32,7 @@ set_url_config_var () {
 	if [[ "${branch}" == "${base_url}" ]]; then
 		branch=''
 	fi
-	log_indent_pad "$2:" "${base_url%.git}${branch:+#${branch}}"
+	log_indent_label "$2:" "${base_url%.git}${branch:+#${branch}}"
 }
 
 
@@ -71,9 +71,9 @@ set_config_vars () {
 		export "${var}"="${value}"
 
 		if grep -qE "(${secret_pattern})" <<<"${var}"; then
-			log_indent_pad "${var}:" '(secret)'
+			log_indent_label "${var}:" '(secret)'
 		else
-			log_indent_pad "${var}:" "${value}"
+			log_indent_label "${var}:" "${value}"
 		fi
 	done <<<"${vars}"
 
