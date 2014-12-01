@@ -19,6 +19,8 @@ buildpack_compile () {
 	create_archive "${build_dir}" '/tmp/source.tar.gz' || return 1
 
 	if HALCYON_NO_SELF_UPDATE=1 \
+		HALCYON_BASE='/app' \
+		HALCYON_PREFIX='/app' \
 		HALCYON_ROOT="${root_dir}" \
 		HALCYON_NO_BUILD_LAYERS=1 \
 		HALCYON_CACHE="${cache_dir}" \
@@ -76,6 +78,8 @@ buildpack_build () {
 	log
 	log
 	HALCYON_NO_SELF_UPDATE=1 \
+	HALCYON_BASE='/app' \
+	HALCYON_PREFIX='/app' \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon deploy "${source_dir}" "$@" || return 1
@@ -99,6 +103,8 @@ buildpack_restore () {
 	log
 	log
 	HALCYON_NO_SELF_UPDATE=1 \
+	HALCYON_BASE='/app' \
+	HALCYON_PREFIX='/app' \
 	HALCYON_RESTORE_LAYERS=1 \
 	HALCYON_NO_BUILD_LAYERS=1 \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
