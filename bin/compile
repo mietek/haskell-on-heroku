@@ -2,7 +2,7 @@
 
 set -eu
 
-export BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
+export BUILDPACK_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd -P )
 
 
 log_indent_pad () {
@@ -76,7 +76,7 @@ set_config_vars () {
 
 	local commit_hash
 	commit_hash=$(
-		cd "${BUILDPACK_TOP_DIR}" &&
+		cd "${BUILDPACK_DIR}" &&
 		git log -n 1 --pretty='format:%h'
 	) || return 1
 
@@ -90,6 +90,6 @@ unset GIT_DIR
 set_config_vars "$3" || exit 1
 
 BUILDPACK_NO_AUTOUPDATE=1 \
-	source "${BUILDPACK_TOP_DIR}/src.sh"
+	source "${BUILDPACK_DIR}/src.sh"
 
 buildpack_compile "$1" "$2" "$3"

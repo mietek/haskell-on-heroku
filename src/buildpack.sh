@@ -1,6 +1,6 @@
 buildpack_compile () {
-	expect_vars BUILDPACK_TOP_DIR
-	expect_existing "${BUILDPACK_TOP_DIR}"
+	expect_vars BUILDPACK_DIR
+	expect_existing "${BUILDPACK_DIR}"
 
 	# NOTE: Files copied into build_dir will be present in /app on a
 	# dyno.  This includes files which should not contribute to
@@ -39,7 +39,7 @@ buildpack_compile () {
 		# HALCYON_PREFIX is /app.
 
 		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
-		copy_file "${BUILDPACK_TOP_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
+		copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
 			local executable
@@ -63,7 +63,7 @@ buildpack_compile () {
 		help_deploy_failed
 	fi
 
-	copy_dir_over "${BUILDPACK_TOP_DIR}" "${build_dir}/.buildpack" || return 1
+	copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" || return 1
 	copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz" || return 1
 
 	rm -rf "${root_dir}" || return 1

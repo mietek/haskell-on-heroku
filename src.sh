@@ -1,12 +1,12 @@
 set -o pipefail
 
-export BUILDPACK_TOP_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
+export BUILDPACK_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
 
 buildpack_source_halcyon () {
-	if [[ -d "${BUILDPACK_TOP_DIR}/lib/halcyon" ]]; then
+	if [[ -d "${BUILDPACK_DIR}/lib/halcyon" ]]; then
 		HALCYON_NO_AUTOUPDATE="${BUILDPACK_NO_AUTOUPDATE:-0}" \
-			source "${BUILDPACK_TOP_DIR}/lib/halcyon/src.sh" || return 1
+			source "${BUILDPACK_DIR}/lib/halcyon/src.sh" || return 1
 		return 0
 	fi
 
@@ -22,15 +22,15 @@ buildpack_source_halcyon () {
 
 	local commit_hash
 	commit_hash=$(
-		git clone -q "${bare_url}" "${BUILDPACK_TOP_DIR}/lib/halcyon" &>'/dev/null' &&
-		cd "${BUILDPACK_TOP_DIR}/lib/halcyon" &&
+		git clone -q "${bare_url}" "${BUILDPACK_DIR}/lib/halcyon" &>'/dev/null' &&
+		cd "${BUILDPACK_DIR}/lib/halcyon" &&
 		git checkout -q "${branch}" &>'/dev/null' &&
 		git log -n 1 --pretty='format:%h'
 	) || return 1
 	echo " done, ${commit_hash:0:7}" >&2
 
 	HALCYON_NO_AUTOUPDATE=1 \
-		source "${BUILDPACK_TOP_DIR}/lib/halcyon/src.sh" || return 1
+		source "${BUILDPACK_DIR}/lib/halcyon/src.sh" || return 1
 }
 
 
@@ -39,8 +39,8 @@ if ! buildpack_source_halcyon; then
 fi
 
 
-source "${BUILDPACK_TOP_DIR}/src/buildpack.sh"
-source "${BUILDPACK_TOP_DIR}/src/help.sh"
+source "${BUILDPACK_DIR}/src/buildpack.sh"
+source "${BUILDPACK_DIR}/src/help.sh"
 
 
 buildpack_autoupdate () {
@@ -48,7 +48,7 @@ buildpack_autoupdate () {
 		return 0
 	fi
 
-	if [[ ! -d "${BUILDPACK_TOP_DIR}/.git" ]]; then
+	if [[ ! -d "${BUILDPACK_DIR}/.git" ]]; then
 		return 1
 	fi
 
@@ -58,14 +58,14 @@ buildpack_autoupdate () {
 	log_begin 'Auto-updating buildpack...'
 
 	local commit_hash
-	if ! commit_hash=$( git_update_into "${url}" "${BUILDPACK_TOP_DIR}" ); then
+	if ! commit_hash=$( git_update_into "${url}" "${BUILDPACK_DIR}" ); then
 		log_end 'error'
 		return 1
 	fi
 	log_end "done, ${commit_hash:0:7}"
 
 	BUILDPACK_NO_AUTOUPDATE=1 \
-		source "${BUILDPACK_TOP_DIR}/src.sh" || return 1
+		source "${BUILDPACK_DIR}/src.sh" || return 1
 }
 
 
