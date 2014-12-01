@@ -10,11 +10,11 @@ buildpack_source_halcyon () {
 		return 0
 	fi
 
-	local url bare_url branch
+	local url base_url branch
 	url="${HALCYON_URL:-https://github.com/mietek/halcyon}"
-	bare_url="${url%#*}"
+	base_url="${url%#*}"
 	branch="${url#*#}"
-	if [[ "${branch}" == "${bare_url}" ]]; then
+	if [[ "${branch}" == "${base_url}" ]]; then
 		branch='master'
 	fi
 
@@ -22,7 +22,7 @@ buildpack_source_halcyon () {
 
 	local commit_hash
 	commit_hash=$(
-		git clone -q "${bare_url}" "${BUILDPACK_DIR}/lib/halcyon" &>'/dev/null' &&
+		git clone -q "${base_url}" "${BUILDPACK_DIR}/lib/halcyon" &>'/dev/null' &&
 		cd "${BUILDPACK_DIR}/lib/halcyon" &&
 		git checkout -q "${branch}" &>'/dev/null' &&
 		git log -n 1 --pretty='format:%h'

@@ -23,13 +23,16 @@ set_url_config_var () {
 	url=$( <"$1/$2" ) || return 1
 	export "$2"="${url}"
 
-	local bare_url branch
-	bare_url="${url%#*}"
+	# NOTE: The master branch is used by default, but the name is omitted
+	# from the message.
+
+	local base_url branch
+	base_url="${url%#*}"
 	branch="${url#*#}"
-	if [[ "${branch}" == "${bare_url}" ]]; then
+	if [[ "${branch}" == "${base_url}" ]]; then
 		branch=''
 	fi
-	log_indent_pad "$2:" "${bare_url%.git}${branch:+#${branch}}"
+	log_indent_pad "$2:" "${base_url%.git}${branch:+#${branch}}"
 }
 
 
