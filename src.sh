@@ -24,9 +24,9 @@ buildpack_install_halcyon () {
 
 	local commit_hash
 	commit_hash=$(
-		git clone -q "${base_url}" "${BUILDPACK_DIR}/lib/halcyon" &>'/dev/null' &&
+		git clone -q "${base_url}" "${BUILDPACK_DIR}/lib/halcyon" >'/dev/null' 2>&1 &&
 		cd "${BUILDPACK_DIR}/lib/halcyon" &&
-		git checkout -q "${branch}" &>'/dev/null' &&
+		git checkout -q "${branch}" >'/dev/null' 2>&1 &&
 		git log -n 1 --pretty='format:%h'
 	) || return 1
 	echo " done, ${commit_hash:0:7}" >&2
