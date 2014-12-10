@@ -39,7 +39,7 @@ buildpack_install_halcyon () {
 
 
 if ! buildpack_install_halcyon; then
-	echo '   *** ERROR: Cannot install Halcyon' >&2
+	echo '   *** ERROR: Failed to install Halcyon' >&2
 fi
 
 source "${BUILDPACK_DIR}/src/buildpack.sh"
