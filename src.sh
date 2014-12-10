@@ -47,11 +47,10 @@ source "${BUILDPACK_DIR}/src/help.sh"
 
 
 buildpack_self_update () {
-	if (( ${BUILDPACK_NO_SELF_UPDATE:-0} )); then
+	if (( ${BUILDPACK_NO_SELF_UPDATE:-0} )) ||
+		[[ ! -d "${BUILDPACK_DIR}/.git" ]]
+	then
 		return 0
-	fi
-	if [[ ! -d "${BUILDPACK_DIR}/.git" ]]; then
-		return 1
 	fi
 
 	local url
@@ -62,15 +61,13 @@ buildpack_self_update () {
 	local commit_hash
 	if ! commit_hash=$( git_update_into "${url}" "${BUILDPACK_DIR}" ); then
 		log_end 'error'
-		return 1
+		return 0
 	fi
 	log_end "done, ${commit_hash:0:7}"
 
 	BUILDPACK_NO_SELF_UPDATE=1 \
-		source "${BUILDPACK_DIR}/src.sh" || return 1
+		source "${BUILDPACK_DIR}/src.sh"
 }
 
 
-if ! buildpack_self_update; then
-	log_warning 'Cannot self-update buildpack'
-fi
+buildpack_self_update
