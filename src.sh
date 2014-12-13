@@ -3,7 +3,7 @@ set -o pipefail
 export BUILDPACK_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
 
-buildpack_install_halcyon () {
+install_halcyon () {
 	if [[ -d "${BUILDPACK_DIR}/lib/halcyon" ]]; then
 		source <( HALCYON_NO_SELF_UPDATE="${BUILDPACK_NO_SELF_UPDATE:-0}" \
 			"${BUILDPACK_DIR}/lib/halcyon/halcyon" paths ) || return 1
@@ -23,12 +23,15 @@ buildpack_install_halcyon () {
 	echo -n '-----> Installing Halcyon...' >&2
 
 	local commit_hash
-	commit_hash=$(
+	if ! commit_hash=$(
 		git clone -q "${base_url}" "${BUILDPACK_DIR}/lib/halcyon" >'/dev/null' 2>&1 &&
 		cd "${BUILDPACK_DIR}/lib/halcyon" &&
 		git checkout -q "${branch}" >'/dev/null' 2>&1 &&
 		git log -n 1 --pretty='format:%h'
-	) || return 1
+	); then
+		echo 'error' >&2
+		return 1
+	fi
 	echo " done, ${commit_hash:0:7}" >&2
 
 	source <( HALCYON_NO_SELF_UPDATE=1 \
@@ -38,7 +41,7 @@ buildpack_install_halcyon () {
 }
 
 
-if ! buildpack_install_halcyon; then
+if ! install_halcyon; then
 	echo '   *** ERROR: Failed to install Halcyon' >&2
 fi
 
