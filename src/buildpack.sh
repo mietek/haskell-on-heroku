@@ -34,13 +34,16 @@ buildpack_compile () {
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
 			local executable
-			if ! executable=$( HALCYON_NO_SELF_UPDATE=1 halcyon executable "${build_dir}" ); then
-				log_warning 'No executable detected'
-			else
+			executable=''
+			if [[ -f "${build_dir}/.halcyon-install-newest/executable" ]] &&
+				executable=$( <"${build_dir}/.halcyon-install-newest/executable" ) &&
+				[[ -n "${executable}" ]]
+			then
 				expect_existing "${build_dir}/bin/${executable}"
 
-				echo "web: /app/bin/${executable}" \
-					>"${build_dir}/Procfile" || return 1
+				echo "web: /app/bin/${executable}" >"${build_dir}/Procfile" || return 1
+			else
+				log_warning 'Cannot create Procfile'
 			fi
 		fi
 
