@@ -25,7 +25,7 @@ buildpack_compile () {
 		HALCYON_NO_BUILD_LAYERS=1 \
 		HALCYON_CACHE="${cache_dir}" \
 		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-			halcyon deploy "${build_dir}"
+			halcyon install "${build_dir}"
 	then
 		# NOTE: This assumes nothing is installed into root_dir
 		# outside root_dir/app.
@@ -47,7 +47,7 @@ buildpack_compile () {
 			fi
 		fi
 
-		help_deploy_succeeded
+		help_install_succeeded
 	else
 		# NOTE: There is no access to the Heroku cache from one-off
 		# dynos.  Hence, the cache is included in the slug, to speed
@@ -56,7 +56,7 @@ buildpack_compile () {
 
 		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || return 1
 
-		help_deploy_failed
+		help_install_failed
 	fi
 
 	copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" || return 1
@@ -84,7 +84,7 @@ buildpack_build () {
 	HALCYON_PREFIX='/app' \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-		halcyon deploy "${source_dir}" "$@" || return 1
+		halcyon install "${source_dir}" "$@" || return 1
 
 	help_build_succeeded
 
@@ -112,7 +112,7 @@ buildpack_restore () {
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_NO_ARCHIVE=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-		halcyon deploy "${source_dir}" "$@" || return 1
+		halcyon install "${source_dir}" "$@" || return 1
 
 	help_restore_succeeded
 

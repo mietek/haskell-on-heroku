@@ -38,7 +38,7 @@ set_url_config_var () {
 
 set_config_vars () {
 	echo >&2
-	echo '-----> Deploying with Haskell on Heroku' >&2
+	echo '-----> Welcome to Haskell on Heroku' >&2
 
 	if [[ ! -d "$1" ]]; then
 		echo >&2
