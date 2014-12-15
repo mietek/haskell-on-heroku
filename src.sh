@@ -56,6 +56,14 @@ buildpack_self_update () {
 		return 0
 	fi
 
+	local now candidate_time
+	now=$( get_current_time )
+	if candidate_time=$( get_modification_time "${BUILDPACK_DIR}" ) &&
+		(( candidate_time + 60 >= now ))
+	then
+		return 0
+	fi
+
 	local url
 	url="${BUILDPACK_URL:-https://github.com/mietek/haskell-on-heroku}"
 
@@ -67,6 +75,8 @@ buildpack_self_update () {
 		return 0
 	fi
 	log_end "done, ${commit_hash:0:7}"
+
+	touch "${BUILDPACK_DIR}" || return 1
 
 	BUILDPACK_NO_SELF_UPDATE=1 \
 		source "${BUILDPACK_DIR}/src.sh"
