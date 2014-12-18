@@ -34,11 +34,12 @@ buildpack_compile () {
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
 			local executable
-			executable=''
-			if [[ -f "${build_dir}/.halcyon-install-newest/executable" ]] &&
-				executable=$( <"${build_dir}/.halcyon-install-newest/executable" ) &&
-				[[ -n "${executable}" ]]
-			then
+			if executable=$(
+				HALCYON_NO_SELF_UPDATE=1 \
+				HALCYON_NO_CLEAN_CACHE=1 \
+				HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+					halcyon executable "${build_dir}"
+			); then
 				expect_existing "${build_dir}/bin/${executable}"
 
 				echo "web: /app/bin/${executable}" >"${build_dir}/Procfile" || return 1
