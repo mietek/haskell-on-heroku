@@ -42,8 +42,11 @@ buildpack_compile () {
 			); then
 				expect_existing "${build_dir}/bin/${executable}"
 
+				log 'Creating Procfile'
+
 				echo "web: /app/bin/${executable}" >"${build_dir}/Procfile" || return 1
 			else
+				log_warning 'Cannot determine executable'
 				log_warning 'Cannot create Procfile'
 			fi
 		fi
