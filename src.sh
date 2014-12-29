@@ -43,6 +43,7 @@ install_halcyon () {
 
 if ! install_halcyon; then
 	echo '   *** ERROR: Failed to install Halcyon' >&2
+	exit 1
 fi
 
 source "${BUILDPACK_DIR}/src/buildpack.sh"
@@ -83,4 +84,7 @@ buildpack_self_update () {
 }
 
 
-buildpack_self_update
+if ! buildpack_self_update; then
+	log_error 'Failed to self-update buildpack'
+	exit 1
+fi
