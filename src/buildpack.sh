@@ -22,7 +22,7 @@ buildpack_compile () {
 		HALCYON_BASE='/app' \
 		HALCYON_PREFIX='/app' \
 		HALCYON_ROOT="${root_dir}" \
-		HALCYON_NO_BUILD_LAYERS=1 \
+		HALCYON_NO_BUILD_DEPENDENCIES=1 \
 		HALCYON_CACHE="${cache_dir}" \
 		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 			halcyon install "${build_dir}"
