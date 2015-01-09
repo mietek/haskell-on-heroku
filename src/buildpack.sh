@@ -67,7 +67,7 @@ buildpack_compile () {
 	copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
 	copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz" || return 1
 
-	rm -rf "${root_dir}" || return 1
+	rm -rf "${root_dir}" || return 0
 }
 
 
@@ -92,7 +92,7 @@ buildpack_build () {
 
 	help_build_succeeded
 
-	rm -rf "${source_dir}" || return 1
+	rm -rf "${source_dir}" || return 0
 }
 
 
@@ -120,5 +120,5 @@ buildpack_restore () {
 
 	help_restore_succeeded
 
-	rm -rf "${source_dir}" || return 1
+	rm -rf "${source_dir}" || return 0
 }
