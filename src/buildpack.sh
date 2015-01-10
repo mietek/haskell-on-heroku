@@ -126,16 +126,21 @@ buildpack_compile () {
 		log_indent '$ restore'
 		log_indent '$ cabal repl'
 		log
+		log
 		;;
 	'2')
+		log_error 'Failed to deploy app'
+		log_error 'Deploying buildpack and cache'
+
 		# NOTE: There is no access to the Heroku cache from one-off
 		# dynos.  Hence, the cache is included in the slug to speed
 		# up the next step, which is building the app on a one-off
 		# dyno.
-		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || true
+		if ! copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache"; then
+			log_error 'Failed to copy cache to slug directory'
+			return 1
+		fi
 
-		log_error 'Failed to deploy app'
-		log_error 'Deploying buildpack'
 		log
 		if ! private_storage; then
 			log_indent 'First, set up private storage:'
@@ -150,6 +155,7 @@ buildpack_compile () {
 		log_indent 'Next, deploy the app:'
 		log_indent '$ git commit --amend --no-edit'
 		log_indent '$ git push -f heroku master'
+		log
 		log
 		;;
 	*)
