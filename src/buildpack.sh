@@ -195,7 +195,7 @@ buildpack_build () {
 	if ! label=$(
 		HALCYON_NO_SELF_UPDATE=1 \
 		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-			halcyon label "${build_dir}" 2>'/dev/null'
+			halcyon label "${source_dir}" 2>'/dev/null'
 	); then
 		log_error 'Failed to determine label'
 		return 1
@@ -244,7 +244,7 @@ buildpack_restore () {
 	if ! label=$(
 		HALCYON_NO_SELF_UPDATE=1 \
 		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-			halcyon label "${build_dir}" 2>'/dev/null'
+			halcyon label "${source_dir}" 2>'/dev/null'
 	); then
 		log_error 'Failed to determine label'
 		return 1
