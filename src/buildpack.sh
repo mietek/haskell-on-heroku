@@ -8,10 +8,12 @@ private_storage () {
 expect_private_storage () {
 	if ! private_storage; then
 		log_error 'Expected private storage'
-		log_error 'To set up private storage:'
+		log
+		log_indent 'To set up private storage:'
 		log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
 		log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'
 		log_indent '$ heroku config:set HALCYON_S3_BUCKET=...'
+		log
 		return 1
 	fi
 }
@@ -61,6 +63,8 @@ buildpack_compile () {
 	case "${status}" in
 	'0')
 		if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
+			log 'Copying app to /app'
+
 			# NOTE: Assumes nothing is installed into root_dir outside
 			# root_dir/app.
 			if ! copy_dir_into "${root_dir}/app" "${build_dir}"; then
@@ -101,18 +105,16 @@ buildpack_compile () {
 		fi
 
 		log
-		log
 		log_label 'App deployed:' "${label}"
 		log
-		log 'To see the app, spin up at least one web dyno:'
+		log_indent 'To see the app, spin up at least one web dyno:'
 		log_indent '$ heroku ps:scale web=1'
 		log_indent '$ heroku open'
 		log
-		log 'To run GHCi, use a one-off dyno:'
+		log_indent 'To run GHCi, use a one-off dyno:'
 		log_indent '$ heroku run bash'
 		log_indent '$ restore'
 		log_indent '$ cabal repl'
-		log
 		log
 		;;
 	'2')
@@ -122,29 +124,25 @@ buildpack_compile () {
 		# dyno.
 		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || true
 
-		log
-		log
-		log_warning 'Paused deploying app'
+		log_error 'Failed to deploy app'
+		log_error 'Deploying buildpack'
 		log
 		if ! private_storage; then
-			log_warning 'First, set up private storage:'
+			log_indent 'First, set up private storage:'
 			log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
 			log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'
 			log_indent '$ heroku config:set HALCYON_S3_BUCKET=...'
 			log
 		fi
-		log_warning 'To continue, build the app on a one-off PX dyno:'
+		log_indent 'To continue, build the app on a one-off PX dyno:'
 		log_indent '$ heroku run --size=PX build'
 		log
-		log_warning 'Next, deploy the app:'
+		log_indent 'Next, deploy the app:'
 		log_indent '$ git commit --amend --no-edit'
 		log_indent '$ git push -f heroku master'
 		log
-		log
 		;;
 	*)
-		log
-		log
 		log_error 'Failed to deploy app'
 		return 1
 	esac
@@ -181,7 +179,6 @@ buildpack_build () {
 	fi
 
 	log
-	log
 	HALCYON_NO_SELF_UPDATE=1 \
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
@@ -190,13 +187,23 @@ buildpack_build () {
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
+	local label
+	if ! label=$(
+		HALCYON_NO_SELF_UPDATE=1 \
+		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+			halcyon label "${build_dir}" 2>'/dev/null'
+	); then
+		log_error 'Failed to determine label'
+		return 1
+	fi
+
 	log
+	log_label 'App built:' "${label}"
 	log
-	log 'App built'
-	log
-	log 'To deploy the app:'
+	log_indent 'To deploy the app:'
 	log_indent '$ git commit --amend --no-edit'
 	log_indent '$ git push -f heroku master'
+	log
 
 	rm -rf "${source_dir}" || return 0
 }
@@ -219,7 +226,6 @@ buildpack_restore () {
 	fi
 
 	log
-	log
 	HALCYON_NO_SELF_UPDATE=1 \
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
@@ -231,12 +237,22 @@ buildpack_restore () {
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
+	local label
+	if ! label=$(
+		HALCYON_NO_SELF_UPDATE=1 \
+		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+			halcyon label "${build_dir}" 2>'/dev/null'
+	); then
+		log_error 'Failed to determine label'
+		return 1
+	fi
+
 	log
+	log_label 'App restored:' "${label}"
 	log
-	log 'App restored'
-	log
-	log 'To run GHCi:'
+	log_indent 'To run GHCi:'
 	log_indent '$ cabal repl'
+	log
 
 	rm -rf "${source_dir}" || return 0
 }
