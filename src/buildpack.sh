@@ -14,7 +14,11 @@ buildpack_compile () {
 	expect_no_existing "${build_dir}/.buildpack" || return 1
 
 	local root_dir
-	root_dir=$( get_tmp_dir 'root' ) || return 1
+	if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
+		root_dir=$( get_tmp_dir 'root' ) || return 1
+	else
+		root_dir='/'
+	fi
 
 	log 'Archiving source directory'
 
@@ -44,10 +48,15 @@ buildpack_compile () {
 
 	case "${status}" in
 	'0')
-		# NOTE: Assumes nothing is installed into root_dir outside
-		# root_dir/app.
+		if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
+			# NOTE: Assumes nothing is installed into root_dir outside
+			# root_dir/app.
 
-		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
+			if ! copy_dir_into "${root_dir}/app" "${build_dir}"; then
+				log_error 'Failed to copy app to slug directory'
+				return 1
+			fi
+		fi
 
 		local label
 		if ! label=$(
@@ -123,7 +132,9 @@ buildpack_compile () {
 		return 1
 	esac
 
-	rm -rf "${root_dir}" || return 0
+	if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
+		rm -rf "${root_dir}" || return 0
+	fi
 }
 
 
@@ -184,8 +195,8 @@ buildpack_restore () {
 	HALCYON_NO_SELF_UPDATE=1 \
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
-	HALCYON_RESTORE_DEPENDENCIES=1 \
 	HALCYON_NO_BUILD_DEPENDENCIES=1 \
+	HALCYON_KEEP_DEPENDENCIES=1 \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_NO_ARCHIVE=1 \
 	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
