@@ -9,15 +9,24 @@ buildpack_compile () {
 
 	local build_dir cache_dir env_dir
 	expect_args build_dir cache_dir env_dir -- "$@"
-	expect_existing "${build_dir}"
-	expect_no_existing "${build_dir}/.buildpack"
+
+	expect_existing "${build_dir}" || return 1
+	expect_no_existing "${build_dir}/.buildpack" || return 1
 
 	local root_dir
 	root_dir=$( get_tmp_dir 'root' ) || return 1
 
 	log 'Archiving source directory'
 
-	create_archive "${build_dir}" '/tmp/source.tar.gz' || return 1
+	if ! create_archive "${build_dir}" '/tmp/source.tar.gz' ||
+		! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
+		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
+			"${build_dir}/.profile.d/buildpack.sh" ||
+		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz"
+	then
+		log_error 'Failed to prepare slug directory'
+		return 1
+	fi
 
 	if HALCYON_NO_SELF_UPDATE=1 \
 		HALCYON_BASE='/app' \
@@ -33,22 +42,24 @@ buildpack_compile () {
 
 		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
 
+		local executable
+		if ! executable=$(
+			HALCYON_NO_SELF_UPDATE=1 \
+			HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+				halcyon executable "${build_dir}" 2>'/dev/null'
+		) ||
+			! expect_existing "${build_dir}/bin/${executable}"
+		then
+			log_error 'Failed to determine executable'
+			return 1
+		fi
+
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
-			local executable
-			if executable=$(
-				HALCYON_NO_SELF_UPDATE=1 \
-				HALCYON_NO_CLEAN_CACHE=1 \
-				HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-					halcyon executable "${build_dir}"
-			); then
-				expect_existing "${build_dir}/bin/${executable}"
+			log 'Creating Procfile'
 
-				log 'Creating Procfile'
-
-				echo "web: /app/bin/${executable}" >"${build_dir}/Procfile" || return 1
-			else
-				log_warning 'Cannot determine executable'
-				log_warning 'Cannot create Procfile'
+			if ! echo "web: /app/bin/${executable}" >"${build_dir}/Procfile"; then
+				log_error 'Failed to create Procfile'
+				return 1
 			fi
 		fi
 
@@ -59,14 +70,11 @@ buildpack_compile () {
 		# up the next step, which is building the app on a one-off
 		# dyno.
 
-		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || return 1
+		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || true
 
 		help_install_failed
 	fi
 
-	copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" || return 1
-	copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" "${build_dir}/.profile.d/buildpack.sh" || return 1
-	copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz" || return 1
 
 	rm -rf "${root_dir}" || return 0
 }
@@ -82,7 +90,10 @@ buildpack_build () {
 
 	log 'Restoring source directory'
 
-	extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}" || return 1
+	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}"; then
+		log_error 'Failed to restore source directory'
+		return 1
+	fi
 
 	log
 	log
@@ -109,7 +120,10 @@ buildpack_restore () {
 
 	log 'Restoring source directory'
 
-	extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}" || return 1
+	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}"; then
+		log_error 'Failed to restore source directory'
+		return 1
+	fi
 
 	log
 	log
