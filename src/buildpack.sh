@@ -40,13 +40,8 @@ buildpack_compile () {
 	# NOTE: Files copied into build_dir will be present in /app on a
 	# dyno.  This includes files which should not contribute to
 	# source_hash, hence the need to archive and restore the source dir.
-	if ! create_archive "${build_dir}" '/tmp/source.tar.gz' ||
-		! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
-		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
-			"${build_dir}/.profile.d/buildpack.sh" ||
-		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz"
-	then
-		log_error 'Failed to prepare slug directory'
+	if ! create_archive "${build_dir}" '/tmp/source.tar.gz'; then
+		log_error 'Failed to prepare source directory'
 		return 1
 	fi
 
@@ -153,6 +148,15 @@ buildpack_compile () {
 		log_error 'Failed to deploy app'
 		return 1
 	esac
+
+	if ! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
+		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
+			"${build_dir}/.profile.d/buildpack.sh" ||
+		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz"
+	then
+		log_error 'Failed to prepare slug directory'
+		return 1
+	fi
 
 	if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
 		rm -rf "${root_dir}" || return 0
