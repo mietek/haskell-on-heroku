@@ -1,6 +1,7 @@
 buildpack_compile () {
 	expect_vars BUILDPACK_DIR
-	expect_existing "${BUILDPACK_DIR}"
+
+	expect_existing "${BUILDPACK_DIR}" || return 1
 
 	# NOTE: Files copied into build_dir will be present in /app on a
 	# dyno.  This includes files which should not contribute to
@@ -72,7 +73,9 @@ buildpack_compile () {
 
 
 buildpack_build () {
-	expect_existing "${BUILDPACK_DIR}"
+	expect_vars BUILDPACK_DIR
+
+	expect_existing "${BUILDPACK_DIR}" || return 1
 
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
@@ -97,7 +100,9 @@ buildpack_build () {
 
 
 buildpack_restore () {
-	expect_existing "${BUILDPACK_DIR}"
+	expect_vars BUILDPACK_DIR
+
+	expect_existing "${BUILDPACK_DIR}" || return 1
 
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
