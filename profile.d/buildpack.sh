@@ -2,7 +2,6 @@ export BUILDPACK_DIR='/app/.buildpack'
 
 
 # NOTE: Self-updating is disabled on worker dynos.
-
 if [[ "${DYNO%.*}" != 'run' ]]; then
 	export BUILDPACK_NO_SELF_UPDATE=1
 	export HALCYON_NO_SELF_UPDATE=1

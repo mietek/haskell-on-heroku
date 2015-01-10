@@ -3,10 +3,6 @@ buildpack_compile () {
 
 	expect_existing "${BUILDPACK_DIR}" || return 1
 
-	# NOTE: Files copied into build_dir will be present in /app on a
-	# dyno.  This includes files which should not contribute to
-	# source_hash, hence the need to archive and restore the source dir.
-
 	local build_dir cache_dir env_dir
 	expect_args build_dir cache_dir env_dir -- "$@"
 
@@ -22,6 +18,9 @@ buildpack_compile () {
 
 	log 'Archiving source directory'
 
+	# NOTE: Files copied into build_dir will be present in /app on a
+	# dyno.  This includes files which should not contribute to
+	# source_hash, hence the need to archive and restore the source dir.
 	if ! create_archive "${build_dir}" '/tmp/source.tar.gz' ||
 		! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
 		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
@@ -33,7 +32,6 @@ buildpack_compile () {
 	fi
 
 	# NOTE: Returns 2 if build is needed, due to NO_BUILD_DEPENDENCIES.
-
 	local status
 	status=0
 	HALCYON_NO_SELF_UPDATE=1 \
@@ -51,7 +49,6 @@ buildpack_compile () {
 		if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
 			# NOTE: Assumes nothing is installed into root_dir outside
 			# root_dir/app.
-
 			if ! copy_dir_into "${root_dir}/app" "${build_dir}"; then
 				log_error 'Failed to copy app to slug directory'
 				return 1
@@ -106,10 +103,9 @@ buildpack_compile () {
 		;;
 	'2')
 		# NOTE: There is no access to the Heroku cache from one-off
-		# dynos.  Hence, the cache is included in the slug, to speed
+		# dynos.  Hence, the cache is included in the slug to speed
 		# up the next step, which is building the app on a one-off
 		# dyno.
-
 		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || true
 
 		log

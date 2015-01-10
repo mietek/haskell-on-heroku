@@ -23,9 +23,8 @@ set_url_config_var () {
 	url=$( <"$1/$2" ) || return 1
 	export "$2"="${url}"
 
-	# NOTE: The master branch is used by default, but the name is omitted
-	# from the message.
-
+	# NOTE: The master branch is used by default, but the branch name is
+	# omitted from the message.
 	local base_url branch
 	base_url="${url%#*}"
 	branch="${url#*#}"
