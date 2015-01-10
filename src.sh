@@ -47,7 +47,6 @@ if ! install_halcyon; then
 fi
 
 source "${BUILDPACK_DIR}/src/buildpack.sh"
-source "${BUILDPACK_DIR}/src/help.sh"
 
 
 buildpack_self_update () {

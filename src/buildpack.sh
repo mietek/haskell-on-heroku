@@ -38,6 +38,7 @@ buildpack_compile () {
 	HALCYON_ROOT="${root_dir}" \
 	HALCYON_NO_BUILD_DEPENDENCIES=1 \
 	HALCYON_CACHE="${cache_dir}" \
+	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${build_dir}" || status="$?"
 
@@ -47,6 +48,16 @@ buildpack_compile () {
 		# root_dir/app.
 
 		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
+
+		local label
+		if ! label=$(
+			HALCYON_NO_SELF_UPDATE=1 \
+			HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+				halcyon label "${build_dir}" 2>'/dev/null'
+		); then
+			log_error 'Failed to determine label'
+			return 1
+		fi
 
 		local executable
 		if ! executable=$(
@@ -69,7 +80,20 @@ buildpack_compile () {
 			fi
 		fi
 
-		help_install_succeeded
+		log
+		log
+		log_label 'App deployed:' "${label}"
+		log
+		log 'To see the app, spin up at least one web dyno:'
+		log_indent '$ heroku ps:scale web=1'
+		log_indent '$ heroku open'
+		log
+		log 'To run GHCi, use a one-off dyno:'
+		log_indent '$ heroku run bash'
+		log_indent '$ restore'
+		log_indent '$ cabal repl'
+		log
+		log
 		;;
 	'2')
 		# NOTE: There is no access to the Heroku cache from one-off
@@ -79,7 +103,18 @@ buildpack_compile () {
 
 		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || true
 
-		help_install_failed
+		log
+		log
+		log_warning 'Paused deploying app'
+		log
+		log_warning 'To continue, build the app on a one-off PX dyno:'
+		log_indent '$ heroku run --size=PX build'
+		log
+		log_warning 'Next, deploy the app:'
+		log_indent '$ git commit --amend --no-edit'
+		log_indent '$ git push -f heroku master'
+		log
+		log
 		;;
 	*)
 		log
@@ -113,10 +148,17 @@ buildpack_build () {
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
+	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
-	help_build_succeeded
+	log
+	log
+	log 'App built'
+	log
+	log 'To deploy the app:'
+	log_indent '$ git commit --amend --no-edit'
+	log_indent '$ git push -f heroku master'
 
 	rm -rf "${source_dir}" || return 0
 }
@@ -146,10 +188,16 @@ buildpack_restore () {
 	HALCYON_NO_BUILD_DEPENDENCIES=1 \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_NO_ARCHIVE=1 \
+	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
-	help_restore_succeeded
+	log
+	log
+	log 'App restored'
+	log
+	log 'To run GHCi:'
+	log_indent '$ cabal repl'
 
 	rm -rf "${source_dir}" || return 0
 }
