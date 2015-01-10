@@ -28,17 +28,23 @@ buildpack_compile () {
 		return 1
 	fi
 
-	if HALCYON_NO_SELF_UPDATE=1 \
-		HALCYON_BASE='/app' \
-		HALCYON_PREFIX='/app' \
-		HALCYON_ROOT="${root_dir}" \
-		HALCYON_NO_BUILD_DEPENDENCIES=1 \
-		HALCYON_CACHE="${cache_dir}" \
-		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-			halcyon install "${build_dir}"
-	then
-		# NOTE: This assumes nothing is installed into root_dir
-		# outside root_dir/app.
+	# NOTE: Returns 2 if build is needed, due to NO_BUILD_DEPENDENCIES.
+
+	local status
+	status=0
+	HALCYON_NO_SELF_UPDATE=1 \
+	HALCYON_BASE='/app' \
+	HALCYON_PREFIX='/app' \
+	HALCYON_ROOT="${root_dir}" \
+	HALCYON_NO_BUILD_DEPENDENCIES=1 \
+	HALCYON_CACHE="${cache_dir}" \
+	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+		halcyon install "${build_dir}" || status="$?"
+
+	case "${status}" in
+	'0')
+		# NOTE: Assumes nothing is installed into root_dir outside
+		# root_dir/app.
 
 		copy_dir_into "${root_dir}/app" "${build_dir}" || return 1
 
@@ -64,7 +70,8 @@ buildpack_compile () {
 		fi
 
 		help_install_succeeded
-	else
+		;;
+	'2')
 		# NOTE: There is no access to the Heroku cache from one-off
 		# dynos.  Hence, the cache is included in the slug, to speed
 		# up the next step, which is building the app on a one-off
@@ -73,8 +80,13 @@ buildpack_compile () {
 		copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache" || true
 
 		help_install_failed
-	fi
-
+		;;
+	*)
+		log
+		log
+		log_error 'Failed to deploy app'
+		return 1
+	esac
 
 	rm -rf "${root_dir}" || return 0
 }
