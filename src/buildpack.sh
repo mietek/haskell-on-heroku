@@ -1,3 +1,22 @@
+private_storage () {
+	[[ -n "${HALCYON_AWS_ACCESS_KEY_ID:+_}"
+	&& -n "${HALCYON_AWS_SECRET_ACCESS_KEY:+_}"
+	&& -n "${HALCYON_S3_BUCKET:+_}" ]] || return 1
+}
+
+
+expect_private_storage () {
+	if ! private_storage; then
+		log_error 'Expected private storage'
+		log_error 'To set up private storage:'
+		log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
+		log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'
+		log_indent '$ heroku config:set HALCYON_S3_BUCKET=...'
+		return 1
+	fi
+}
+
+
 buildpack_compile () {
 	expect_vars BUILDPACK_DIR
 
@@ -112,6 +131,13 @@ buildpack_compile () {
 		log
 		log_warning 'Paused deploying app'
 		log
+		if ! private_storage; then
+			log_warning 'First, set up private storage:'
+			log_indent '$ heroku config:set HALCYON_AWS_ACCESS_KEY_ID=...'
+			log_indent '$ heroku config:set HALCYON_AWS_SECRET_ACCESS_KEY=...'
+			log_indent '$ heroku config:set HALCYON_S3_BUCKET=...'
+			log
+		fi
 		log_warning 'To continue, build the app on a one-off PX dyno:'
 		log_indent '$ heroku run --size=PX build'
 		log
@@ -138,6 +164,7 @@ buildpack_build () {
 	expect_vars BUILDPACK_DIR
 
 	expect_existing "${BUILDPACK_DIR}" || return 1
+	expect_private_storage || return 1
 
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
@@ -175,6 +202,7 @@ buildpack_restore () {
 	expect_vars BUILDPACK_DIR
 
 	expect_existing "${BUILDPACK_DIR}" || return 1
+	expect_private_storage || return 1
 
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
