@@ -57,6 +57,7 @@ buildpack_compile () {
 	HALCYON_NO_BUILD_DEPENDENCIES=1 \
 	HALCYON_CACHE="${cache_dir}" \
 	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
+	HALCYON_INTERNAL_NO_CLEANUP=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${build_dir}" || status="$?"
 
@@ -155,10 +156,6 @@ buildpack_compile () {
 		log_error 'Failed to deploy app'
 		return 1
 	esac
-
-	if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
-		rm -rf "${root_dir}" || return 0
-	fi
 }
 
 
@@ -184,6 +181,7 @@ buildpack_build () {
 	HALCYON_PREFIX='/app' \
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
+	HALCYON_INTERNAL_NO_CLEANUP=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
@@ -204,8 +202,6 @@ buildpack_build () {
 	log_indent '$ git commit --amend --no-edit'
 	log_indent '$ git push -f heroku master'
 	log
-
-	rm -rf "${source_dir}" || return 0
 }
 
 
@@ -234,6 +230,7 @@ buildpack_restore () {
 	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_NO_ARCHIVE=1 \
 	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
+	HALCYON_INTERNAL_NO_CLEANUP=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
@@ -253,6 +250,4 @@ buildpack_restore () {
 	log_indent 'To run GHCi:'
 	log_indent '$ cabal repl'
 	log
-
-	rm -rf "${source_dir}" || return 0
 }
