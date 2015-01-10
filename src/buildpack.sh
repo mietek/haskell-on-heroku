@@ -60,6 +60,15 @@ buildpack_compile () {
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${build_dir}" || status="$?"
 
+	if ! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
+		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
+			"${build_dir}/.profile.d/buildpack.sh" ||
+		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz"
+	then
+		log_error 'Failed to prepare slug directory'
+		return 1
+	fi
+
 	case "${status}" in
 	'0')
 		if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
@@ -146,15 +155,6 @@ buildpack_compile () {
 		log_error 'Failed to deploy app'
 		return 1
 	esac
-
-	if ! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
-		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
-			"${build_dir}/.profile.d/buildpack.sh" ||
-		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz"
-	then
-		log_error 'Failed to prepare slug directory'
-		return 1
-	fi
 
 	if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
 		rm -rf "${root_dir}" || return 0
