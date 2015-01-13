@@ -37,12 +37,10 @@ buildpack_compile () {
 		root_dir='/'
 	fi
 
-	log 'Archiving source directory'
-
 	# NOTE: Files copied into build_dir will be present in /app on a
 	# dyno.  This includes files which should not contribute to
 	# source_hash, hence the need to archive and restore the source dir.
-	if ! create_archive "${build_dir}" '/tmp/source.tar.gz'; then
+	if ! create_archive "${build_dir}" '/tmp/source.tar.gz' 2>'/dev/null'; then
 		log_error 'Failed to prepare source directory'
 		return 1
 	fi
@@ -73,8 +71,6 @@ buildpack_compile () {
 	case "${status}" in
 	'0')
 		if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
-			log 'Copying app to /app'
-
 			# NOTE: Assumes nothing is installed into root_dir outside
 			# root_dir/app.
 			if ! copy_dir_into "${root_dir}/app" "${build_dir}"; then
@@ -106,10 +102,8 @@ buildpack_compile () {
 		fi
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
-			log 'Creating Procfile'
-
 			if ! echo "web: /app/bin/${executable}" >"${build_dir}/Procfile"; then
-				log_error 'Failed to create Procfile'
+				log_error 'Failed to generate Procfile'
 				return 1
 			fi
 		fi
@@ -174,9 +168,7 @@ buildpack_build () {
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
 
-	log 'Restoring source directory'
-
-	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}"; then
+	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}" 2>'/dev/null'; then
 		log_error 'Failed to restore source directory'
 		return 1
 	fi
@@ -220,9 +212,7 @@ buildpack_restore () {
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
 
-	log 'Restoring source directory'
-
-	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}"; then
+	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}" 2>'/dev/null'; then
 		log_error 'Failed to restore source directory'
 		return 1
 	fi
