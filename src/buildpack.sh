@@ -164,7 +164,7 @@ buildpack_compile () {
 }
 
 
-buildpack_build () {
+buildpack_install () {
 	expect_vars BUILDPACK_DIR
 
 	expect_existing "${BUILDPACK_DIR}" || return 1
@@ -178,7 +178,16 @@ buildpack_build () {
 		return 1
 	fi
 
-	log
+	local label
+	if ! label=$(
+		HALCYON_NO_SELF_UPDATE=1 \
+		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+			halcyon label "${source_dir}" 2>'/dev/null'
+	); then
+		log_error 'Failed to determine label'
+		return 1
+	fi
+
 	HALCYON_NO_SELF_UPDATE=1 \
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
@@ -188,13 +197,14 @@ buildpack_build () {
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 		halcyon install "${source_dir}" "$@" || return 1
 
+	echo "${label}"
+}
+
+
+buildpack_build () {
 	local label
-	if ! label=$(
-		HALCYON_NO_SELF_UPDATE=1 \
-		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-			halcyon label "${source_dir}" 2>'/dev/null'
-	); then
-		log_error 'Failed to determine label'
+	if ! label=$( buildpack_install "$@" ); then
+		log_error 'Failed to build app'
 		return 1
 	fi
 
@@ -205,43 +215,17 @@ buildpack_build () {
 	log_indent '$ git commit --amend --no-edit'
 	log_indent '$ git push -f heroku master'
 	log
+	log
 }
 
 
 buildpack_restore () {
-	expect_vars BUILDPACK_DIR
-
-	expect_existing "${BUILDPACK_DIR}" || return 1
-	expect_private_storage || return 1
-
-	local source_dir
-	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
-
-	if ! extract_archive_over "${BUILDPACK_DIR}/source.tar.gz" "${source_dir}" 2>'/dev/null'; then
-		log_error 'Failed to restore source directory'
-		return 1
-	fi
-
-	log
-	HALCYON_NO_SELF_UPDATE=1 \
-	HALCYON_BASE='/app' \
-	HALCYON_PREFIX='/app' \
-	HALCYON_NO_BUILD_DEPENDENCIES=1 \
-	HALCYON_KEEP_DEPENDENCIES=1 \
-	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
-	HALCYON_NO_ARCHIVE=1 \
-	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
-	HALCYON_INTERNAL_NO_CLEANUP=1 \
-	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-		halcyon install "${source_dir}" "$@" || return 1
-
 	local label
 	if ! label=$(
-		HALCYON_NO_SELF_UPDATE=1 \
-		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-			halcyon label "${source_dir}" 2>'/dev/null'
+		HALCYON_KEEP_DEPENDENCIES=1 \
+			buildpack_install "$@"
 	); then
-		log_error 'Failed to determine label'
+		log_error 'Failed to restore app'
 		return 1
 	fi
 
@@ -250,5 +234,6 @@ buildpack_restore () {
 	log
 	log_indent 'To run GHCi:'
 	log_indent '$ cabal repl'
+	log
 	log
 }
