@@ -45,14 +45,14 @@ buildpack_compile () {
 		return 1
 	fi
 
-	# NOTE: Returns 2 if build is needed, due to NO_BUILD_DEPENDENCIES.
+	# NOTE: Returns 2 if build is needed, if NO_BUILD_DEPENDENCIES is 1.
 	local status
 	status=0
 	HALCYON_NO_SELF_UPDATE=1 \
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
 	HALCYON_ROOT="${root_dir}" \
-	HALCYON_NO_BUILD_DEPENDENCIES=1 \
+	HALCYON_NO_BUILD_DEPENDENCIES="${HALCYON_NO_BUILD_DEPENDENCIES:-1}" \
 	HALCYON_CACHE="${cache_dir}" \
 	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
 	HALCYON_INTERNAL_NO_CLEANUP=1 \
