@@ -175,7 +175,6 @@ buildpack_install () {
 	expect_vars BUILDPACK_DIR
 
 	expect_existing "${BUILDPACK_DIR}" || return 1
-	expect_private_storage || return 1
 
 	local source_dir
 	source_dir=$( get_tmp_dir 'buildpack-source' ) || return 1
@@ -209,6 +208,8 @@ buildpack_install () {
 
 
 buildpack_build () {
+	expect_private_storage || return 1
+
 	local label
 	if ! label=$( buildpack_install "$@" ); then
 		log_error 'Failed to build app'
