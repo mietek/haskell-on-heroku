@@ -62,7 +62,8 @@ buildpack_compile () {
 	if ! copy_dir_over "${BUILDPACK_DIR}" "${build_dir}/.buildpack" ||
 		! copy_file "${BUILDPACK_DIR}/profile.d/buildpack.sh" \
 			"${build_dir}/.profile.d/buildpack.sh" ||
-		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz"
+		! copy_file '/tmp/source.tar.gz' "${build_dir}/.buildpack/source.tar.gz" ||
+		! echo ':set prompt "\ESC[32;1m\x03BB \ESC[0m"' >"${build_dir}/.ghci"
 	then
 		log_error 'Failed to prepare slug directory'
 		return 1
