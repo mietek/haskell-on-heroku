@@ -40,6 +40,8 @@ set_config_vars () {
 	echo >&2
 	echo '-----> Welcome to Haskell on Heroku' >&2
 
+	unset GIT_DIR
+
 	if [[ ! -d "$1" ]]; then
 		echo >&2
 		return 0
@@ -96,11 +98,12 @@ set_config_vars () {
 }
 
 
-unset GIT_DIR
-
-set_config_vars "$3" || exit 1
+if ! set_config_vars "${3:-/dev/null}"; then
+	echo '   *** ERROR: Failed to set config vars' >&2
+	exit 1
+fi
 
 BUILDPACK_NO_SELF_UPDATE=1 \
 	source "${BUILDPACK_DIR}/src.sh"
 
-buildpack_compile "$1" "$2" "$3"
+buildpack_compile "$@"

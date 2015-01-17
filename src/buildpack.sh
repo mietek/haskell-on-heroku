@@ -24,8 +24,8 @@ buildpack_compile () {
 
 	expect_existing "${BUILDPACK_DIR}" || return 1
 
-	local build_dir cache_dir env_dir
-	expect_args build_dir cache_dir env_dir -- "$@"
+	local build_dir cache_dir
+	expect_args build_dir cache_dir -- "$@"
 
 	expect_existing "${build_dir}" || return 1
 	expect_no_existing "${build_dir}/.buildpack" || return 1
