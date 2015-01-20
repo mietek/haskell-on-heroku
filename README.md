@@ -28,7 +28,11 @@ $ git push -q heroku master
 
 - Start with the [Haskell on Heroku tutorial](https://haskellonheroku.com/tutorial/) to learn how to develop a simple Haskell web app and deploy it to Heroku.
 
-- See the [Haskell on Heroku reference](https://haskellonheroku.com/reference/) for a complete list of available commands and optinos.
+- Read the [Halcyon tutorial](https://halcyon.sh/tutorial/) to learn more about developing Haskell apps using Halcyon.
+
+- See the [Haskell on Heroku reference](https://haskellonheroku.com/reference/) for a list of buildpack-specific options.
+
+- Look for additional options in the [Halcyon reference](https://halcyon.sh/reference/).
 
 
 #### Internals
