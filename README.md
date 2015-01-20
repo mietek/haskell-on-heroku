@@ -17,6 +17,12 @@ Create a new Heroku app with the `heroku create` command, using the `-b` option 
 $ heroku create -b https://github.com/mietek/haskell-on-heroku
 ```
 
+Push the code to Heroku in order to deploy your app:
+
+```
+$ git push -q heroku master
+```
+
 
 ### Documentation
 
