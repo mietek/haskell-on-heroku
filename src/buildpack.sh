@@ -98,6 +98,14 @@ buildpack_compile () {
 				log_error 'Failed to copy app to slug directory'
 				return 1
 			fi
+		else
+			if ! copy_dir_over '/app/ghc' "${build_dir}/ghc" ||
+				! copy_dir_over '/app/cabal' "${build_dir}/cabal" ||
+				! copy_dir_over '/app/sandbox' "${build_dir}/sandbox"
+			then
+				log_error 'Failed to copy dependencies to slug directory'
+				return 1
+			fi
 		fi
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
