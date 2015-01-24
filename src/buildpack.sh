@@ -45,6 +45,20 @@ buildpack_compile () {
 		return 1
 	fi
 
+	local label executable
+	if ! label=$(
+		HALCYON_NO_SELF_UPDATE=1 \
+		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+			halcyon label "${build_dir}" 2>'/dev/null'
+	) || ! executable=$(
+		HALCYON_NO_SELF_UPDATE=1 \
+		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
+			halcyon executable "${build_dir}" 2>'/dev/null'
+	); then
+		log_error 'Failed to detect app'
+		return 1
+	fi
+
 	# NOTE: Returns 2 if build is needed, if NO_BUILD_DEPENDENCIES is 1.
 	local status
 	status=0
@@ -84,28 +98,6 @@ buildpack_compile () {
 				log_error 'Failed to copy app to slug directory'
 				return 1
 			fi
-		fi
-
-		local label
-		if ! label=$(
-			HALCYON_NO_SELF_UPDATE=1 \
-			HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-				halcyon label "${build_dir}" 2>'/dev/null'
-		); then
-			log_error 'Failed to determine label'
-			return 1
-		fi
-
-		local executable
-		if ! executable=$(
-			HALCYON_NO_SELF_UPDATE=1 \
-			HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
-				halcyon executable "${build_dir}" 2>'/dev/null'
-		) ||
-			! expect_existing "${build_dir}/bin/${executable}"
-		then
-			log_error 'Failed to determine executable'
-			return 1
 		fi
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
@@ -190,7 +182,7 @@ buildpack_install () {
 		HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
 			halcyon label "${source_dir}" 2>'/dev/null'
 	); then
-		log_error 'Failed to determine label'
+		log_error 'Failed to detect app'
 		return 1
 	fi
 
