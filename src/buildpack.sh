@@ -31,11 +31,7 @@ buildpack_compile () {
 	expect_no_existing "${build_dir}/.buildpack" || return 1
 
 	local root_dir
-	if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
-		root_dir=$( get_tmp_dir 'root' ) || return 1
-	else
-		root_dir='/'
-	fi
+	root_dir=$( get_tmp_dir 'root' ) || return 1
 
 	# NOTE: Files copied into build_dir will be present in /app on a
 	# dyno.  This includes files which should not contribute to
@@ -91,14 +87,12 @@ buildpack_compile () {
 
 	case "${status}" in
 	'0')
-		if ! (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
-			# NOTE: Assumes nothing is installed into root_dir outside
-			# root_dir/app.
-			if ! copy_dir_into "${root_dir}/app" "${build_dir}"; then
-				log_error 'Failed to copy app to slug directory'
-				return 1
-			fi
-		else
+		if ! copy_dir_into "${root_dir}/app" "${build_dir}"; then
+			log_error 'Failed to copy app to slug directory'
+			return 1
+		fi
+
+		if (( ${HALCYON_KEEP_DEPENDENCIES:-0} )); then
 			if ! copy_dir_over '/app/ghc' "${build_dir}/ghc" ||
 				! copy_dir_over '/app/cabal' "${build_dir}/cabal" ||
 				! copy_dir_over '/app/sandbox' "${build_dir}/sandbox"
