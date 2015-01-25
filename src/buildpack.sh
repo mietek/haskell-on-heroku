@@ -130,15 +130,11 @@ buildpack_compile () {
 		# dynos.  Hence, the cache is included in the slug to speed
 		# up the next step, which is building the app on a one-off
 		# dyno.
-		if ! (( ${BUILDPACK_NO_COPY_CACHE:-0} )); then
-			log_error 'Deploying buildpack with cache'
+		log_error 'Deploying buildpack with cache'
 
-			if ! copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache"; then
-				log_error 'Failed to copy cache to slug directory'
-				return 1
-			fi
-		else
-			log_error 'Deploying buildpack'
+		if ! copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache"; then
+			log_error 'Failed to copy cache to slug directory'
+			return 1
 		fi
 
 		log
