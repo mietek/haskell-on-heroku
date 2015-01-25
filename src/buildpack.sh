@@ -103,7 +103,7 @@ buildpack_compile () {
 		fi
 
 		if [[ ! -f "${build_dir}/Procfile" ]]; then
-			if ! echo "web: /app/bin/${executable}" >"${build_dir}/Procfile"; then
+			if ! echo "web: bin/${executable}" >"${build_dir}/Procfile"; then
 				log_error 'Failed to generate Procfile'
 				return 1
 			fi
