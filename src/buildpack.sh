@@ -118,8 +118,8 @@ buildpack_compile () {
 		log
 		log_indent 'To run GHCi, use a one-off dyno:'
 		log_indent '$ heroku run bash'
-		log_indent '$ restore'
-		log_indent '$ cabal repl'
+		log_indent '~ $ restore'
+		log_indent '~ $ cabal repl'
 		log
 		log
 		;;
@@ -130,7 +130,7 @@ buildpack_compile () {
 		# dynos.  Hence, the cache is included in the slug to speed
 		# up the next step, which is building the app on a one-off
 		# dyno.
-		log_error 'Deploying buildpack with cache'
+		log_error 'Deploying buildpack only'
 
 		if ! copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache"; then
 			log_error 'Failed to copy cache to slug directory'
@@ -146,7 +146,7 @@ buildpack_compile () {
 			log
 		fi
 		log_indent 'To continue, build the app on a one-off PX dyno:'
-		log_indent '$ heroku run --size=PX build'
+		log_indent '$ heroku run -s PX build'
 		log
 		log_indent 'Next, deploy the app:'
 		log_indent '$ git commit --amend --no-edit'
