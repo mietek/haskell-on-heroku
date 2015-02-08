@@ -125,18 +125,7 @@ buildpack_compile () {
 		;;
 	'2')
 		log_error 'Failed to deploy app'
-
-		# NOTE: There is no access to the Heroku cache from one-off
-		# dynos.  Hence, the cache is included in the slug to speed
-		# up the next step, which is building the app on a one-off
-		# dyno.
 		log_error 'Deploying buildpack only'
-
-		if ! copy_dir_over "${cache_dir}" "${build_dir}/.buildpack/cache"; then
-			log_error 'Failed to copy cache to slug directory'
-			return 1
-		fi
-
 		log
 		if ! private_storage; then
 			log_indent 'First, set up private storage:'
@@ -187,7 +176,6 @@ buildpack_install () {
 	HALCYON_NO_SELF_UPDATE=1 \
 	HALCYON_BASE='/app' \
 	HALCYON_PREFIX='/app' \
-	HALCYON_CACHE="${BUILDPACK_DIR}/cache" \
 	HALCYON_INTERNAL_NO_ANNOUNCE_INSTALL=1 \
 	HALCYON_INTERNAL_NO_CLEANUP=1 \
 	HALCYON_INTERNAL_NO_COPY_LOCAL_SOURCE=1 \
