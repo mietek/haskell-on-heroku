@@ -36,14 +36,9 @@ set_url_config_var () {
 
 
 set_config_vars () {
-	echo >&2
-	echo >&2
-	echo '-----> Welcome to Haskell on Heroku' >&2
-
 	unset GIT_DIR
 
 	if [[ ! -d "$1" ]]; then
-		echo >&2
 		return 0
 	fi
 
@@ -86,24 +81,40 @@ set_config_vars () {
 			log_indent_label "${var}:" "${value}"
 		fi
 	done <<<"${vars}"
-
-	local commit_hash
-	commit_hash=$(
-		cd "${BUILDPACK_DIR}" &&
-		git log -n 1 --pretty='format:%h'
-	) || return 1
-
-	echo >&2
-	echo "-----> Installing buildpack... done, ${commit_hash:0:7}" >&2
 }
 
 
-if ! set_config_vars "${3:-/dev/null}"; then
-	echo '   *** ERROR: Failed to set config vars' >&2
+install_buildpack () {
+	echo >&2
+	echo >&2
+	echo '-----> Welcome to Haskell on Heroku' >&2
+
+	if ! set_config_vars "${3:-/dev/null}"; then
+		echo '   *** ERROR: Failed to set config vars' >&2
+		return 1
+	fi
+
+	echo >&2
+	echo -n '-----> Installing buildpack...' >&2
+
+	local commit_hash
+	if ! commit_hash=$(
+		cd "${BUILDPACK_DIR}" &&
+		git log -n 1 --pretty='format:%h'
+	); then
+		echo 'error' >&2
+		return 1
+	fi
+	echo " done, ${commit_hash:0:7}" >&2
+
+	BUILDPACK_NO_SELF_UPDATE=1 \
+		source "${BUILDPACK_DIR}/src.sh" || return 1
+}
+
+
+if ! install_buildpack "$@"; then
+	echo '   *** ERROR: Failed to install buildpack' >&2
 	exit 1
 fi
-
-BUILDPACK_NO_SELF_UPDATE=1 \
-	source "${BUILDPACK_DIR}/src.sh"
 
 buildpack_compile "$@"
