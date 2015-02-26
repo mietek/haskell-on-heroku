@@ -58,6 +58,9 @@ set_config_vars () {
 		sed "s:$1/::" |
 		sort
 	) || return 1
+	if [[ -z "${vars}" ]]; then
+		return 0
+	fi
 
 	local var
 	while read -r var; do
