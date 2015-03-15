@@ -20,7 +20,7 @@ install_halcyon () {
 		branch='master'
 	fi
 
-	echo -n '-----> Installing Halcyon...' >&2
+	printf -- '-----> Installing Halcyon...' >&2
 
 	local commit_hash
 	if ! commit_hash=$(

@@ -98,7 +98,7 @@ install_buildpack () {
 	fi
 
 	echo >&2
-	echo -n '-----> Installing buildpack...' >&2
+	printf -- '-----> Installing buildpack...' >&2
 
 	local commit_hash
 	if ! commit_hash=$(
