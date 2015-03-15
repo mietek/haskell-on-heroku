@@ -108,7 +108,7 @@ install_buildpack () {
 		echo ' error' >&2
 		return 1
 	fi
-	echo " done, ${commit_hash:0:7}" >&2
+	echo " done, ${commit_hash}" >&2
 
 	BUILDPACK_NO_SELF_UPDATE=1 \
 		source "${BUILDPACK_DIR}/src.sh" || return 1

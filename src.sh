@@ -31,7 +31,7 @@ install_halcyon () {
 		echo ' error' >&2
 		return 1
 	fi
-	echo " done, ${commit_hash:0:7}" >&2
+	echo " done, ${commit_hash}" >&2
 
 	eval "$( HALCYON_NO_SELF_UPDATE=1 "${BUILDPACK_DIR}/lib/halcyon/halcyon" paths )" || return 1
 	BASHMENOT_NO_SELF_UPDATE=1 \
@@ -72,7 +72,7 @@ buildpack_self_update () {
 		log_end 'error'
 		return 0
 	fi
-	log_end "done, ${commit_hash:0:7}"
+	log_end "done, ${commit_hash}"
 
 	touch "${BUILDPACK_DIR}" || return 1
 
