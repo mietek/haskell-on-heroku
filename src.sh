@@ -5,8 +5,7 @@ export BUILDPACK_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P )
 
 install_halcyon () {
 	if [[ -d "${BUILDPACK_DIR}/lib/halcyon" ]]; then
-		source <( HALCYON_NO_SELF_UPDATE="${BUILDPACK_NO_SELF_UPDATE:-0}" \
-			"${BUILDPACK_DIR}/lib/halcyon/halcyon" paths ) || return 1
+		eval "$( HALCYON_NO_SELF_UPDATE="${BUILDPACK_NO_SELF_UPDATE:-0}" "${BUILDPACK_DIR}/lib/halcyon/halcyon" paths )" || return 1
 		BASHMENOT_NO_SELF_UPDATE=1 \
 			source "${BUILDPACK_DIR}/lib/halcyon/lib/bashmenot/src.sh" || return 1
 		return 0
@@ -34,8 +33,7 @@ install_halcyon () {
 	fi
 	echo " done, ${commit_hash:0:7}" >&2
 
-	source <( HALCYON_NO_SELF_UPDATE=1 \
-		"${BUILDPACK_DIR}/lib/halcyon/halcyon" paths ) || return 1
+	eval "$( HALCYON_NO_SELF_UPDATE=1 "${BUILDPACK_DIR}/lib/halcyon/halcyon" paths )" || return 1
 	BASHMENOT_NO_SELF_UPDATE=1 \
 		source "${BUILDPACK_DIR}/lib/halcyon/lib/bashmenot/src.sh" || return 1
 }

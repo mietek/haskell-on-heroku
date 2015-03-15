@@ -31,5 +31,5 @@ if ! (( ${BUILDPACK_INTERNAL_PATHS:-0} )); then
 
 	export PATH="${BUILDPACK_DIR}/bin:${PATH:-}"
 
-	source <( HALCYON_NO_SELF_UPDATE=1 "${BUILDPACK_DIR}/lib/halcyon/halcyon" paths )
+	eval "$( HALCYON_NO_SELF_UPDATE=1 "${BUILDPACK_DIR}/lib/halcyon/halcyon" paths )"
 fi
