@@ -1,3 +1,10 @@
+-------------------------------------------------------------------------------
+
+This project is no longer maintained.
+
+-------------------------------------------------------------------------------
+
+
 [Haskell on Heroku](https://haskellonheroku.com/)
 ==================================================
 
@@ -45,4 +52,4 @@ Haskell on Heroku is written in [GNU _bash_](https://gnu.org/software/bash/), 
 About
 -----
 
-Made by [Miëtek Bak](https://mietek.io/).  Published under the [MIT X11 license](https://halcyon.sh/license/).  Not affiliated with Heroku.
+Made by [Miëtek Bak](https://mietek.io/).  Published under the BSD license.  Not affiliated with Heroku.
